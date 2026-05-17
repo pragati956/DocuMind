@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Signup from './Signup';
 import Login from './Login';
-import Home from './Home';
+import Home from './pages/Home';
 
 function App() {
   return (
@@ -15,5 +15,4 @@ function App() {
     </BrowserRouter>
   );
 }
-
-export default App;
+export default App; 

@@ -343,15 +343,13 @@ function FeatureCard({ feature, index }) {
         <motion.div
           animate={{ opacity: hovered ? 1 : 0.45, y: hovered ? 0 : 5 }}
           transition={{ duration: 0.3 }}
-          className="text-right"
-        >
+          className="text-right">
           <div className={`text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r ${feature.accent}`}>
             {feature.stat}
           </div>
           <div className="text-[11px] text-gray-500">{feature.statLabel}</div>
         </motion.div>
       </div>
-
       {/* Content */}
       <div className="relative z-10 mt-8">
         <h3 className="text-2xl font-semibold text-white">{feature.title}</h3>
