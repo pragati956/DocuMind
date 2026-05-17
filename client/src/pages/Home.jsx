@@ -1,15 +1,17 @@
-import Navbar from "../components/Navbar";
-import Hero from "../components/Hero";
-import Features from "../components/Features";
-import Footer from "../components/Footer";
-const Home = () => {
+import Navbar from "../components/landing/Navbar";
+import HeroSection from "../components/landing/HeroSection";
+import FeaturesSection from "../components/landing/FeaturesSection";
+import CTASection from "../components/landing/CTASection";
+import Footer from "../components/landing/Footer";
+
+export default function Home() {
   return (
-    <main className="bg-[#050816] text-white overflow-hidden">
+    <main className="bg-[#0B0F19] min-h-screen overflow-hidden">
       <Navbar />
-      <Hero />
-      <Features />
+      <HeroSection />
+      <FeaturesSection />
+      <CTASection />
       <Footer />
     </main>
   );
-};
-export default Home;
+}
