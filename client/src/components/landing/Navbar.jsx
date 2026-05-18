@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react"; // Added useContext
 import { motion, AnimatePresence } from "framer-motion";
 import { HiMenuAlt3, HiX } from "react-icons/hi";
+import { Link } from 'react-router-dom';
+import { AuthContext } from "../../context/AuthContext"; // Imported AuthContext
+import { User, LogOut, Settings } from 'lucide-react'; // Imported Lucide icons
 
 const navLinks = [
   { name: "Home", href: "#" },
@@ -12,6 +15,8 @@ const navLinks = [
 export default function Navbar() {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { user, logout } = useContext(AuthContext); // Extracted user and logout from context
+  const [profileDropdown, setProfileDropdown] = useState(false); // Added state for desktop profile dropdown
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -67,21 +72,60 @@ export default function Navbar() {
             </div>
 
             {/* Desktop Buttons */}
-            <div className="hidden md:flex items-center gap-4">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.96 }}
-                className="px-5 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:text-white bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300"
-              >
-                Login
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.06, boxShadow: "0 0 30px rgba(99,102,241,0.6)" }}
-                whileTap={{ scale: 0.95 }}
-                className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-indigo-500 to-cyan-500 transition-all duration-300"
-              >
-                Get Started
-              </motion.button>
+            <div className="hidden md:flex items-center gap-4 relative">
+              {/* Wrapped buttons in conditional rendering based on user state */}
+              {user ? (
+                <div className="relative">
+                  <button
+                    onClick={() => setProfileDropdown(!profileDropdown)}
+                    className="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 transition-all text-white"
+                  >
+                    <User size={20} />
+                  </button>
+
+                  {profileDropdown && (
+                    <div className="absolute right-0 mt-3 w-48 bg-[#0a0f25] border border-white/10 rounded-xl shadow-2xl py-2 z-50">
+                      <div className="px-4 py-2 border-b border-white/10 mb-2">
+                        <p className="text-xs text-gray-400">Signed in as</p>
+                        <p className="text-sm font-medium text-white truncate">{user.email}</p>
+                      </div>
+                      <button className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 flex items-center gap-2">
+                        <Settings size={16} /> My Workspace
+                      </button>
+                      <button
+                        onClick={() => {
+                          logout();
+                          setProfileDropdown(false);
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-white/5 flex items-center gap-2"
+                      >
+                        <LogOut size={16} /> Sign out
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <Link to="/login">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.96 }}
+                      className="px-5 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:text-white bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300"
+                    >
+                      Login
+                    </motion.button>
+                  </Link>
+                  <Link to="/register">
+                    <motion.button
+                      whileHover={{ scale: 1.06, boxShadow: "0 0 30px rgba(99,102,241,0.6)" }}
+                      whileTap={{ scale: 0.95 }}
+                      className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-indigo-500 to-cyan-500 transition-all duration-300"
+                    >
+                      Get Started
+                    </motion.button>
+                  </Link>
+                </>
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -112,12 +156,40 @@ export default function Navbar() {
                     </motion.a>
                   ))}
                   <div className="flex flex-col gap-3 pt-4">
-                    <button className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-300">
-                      Login
-                    </button>
-                    <button className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 text-white font-medium hover:shadow-[0_0_20px_rgba(99,102,241,0.5)] transition-all duration-300">
-                      Get Started
-                    </button>
+                    {/* Added conditional rendering for mobile menu user state */}
+                    {user ? (
+                      <>
+                        <div className="px-4 py-2 border-b border-white/10 mb-2">
+                          <p className="text-xs text-gray-400">Signed in as</p>
+                          <p className="text-sm font-medium text-white truncate">{user.email}</p>
+                        </div>
+                        <button className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-300 flex justify-center items-center gap-2">
+                          <Settings size={18} /> My Workspace
+                        </button>
+                        <button
+                          onClick={() => {
+                            logout();
+                            setMobileMenu(false);
+                          }}
+                          className="w-full py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 hover:text-red-300 hover:bg-red-500/20 transition-all duration-300 flex justify-center items-center gap-2"
+                        >
+                          <LogOut size={18} /> Sign Out
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <Link to="/login" onClick={() => setMobileMenu(false)} className="w-full">
+                          <button className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-300">
+                            Login
+                          </button>
+                        </Link>
+                        <Link to="/register" onClick={() => setMobileMenu(false)} className="w-full">
+                          <button className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 text-white font-medium hover:shadow-[0_0_20px_rgba(99,102,241,0.5)] transition-all duration-300">
+                            Get Started
+                          </button>
+                        </Link>
+                      </>
+                    )}
                   </div>
                 </div>
               </motion.div>
