@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useContext } from 'react'; // Added useContext import
 import { useNavigate, Link } from 'react-router-dom';
+import { AuthContext } from './context/AuthContext'; // Imported AuthContext
 
 function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
+    const { setUser } = useContext(AuthContext); // Destructured setUser from context
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -16,7 +18,8 @@ function Login() {
         const data = await response.json();
 
         if (data.status === "Success") {
-            navigate('/home');
+            setUser({ email: email }); // Saved user email to global state on success
+            navigate('/'); // Redirected to root (Home) instead of /home
         } else if (data.status === "Wrong password") {
             alert("Incorrect password!");
         } else if (data.status === "No record exists") {
