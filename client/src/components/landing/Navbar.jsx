@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { HiMenuAlt3, HiX } from "react-icons/hi";
+import { Link } from 'react-router-dom';
 
 const navLinks = [
   { name: "Home", href: "#" },
@@ -68,20 +69,24 @@ export default function Navbar() {
 
             {/* Desktop Buttons */}
             <div className="hidden md:flex items-center gap-4">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.96 }}
-                className="px-5 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:text-white bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300"
-              >
-                Login
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.06, boxShadow: "0 0 30px rgba(99,102,241,0.6)" }}
-                whileTap={{ scale: 0.95 }}
-                className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-indigo-500 to-cyan-500 transition-all duration-300"
-              >
-                Get Started
-              </motion.button>
+              <Link to="/login">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.96 }}
+                  className="px-5 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:text-white bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300"
+                >
+                  Login
+                </motion.button>
+              </Link>
+              <Link to="/register">
+                <motion.button
+                  whileHover={{ scale: 1.06, boxShadow: "0 0 30px rgba(99,102,241,0.6)" }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-indigo-500 to-cyan-500 transition-all duration-300"
+                >
+                  Get Started
+                </motion.button>
+              </Link>
             </div>
 
             {/* Mobile Menu Button */}
@@ -112,12 +117,16 @@ export default function Navbar() {
                     </motion.a>
                   ))}
                   <div className="flex flex-col gap-3 pt-4">
-                    <button className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-300">
-                      Login
-                    </button>
-                    <button className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 text-white font-medium hover:shadow-[0_0_20px_rgba(99,102,241,0.5)] transition-all duration-300">
-                      Get Started
-                    </button>
+                    <Link to="/login" onClick={() => setMobileMenu(false)} className="w-full">
+                      <button className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-300">
+                        Login
+                      </button>
+                    </Link>
+                    <Link to="/register" onClick={() => setMobileMenu(false)} className="w-full">
+                      <button className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 text-white font-medium hover:shadow-[0_0_20px_rgba(99,102,241,0.5)] transition-all duration-300">
+                        Get Started
+                      </button>
+                    </Link>
                   </div>
                 </div>
               </motion.div>
