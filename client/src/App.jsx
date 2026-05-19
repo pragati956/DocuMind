@@ -4,6 +4,7 @@ import Signup from './pages/Register';
 import Login from './pages/Login';
 import Home from './pages/Home';
 import Dashboard from "./pages/Dashboard";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
@@ -13,7 +14,15 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/register" element={<Signup />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+      
+          <Route
+  path="/dashboard"
+  element={
+    <ProtectedRoute>
+      <Dashboard />
+    </ProtectedRoute>
+  }
+/>
           {/* Removed the duplicate /home route */}
         </Routes>
       </BrowserRouter>

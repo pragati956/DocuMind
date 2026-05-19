@@ -1,6 +1,9 @@
 
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { loginUser } from "../services/authService";
+import { Link } from "react-router-dom";
+
 
 // import { loginUser } from "../services/authService";
 // export default function Login() {
@@ -93,6 +96,7 @@ function InputField({ icon, label, type, value, onChange, placeholder, rightEl }
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
   const [showPass, setShowPass] = useState(false);
   const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -101,19 +105,52 @@ export default function Login() {
   const particles = Array.from({ length: 14 }, (_, i) => ({
     x: Math.random() * 100, y: Math.random() * 100, delay: i * 0.35,
   }));
+const handleSubmit = async () => {
 
-  const handleSubmit = () => {
-    if (loading || done) return;
+  try {
+
     setLoading(true);
-    setTimeout(() => { setLoading(false); setDone(true); }, 2200);
-  };
+
+    const data = await loginUser({
+      email,
+      password,
+    });
+
+    console.log(data);
+
+    // STORE TOKEN
+    localStorage.setItem("token", data.token);
+
+    setLoading(false);
+
+    setDone(true);
+
+    toast.success("Login successful");
+
+    setTimeout(() => {
+      navigate("/dashboard");
+    }, 1000);
+
+  } catch (error) {
+
+    setLoading(false);
+
+    console.log(error);
+
+    toast.error("Invalid credentials");
+  }
+};
+  // const handleSubmit = () => {
+  //   if (loading || done) return;
+  //   setLoading(true);
+  //   setTimeout(() => { setLoading(false); setDone(true); }, 2200);
+  // };
 
   return (
     <div
       className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#0B0F19] px-4 py-12"
       style={{ fontFamily: "'Poppins', sans-serif" }}
     >
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');`}</style>
 
       {/* ── Background ── */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -353,21 +390,17 @@ export default function Login() {
           </motion.div>
 
           {/* ── Register link ── */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.58 }}
-            className="text-center text-gray-500 text-xs mt-6"
-          >
-            Don't have an account?{" "}
-            <motion.a
-              href="#"
-              whileHover={{ color: "#93c5fd" }}
-              className="text-blue-400 font-semibold transition-colors duration-200 hover:underline underline-offset-2"
-            >
-              Create one free
-            </motion.a>
-          </motion.p>
+          <motion.span
+  whileHover={{ scale: 1.05 }}
+  className="inline-block"
+>
+  <Link
+    to="/register"
+    className="text-blue-400 font-semibold transition-colors duration-200 hover:underline underline-offset-2 cursor-pointer"
+  >
+    Create one free
+  </Link>
+</motion.span>
 
           {/* ── Footer note ── */}
           <motion.p

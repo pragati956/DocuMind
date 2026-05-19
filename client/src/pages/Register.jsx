@@ -1,6 +1,8 @@
 
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { registerUser } from "../services/authService";
+
 
 // import { registerUser } from "../services/authService";
 // export default function Register() {
@@ -85,8 +87,8 @@ function InputField({ icon, label, type, value, onChange, placeholder, rightEl, 
             boxShadow: error
               ? "0 0 0 3px rgba(239,68,68,0.07)"
               : focused
-              ? "0 0 0 3px rgba(59,130,246,0.08), 0 0 18px rgba(59,130,246,0.1)"
-              : "none",
+                ? "0 0 0 3px rgba(59,130,246,0.08), 0 0 18px rgba(59,130,246,0.1)"
+                : "none",
           }}
         />
         {rightEl && (
@@ -136,9 +138,8 @@ function StrengthBar({ password }) {
           </div>
         ))}
       </div>
-      <p className={`text-[10px] font-medium ${
-        score === 1 ? "text-red-400" : score === 2 ? "text-amber-400" : score === 3 ? "text-blue-400" : "text-emerald-400"
-      }`}>
+      <p className={`text-[10px] font-medium ${score === 1 ? "text-red-400" : score === 2 ? "text-amber-400" : score === 3 ? "text-blue-400" : "text-emerald-400"
+        }`}>
         {label}
       </p>
     </motion.div>
@@ -148,6 +149,7 @@ function StrengthBar({ password }) {
 /* ─── Main Register Component ─── */
 export default function Register() {
   const [form, setForm] = useState({ name: "", email: "", password: "", confirm: "" });
+  const navigate = useNavigate();
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [agreed, setAgreed] = useState(false);
@@ -172,12 +174,45 @@ export default function Register() {
     return e;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+
     const e = validate();
-    if (Object.keys(e).length) { setErrors(e); return; }
-    setErrors({});
-    setLoading(true);
-    setTimeout(() => { setLoading(false); setDone(true); }, 2400);
+
+    if (Object.keys(e).length) {
+      setErrors(e);
+      return;
+    }
+
+    try {
+
+      setLoading(true);
+
+      const data = await registerUser({
+        name: form.name,
+        email: form.email,
+        password: form.password,
+      });
+
+      console.log(data);
+
+      setLoading(false);
+
+      setDone(true);
+
+      toast.success("Registration successful");
+
+      setTimeout(() => {
+        navigate("/login");
+      }, 1000);
+
+    } catch (error) {
+
+      setLoading(false);
+
+      console.log(error.response?.data);
+
+      toast.error(error.response?.data?.message || "Registration failed");
+    }
   };
 
   /* clear error on edit */
@@ -200,8 +235,6 @@ export default function Register() {
       className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#0B0F19] px-4 py-12"
       style={{ fontFamily: "'Poppins', sans-serif" }}
     >
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');`}</style>
-
       {/* ── Background ── */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <Orb
@@ -351,13 +384,12 @@ export default function Register() {
               <label className="flex items-start gap-3 cursor-pointer group">
                 <div
                   onClick={() => { setAgreed(!agreed); setErrors((e) => ({ ...e, terms: "" })); }}
-                  className={`w-5 h-5 rounded-md border shrink-0 mt-0.5 flex items-center justify-center transition-all duration-200 ${
-                    agreed
+                  className={`w-5 h-5 rounded-md border shrink-0 mt-0.5 flex items-center justify-center transition-all duration-200 ${agreed
                       ? "bg-blue-500 border-blue-500"
                       : errors.terms
-                      ? "border-red-500/50 bg-red-500/5"
-                      : "border-[#374151] bg-white/[0.03] group-hover:border-blue-500/50"
-                  }`}
+                        ? "border-red-500/50 bg-red-500/5"
+                        : "border-[#374151] bg-white/[0.03] group-hover:border-blue-500/50"
+                    }`}
                 >
                   <AnimatePresence>
                     {agreed && (
@@ -401,11 +433,10 @@ export default function Register() {
                 whileTap={!loading && !done ? { scale: 0.98 } : {}}
                 onClick={handleSubmit}
                 disabled={loading}
-                className={`w-full py-3.5 rounded-xl font-semibold text-sm text-white flex items-center justify-center gap-2 transition-all duration-300 relative overflow-hidden ${
-                  done
+                className={`w-full py-3.5 rounded-xl font-semibold text-sm text-white flex items-center justify-center gap-2 transition-all duration-300 relative overflow-hidden ${done
                     ? "bg-gradient-to-r from-emerald-500 to-teal-500 shadow-[0_0_25px_rgba(16,185,129,0.35)]"
                     : "bg-gradient-to-r from-blue-500 to-indigo-500 shadow-[0_0_20px_rgba(59,130,246,0.25)]"
-                }`}
+                  }`}
               >
                 {/* Shimmer */}
                 {!loading && !done && (
@@ -446,17 +477,17 @@ export default function Register() {
             </motion.div>
 
             {/* ── Login redirect ── */}
-            <motion.p variants={itemVariants} className="text-center text-gray-500 text-xs mt-5">
-              Already have an account?{" "}
-              <motion.a
-                href="#"
-                whileHover={{ color: "#93c5fd" }}
-                className="text-blue-400 font-semibold transition-colors duration-200 hover:underline underline-offset-2"
+            <motion.span
+              whileHover={{ scale: 1.05 }}
+              className="inline-block"
+            >
+              <Link
+                to="/login"
+                className="text-blue-400 font-semibold transition-colors duration-200 hover:underline underline-offset-2 cursor-pointer"
               >
                 Sign in
-              </motion.a>
-            </motion.p>
-
+              </Link>
+            </motion.span>
           </motion.div>
         </div>
 
