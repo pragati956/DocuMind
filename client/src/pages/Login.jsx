@@ -90,6 +90,11 @@ export default function Login() {
   const [done, setDone] = useState(false);
   const { login } = useContext(AuthContext); // Hooked into the global login context state dispatcher
 
+  const handleOAuthLogin = (provider) => {
+    const url = `http://localhost:5000/api/auth/${provider}`;
+    window.location.href = url;
+  };
+
   const particles = Array.from({ length: 14 }, (_, i) => ({
     x: Math.random() * 100, y: Math.random() * 100, delay: i * 0.35,
   }));
@@ -206,17 +211,19 @@ export default function Login() {
             className="grid grid-cols-2 gap-3 mb-6"
           >
             {[
-              { icon: <FiChrome />, label: "Google" },
-              { icon: <FiGithub />, label: "GitHub" },
+              { icon: <FiChrome />, label: "google" },
+              { icon: <FiGithub />, label: "github" },
             ].map(({ icon, label }, i) => (
               <motion.button
                 key={i}
+                type="button"
+                onClick={() => handleOAuthLogin(label)}
                 whileHover={{ scale: 1.03, borderColor: "rgba(255,255,255,0.15)", backgroundColor: "rgba(255,255,255,0.06)" }}
                 whileTap={{ scale: 0.98 }}
                 className="flex items-center justify-center gap-2.5 py-3 rounded-xl border border-[#1F2937] bg-white/[0.03] text-gray-300 text-sm font-medium transition-colors duration-200"
               >
                 <span className="text-base">{icon}</span>
-                {label}
+                {label === "google" ? "Google" : "GitHub"}
               </motion.button>
             ))}
           </motion.div>
