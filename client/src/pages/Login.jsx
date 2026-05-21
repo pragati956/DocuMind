@@ -1,19 +1,9 @@
-
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { loginUser } from "../services/authService";
 import { Link } from "react-router-dom";
-
-
-// import { loginUser } from "../services/authService";
-// export default function Login() {
-//     return (
-//         <div className="min-h-screen bg-[#0B0F19]">
-//             {/* Login page */}
-//         </div>
-//     );
-// }
-import React, { useState } from "react";
+import React, { useState, useContext } from "react"; // Added useContext import hook
+import { AuthContext } from "../context/AuthContext"; // Imported global AuthContext
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiMail, FiLock, FiEye, FiEyeOff, FiArrowRight,
@@ -54,7 +44,6 @@ function InputField({ icon, label, type, value, onChange, placeholder, rightEl }
         {label}
       </label>
       <div className="relative">
-        {/* left icon */}
         <div className={`absolute left-4 top-1/2 -translate-y-1/2 text-sm transition-colors duration-300 ${focused ? "text-blue-400" : "text-gray-600"}`}>
           {icon}
         </div>
@@ -74,14 +63,12 @@ function InputField({ icon, label, type, value, onChange, placeholder, rightEl }
           }}
         />
 
-        {/* right element */}
         {rightEl && (
           <div className="absolute right-4 top-1/2 -translate-y-1/2">
             {rightEl}
           </div>
         )}
 
-        {/* focus glow bar */}
         <motion.div
           animate={{ scaleX: focused ? 1 : 0, opacity: focused ? 1 : 0 }}
           transition={{ duration: 0.3 }}
@@ -101,57 +88,44 @@ export default function Login() {
   const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const { login } = useContext(AuthContext); // Hooked into the global login context state dispatcher
 
   const particles = Array.from({ length: 14 }, (_, i) => ({
     x: Math.random() * 100, y: Math.random() * 100, delay: i * 0.35,
   }));
-const handleSubmit = async () => {
 
-  try {
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
 
-    setLoading(true);
+      const data = await loginUser({
+        email,
+        password,
+      });
 
-    const data = await loginUser({
-      email,
-      password,
-    });
+      // Saved user document object fields and temporary JWT verification keys globally
+      login(data.user, data.token);
 
-    console.log(data);
+      setLoading(false);
+      setDone(true);
+      toast.success("Login successful");
 
-    // STORE TOKEN
-    localStorage.setItem("token", data.token);
+      setTimeout(() => {
+        navigate("/dashboard"); // Route target changed to target your newly protected app container views
+      }, 1000);
 
-    setLoading(false);
-
-    setDone(true);
-
-    toast.success("Login successful");
-
-    setTimeout(() => {
-      navigate("/dashboard");
-    }, 1000);
-
-  } catch (error) {
-
-    setLoading(false);
-
-    console.log(error);
-
-    toast.error("Invalid credentials");
-  }
-};
-  // const handleSubmit = () => {
-  //   if (loading || done) return;
-  //   setLoading(true);
-  //   setTimeout(() => { setLoading(false); setDone(true); }, 2200);
-  // };
+    } catch (error) {
+      setLoading(false);
+      console.log(error);
+      toast.error("Invalid credentials");
+    }
+  };
 
   return (
     <div
       className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#0B0F19] px-4 py-12"
       style={{ fontFamily: "'Poppins', sans-serif" }}
     >
-
       {/* ── Background ── */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <Orb
@@ -170,7 +144,6 @@ const handleSubmit = async () => {
           transition={{ duration: 7, repeat: Infinity, delay: 4 }}
         />
 
-        {/* Grid */}
         <div
           className="absolute inset-0 opacity-[0.035]"
           style={{
@@ -179,7 +152,6 @@ const handleSubmit = async () => {
           }}
         />
 
-        {/* Particles */}
         {particles.map((p, i) => <Particle key={i} {...p} />)}
       </div>
 
@@ -190,14 +162,12 @@ const handleSubmit = async () => {
         transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
         className="relative z-10 w-full max-w-md"
       >
-        {/* Top glow */}
         <div className="absolute -top-px left-1/2 -translate-x-1/2 w-48 h-px bg-gradient-to-r from-transparent via-blue-400/60 to-transparent" />
 
         <div
           className="rounded-3xl border border-[#1F2937] p-8 relative overflow-hidden"
           style={{ background: "rgba(17,24,39,0.85)", backdropFilter: "blur(24px)" }}
         >
-          {/* Card inner glow */}
           <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-blue-500/[0.06] to-transparent pointer-events-none rounded-t-3xl" />
 
           {/* ── Logo ── */}
@@ -307,7 +277,7 @@ const handleSubmit = async () => {
             <label className="flex items-center gap-2.5 cursor-pointer group">
               <div
                 onClick={() => setRemember(!remember)}
-                className={`w-4.5 h-4.5 w-5 h-5 rounded-md border flex items-center justify-center transition-all duration-200 ${remember ? "bg-blue-500 border-blue-500" : "border-[#374151] bg-white/[0.03] group-hover:border-blue-500/50"}`}
+                className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all duration-200 ${remember ? "bg-blue-500 border-blue-500" : "border-[#374151] bg-white/[0.03] group-hover:border-blue-500/50"}`}
               >
                 <AnimatePresence>
                   {remember && (
@@ -342,7 +312,7 @@ const handleSubmit = async () => {
           >
             <motion.button
               whileHover={!loading && !done ? { scale: 1.02, boxShadow: "0 0 30px rgba(59,130,246,0.45)" } : {}}
-              whileTap={!loading && !done ? { scale: 0.98 } : {}}
+              whileTap={{ scale: 0.98 }}
               onClick={handleSubmit}
               disabled={loading}
               className={`w-full py-3.5 rounded-xl font-semibold text-sm text-white flex items-center justify-center gap-2 transition-all duration-300 relative overflow-hidden ${
@@ -351,7 +321,6 @@ const handleSubmit = async () => {
                   : "bg-gradient-to-r from-blue-500 to-indigo-500 shadow-[0_0_20px_rgba(59,130,246,0.3)]"
               }`}
             >
-              {/* Shimmer */}
               {!loading && !done && (
                 <motion.div
                   className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12"
@@ -390,17 +359,17 @@ const handleSubmit = async () => {
           </motion.div>
 
           {/* ── Register link ── */}
-          <motion.span
-  whileHover={{ scale: 1.05 }}
-  className="inline-block"
->
-  <Link
-    to="/register"
-    className="text-blue-400 font-semibold transition-colors duration-200 hover:underline underline-offset-2 cursor-pointer"
-  >
-    Create one free
-  </Link>
-</motion.span>
+          <div className="text-center mt-6 text-sm text-gray-500">
+            Don't have an account?{" "}
+            <motion.span whileHover={{ scale: 1.05 }} className="inline-block">
+              <Link
+                to="/register"
+                className="text-blue-400 font-semibold transition-colors duration-200 hover:underline underline-offset-2 cursor-pointer"
+              >
+                Create one free
+              </Link>
+            </motion.span>
+          </div>
 
           {/* ── Footer note ── */}
           <motion.p
