@@ -1,12 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react"; // Added useContext import hook
+import { AuthContext } from "../context/AuthContext"; // Imported global AuthContext
+import { useNavigate } from "react-router-dom"; // Imported programmatic route navigation hook
+import toast from "react-hot-toast"; // Imported active alert engine
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiHome, FiFileText, FiSearch, FiSettings, FiUpload,
   FiBell, FiChevronLeft, FiCpu, FiZap, FiShield, FiCloud,
   FiMoreHorizontal, FiTrendingUp, FiUsers, FiActivity,
-  FiCheckCircle, FiClock, FiArrowUp, FiGrid, FiStar,
-  FiFolder, FiDownload, FiEye, FiMessageSquare, FiMenu,
-  FiX, FiPlus, FiChevronRight,
+  FiArrowUp, FiGrid, FiStar, FiFolder, FiDownload, FiEye, 
+  FiMessageSquare, FiMenu, FiX, FiPlus, FiChevronRight, FiLogOut
 } from "react-icons/fi";
 
 /* ─── FAKE DATA ─── */
@@ -110,7 +112,7 @@ function UploadModal({ onClose }) {
 }
 
 /* ─── SIDEBAR ─── */
-function Sidebar({ collapsed, setCollapsed }) {
+function Sidebar({ collapsed, setCollapsed, onLogout }) { // Passed down the unified logout tracking callback
   return (
     <motion.aside
       animate={{ width: collapsed ? 72 : 240 }}
@@ -174,6 +176,27 @@ function Sidebar({ collapsed, setCollapsed }) {
             )}
           </motion.button>
         ))}
+
+        {/* Dynamic Action Trigger Button item for Logout workflows directly in the side navigation panel */}
+        <motion.button
+          whileHover={{ x: collapsed ? 0 : 3 }}
+          onClick={onLogout}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all duration-200 group relative"
+        >
+          <span className="text-lg shrink-0"><FiLogOut /></span>
+          <AnimatePresence>
+            {!collapsed && (
+              <motion.span
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="whitespace-nowrap flex-1 text-left"
+              >
+                Logout
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </motion.button>
       </nav>
 
       {/* Storage bar */}
@@ -217,7 +240,13 @@ function Sidebar({ collapsed, setCollapsed }) {
 }
 
 /* ─── TOP NAVBAR ─── */
-function Topbar({ onUpload, sidebarCollapsed, setSidebarCollapsed }) {
+function Topbar({ onUpload, sidebarCollapsed, setSidebarCollapsed, user, onLogout }) {
+  // Parsing algorithm to dynamically compute uppercase name abbreviations for active profiles
+  const getInitials = (name) => {
+    if (!name) return "U";
+    return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+  };
+
   return (
     <header className="h-16 border-b border-[#1F2937] bg-[#0B0F19]/80 backdrop-blur-xl flex items-center justify-between px-6 shrink-0 sticky top-0 z-10">
       <div className="flex items-center gap-4">
@@ -259,14 +288,23 @@ function Topbar({ onUpload, sidebarCollapsed, setSidebarCollapsed }) {
           <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center text-[9px] text-white font-bold">3</span>
         </div>
 
+        {/* Dynamic Context Header Status indicators mapping verified users accounts */}
         <div className="flex items-center gap-2.5 pl-3 border-l border-white/10">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-xs font-bold">
-            AJ
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-xs font-bold shadow-md">
+            {getInitials(user?.name)} {/* Loaded calculated initials fallback token */}
           </div>
-          <div className="hidden sm:block">
-            <p className="text-white text-xs font-medium leading-none">Alex Johnson</p>
-            <p className="text-gray-500 text-[10px] mt-0.5">Pro Plan</p>
+          <div className="hidden sm:block text-left">
+            <p className="text-white text-xs font-medium leading-none max-w-[110px] truncate">{user?.name || "Active Workspace"}</p>
+            <p className="text-gray-500 text-[10px] mt-1 max-w-[110px] truncate">{user?.email}</p>
           </div>
+          {/* Header specific direct inline button wrapper for running state modifications */}
+          <button 
+            onClick={onLogout} 
+            className="text-gray-500 hover:text-red-400 transition-colors ml-1 p-1 hover:bg-white/5 rounded-lg"
+            title="Sign Out"
+          >
+            <FiLogOut className="text-sm" />
+          </button>
         </div>
       </div>
     </header>
@@ -274,7 +312,7 @@ function Topbar({ onUpload, sidebarCollapsed, setSidebarCollapsed }) {
 }
 
 /* ─── WELCOME BANNER ─── */
-function WelcomeBanner({ onUpload }) {
+function WelcomeBanner({ onUpload, user }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -282,20 +320,18 @@ function WelcomeBanner({ onUpload }) {
       transition={{ duration: 0.6 }}
       className="relative rounded-3xl border border-white/[0.07] bg-gradient-to-br from-blue-600/20 via-indigo-600/10 to-purple-600/10 p-7 overflow-hidden mb-6"
     >
-      {/* Ambient */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 blur-[80px] rounded-full pointer-events-none" />
       <div className="absolute bottom-0 left-1/3 w-48 h-48 bg-purple-500/10 blur-[80px] rounded-full pointer-events-none" />
-
-      {/* Grid */}
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: "linear-gradient(rgba(100,200,255,1) 1px,transparent 1px),linear-gradient(90deg,rgba(100,200,255,1) 1px,transparent 1px)", backgroundSize: "40px 40px" }} />
 
       <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
-        <div>
+        <div className="text-left">
           <div className="flex items-center gap-2 mb-2">
             <motion.span animate={{ opacity: [1, 0.4, 1] }} transition={{ duration: 2, repeat: Infinity }} className="w-2 h-2 rounded-full bg-emerald-400" />
             <span className="text-emerald-300 text-xs font-semibold uppercase tracking-widest">AI Ready</span>
           </div>
-          <h1 className="text-white text-2xl font-bold tracking-tight mb-1">Good morning, Alex 👋</h1>
+          {/* Linked layout greetings directly with contextual parsed object indices */}
+          <h1 className="text-white text-2xl font-bold tracking-tight mb-1">Good morning, {user?.name?.split(" ")[0] || "User"} 👋</h1>
           <p className="text-gray-400 text-sm">You have 3 documents pending AI analysis. Upload more to get started.</p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
@@ -338,8 +374,8 @@ function StatsSection() {
               <FiArrowUp className="text-[10px]" /> {s.change}
             </span>
           </div>
-          <p className="text-white text-2xl font-bold mb-0.5">{s.value}</p>
-          <p className="text-gray-500 text-xs">{s.label}</p>
+          <p className="text-white text-2xl font-bold mb-0.5 text-left">{s.value}</p>
+          <p className="text-gray-500 text-xs text-left">{s.label}</p>
         </motion.div>
       ))}
     </div>
@@ -378,7 +414,7 @@ function RecentDocuments({ onUpload }) {
             <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${doc.color} flex items-center justify-center text-white text-sm shrink-0`}>
               {doc.icon}
             </div>
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 text-left">
               <p className="text-white text-sm font-medium truncate group-hover:text-blue-300 transition-colors">{doc.name}</p>
               <p className="text-gray-500 text-xs mt-0.5">{doc.type} · {doc.size} · {doc.time}</p>
             </div>
@@ -429,7 +465,7 @@ function AiSummaries() {
             className="p-4 rounded-xl border border-[#1F2937] bg-white/[0.02] cursor-pointer transition-all duration-200 group"
           >
             <div className="flex items-start justify-between gap-2 mb-2">
-              <p className="text-white text-sm font-semibold group-hover:text-purple-300 transition-colors">{s.title}</p>
+              <p className="text-white text-sm font-semibold group-hover:text-purple-300 transition-colors text-left">{s.title}</p>
               <div className="flex items-center gap-2 shrink-0">
                 {s.starred && <FiStar className="text-amber-400 text-xs" />}
                 <div className="w-6 h-6 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
@@ -437,7 +473,7 @@ function AiSummaries() {
                 </div>
               </div>
             </div>
-            <p className="text-gray-400 text-xs leading-relaxed mb-3">{s.insight}</p>
+            <p className="text-gray-400 text-xs leading-relaxed mb-3 text-left">{s.insight}</p>
             <div className="flex items-center gap-2">
               {s.tags.map((tag, j) => (
                 <span key={j} className="px-2 py-0.5 rounded-full bg-white/5 border border-white/[0.07] text-gray-400 text-[10px]">{tag}</span>
@@ -478,7 +514,7 @@ function ActivityFeed() {
             <div className={`w-8 h-8 rounded-xl bg-white/5 border border-white/[0.06] flex items-center justify-center ${a.color} text-sm shrink-0`}>
               {a.icon}
             </div>
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 text-left">
               <p className="text-gray-300 text-xs">
                 <span className="text-white font-medium">{a.user}</span>{" "}
                 {a.action}{" "}
@@ -531,28 +567,39 @@ function QuickActions({ onUpload }) {
 export default function Dashboard() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
+  const { user, logout } = useContext(AuthContext); // Initialized local Context references
+  const navigate = useNavigate();
+
+  // Executed continuous sign-out logic sequence safely routing back onto the landing page index
+  const handleLogout = () => {
+    logout();
+    toast.success("Logged out successfully");
+    navigate("/");
+  };
 
   return (
     <div className="flex h-screen bg-[#0B0F19] overflow-hidden" style={{ fontFamily: "'Poppins', sans-serif" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap'); * { scrollbar-width: thin; scrollbar-color: #1F2937 transparent; } ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: #1F2937; border-radius: 99px; }`}</style>
 
-      {/* Sidebar */}
+      {/* Sidebar Layout */}
       <div className="hidden md:block">
-        <Sidebar collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed} />
+        <Sidebar collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed} onLogout={handleLogout} />
       </div>
 
-      {/* Main */}
+      {/* Main Container */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Topbar
           onUpload={() => setUploadOpen(true)}
           sidebarCollapsed={sidebarCollapsed}
           setSidebarCollapsed={setSidebarCollapsed}
+          user={user}
+          onLogout={handleLogout}
         />
 
         {/* Scrollable body */}
         <main className="flex-1 overflow-y-auto">
           <div className="max-w-screen-xl mx-auto px-6 py-7">
-            <WelcomeBanner onUpload={() => setUploadOpen(true)} />
+            <WelcomeBanner onUpload={() => setUploadOpen(true)} user={user} />
             <StatsSection />
             <QuickActions onUpload={() => setUploadOpen(true)} />
 
