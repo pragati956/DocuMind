@@ -16,6 +16,10 @@ import Settings from "./pages/dashboard/Settings";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
 import DashboardLayout from "./layouts/DashboardLayout";
+import SmartSearch from "./pages/dashboard/SmartSearch";
+import AiSummariesPage from "./pages/dashboard/AiSummariesPage";
+import Collections from "./pages/dashboard/Collections";
+import Analytics from "./pages/dashboard/Analytics";
 
 function App() {
   return (
@@ -60,6 +64,13 @@ function App() {
 
             {/* SETTINGS */}
             <Route path="settings" element={<Settings />} />
+            <Route path="search" element={<SmartSearch />} />
+
+<Route path="summaries" element={<AiSummariesPage />} />
+
+<Route path="collections" element={<Collections />} />
+
+<Route path="analytics" element={<Analytics />} />
 
           </Route>
 

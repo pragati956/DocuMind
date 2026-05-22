@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link, useLocation } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import {
   FiHome, FiFileText, FiSearch, FiZap, FiFolder,
   FiActivity, FiSettings, FiCpu, FiChevronLeft,
@@ -9,17 +9,57 @@ import {
 
 /* ─── Nav Data ─── */
 const navMain = [
-  { icon: <FiHome />, label: "Dashboard", badge: null, id: "dashboard" },
-  { icon: <FiFileText />, label: "Documents", badge: "1.2k", id: "documents" },
-  { icon: <FiSearch />, label: "Smart Search", badge: null, id: "search" },
-  { icon: <FiZap />, label: "AI Summaries", badge: "3", id: "summaries" },
-  { icon: <FiFolder />, label: "Collections", badge: null, id: "collections" },
-  { icon: <FiActivity />, label: "Analytics", badge: null, id: "analytics" },
+  {
+    icon: <FiHome />,
+    label: "Dashboard",
+    path: "/dashboard",
+  },
+
+  {
+    icon: <FiFileText />,
+    label: "Documents",
+    badge: "1.2k",
+    path: "/dashboard/documents",
+  },
+
+  {
+    icon: <FiSearch />,
+    label: "Smart Search",
+    path: "/dashboard/search",
+  },
+
+  {
+    icon: <FiZap />,
+    label: "AI Summaries",
+    badge: "3",
+    path: "/dashboard/summaries",
+  },
+
+  {
+    icon: <FiFolder />,
+    label: "Collections",
+    path: "/dashboard/collections",
+  },
+
+  {
+    icon: <FiActivity />,
+    label: "Analytics",
+    path: "/dashboard/analytics",
+  },
 ];
 
 const navBottom = [
-  { icon: <FiHelpCircle />, label: "Help & Support", id: "help" },
-  { icon: <FiSettings />, label: "Settings", id: "settings" },
+  {
+    icon: <FiHelpCircle />,
+    label: "Help & Support",
+    path: "/dashboard/help",
+  },
+
+  {
+    icon: <FiSettings />,
+    label: "Settings",
+    path: "/dashboard/settings",
+  },
 ];
 
 /* ─── Tooltip ─── */
@@ -45,72 +85,83 @@ function Tooltip({ label, visible }) {
 }
 
 /* ─── Nav Item ─── */
-function NavItem({ item, active, collapsed, onClick }) {
+function NavItem({ item, collapsed }) {
+
   const [hovered, setHovered] = useState(false);
-  const isActive = active === item.id;
 
   return (
-    <div className="relative" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
-      <motion.button
-        onClick={() => onClick(item.id)}
-        whileTap={{ scale: 0.97 }}
-        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 relative group
-          ${isActive
-            ? "bg-blue-500/12 text-blue-400 border border-blue-500/20"
-            : "text-gray-500 hover:text-white hover:bg-white/[0.05] border border-transparent"
-          }`}
-        style={{ backgroundColor: isActive ? "rgba(59,130,246,0.1)" : undefined }}
+    <div
+      className="relative"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+
+      <NavLink
+        to={item.path}
+        className={({ isActive }) =>
+          `w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 relative group border
+
+          ${
+            isActive
+              ? "bg-blue-500/12 text-blue-400 border-blue-500/20"
+              : "text-gray-500 hover:text-white hover:bg-white/[0.05] border-transparent"
+          }`
+        }
       >
-        {/* Active indicator */}
-        {isActive && (
-          <motion.div
-            layoutId="activeIndicator"
-            className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-full bg-blue-400"
-            transition={{ type: "spring", stiffness: 400, damping: 30 }}
-          />
+
+        {({ isActive }) => (
+          <>
+
+            {/* Active Indicator */}
+            {isActive && (
+              <motion.div
+                layoutId="activeIndicator"
+                className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-full bg-blue-400"
+              />
+            )}
+
+            {/* Icon */}
+            <span className="text-lg shrink-0 ml-1">
+              {item.icon}
+            </span>
+            {/* Label */}
+            <AnimatePresence>
+              {!collapsed && (
+                <motion.span
+                  initial={{ opacity: 0, x: -6 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -6 }}
+                  className="flex-1 text-left whitespace-nowrap truncate"
+                >
+                  {item.label}
+                </motion.span>
+              )}
+            </AnimatePresence>
+
+            {/* Badge */}
+            <AnimatePresence>
+              {!collapsed && item.badge && (
+                <motion.span
+                  initial={{ opacity: 0, scale: 0.7 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.7 }}
+                  className="px-1.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400 text-[10px] font-semibold border border-blue-500/20 shrink-0"
+                >
+                  {item.badge}
+                </motion.span>
+              )}
+            </AnimatePresence>
+
+          </>
         )}
 
-        {/* Icon */}
-        <motion.span
-          animate={{ color: isActive ? "#60a5fa" : hovered ? "#ffffff" : "#6b7280" }}
-          transition={{ duration: 0.2 }}
-          className="text-lg shrink-0 ml-1"
-        >
-          {item.icon}
-        </motion.span>
+      </NavLink>
 
-        {/* Label */}
-        <AnimatePresence>
-          {!collapsed && (
-            <motion.span
-              initial={{ opacity: 0, x: -6 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -6 }}
-              transition={{ duration: 0.18 }}
-              className="flex-1 text-left whitespace-nowrap truncate"
-            >
-              {item.label}
-            </motion.span>
-          )}
-        </AnimatePresence>
+      {/* Tooltip */}
+      {collapsed && (
+        <Tooltip label={item.label} visible={hovered} />
+      )}
 
-        {/* Badge */}
-        <AnimatePresence>
-          {!collapsed && item.badge && (
-            <motion.span
-              initial={{ opacity: 0, scale: 0.7 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.7 }}
-              className="px-1.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400 text-[10px] font-semibold border border-blue-500/20 shrink-0"
-            >
-              {item.badge}
-            </motion.span>
-          )}
-        </AnimatePresence>
-      </motion.button>
-
-      {/* Collapsed tooltip */}
-      {collapsed && <Tooltip label={item.label} visible={hovered} />}
     </div>
   );
 }
@@ -292,7 +343,7 @@ function SectionLabel({ label, collapsed }) {
 /* ─── Main Sidebar ─── */
 export default function Sidebar({ defaultCollapsed = false }) {
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
-  const [active, setActive] = useState("dashboard");
+  // const [active, setActive] = useState("dashboard");
 
   return (
     <>
@@ -354,13 +405,11 @@ export default function Sidebar({ defaultCollapsed = false }) {
         >
           <SectionLabel label="Menu" collapsed={collapsed} />
           {navMain.map((item) => (
-            <NavItem
-              key={item.id}
-              item={item}
-              active={active}
-              collapsed={collapsed}
-              onClick={setActive}
-            />
+           <NavItem
+  key={item.label}
+  item={item}
+  collapsed={collapsed}
+/>
           ))}
 
           {/* Divider */}
@@ -368,13 +417,11 @@ export default function Sidebar({ defaultCollapsed = false }) {
 
           <SectionLabel label="General" collapsed={collapsed} />
           {navBottom.map((item) => (
-            <NavItem
-              key={item.id}
-              item={item}
-              active={active}
-              collapsed={collapsed}
-              onClick={setActive}
-            />
+           <NavItem
+  key={item.label}
+  item={item}
+  collapsed={collapsed}
+/>
           ))}
         </nav>
 
