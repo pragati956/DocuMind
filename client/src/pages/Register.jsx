@@ -292,7 +292,6 @@ export default function Register() {
               </motion.div>
               <span className="text-white text-2xl font-semibold tracking-tight">DocuMind</span>
             </motion.div>
-
             {/* ── Heading ── */}
             <motion.div variants={itemVariants} className="text-center mb-7">
               <h1 className="text-white text-2xl font-bold tracking-tight mb-1.5">Create your account</h1>
