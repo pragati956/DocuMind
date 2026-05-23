@@ -2,40 +2,44 @@ import mongoose from "mongoose";
 
 const documentSchema = new mongoose.Schema(
   {
+    title: {
+      type: String,
+      required: true,
+    },
 
-    userId: {
+    fileUrl: {
+      type: String,
+      required: true,
+    },
+
+    publicId: {
+      type: String,
+      required: true,
+    },
+
+    fileType: {
+      type: String,
+    },
+
+    fileSize: {
+      type: Number,
+    },
+
+    uploadedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
     },
 
-    fileName: {
-      type: String,
-      required: true,
-    },
-
-    filePath: {
-      type: String,
-      required: true,
-    },
-
-    uploadedAt: {
-      type: Date,
-      default: Date.now,
-    },
-
-    extractedText: {
+    summary: {
       type: String,
       default: "",
     },
 
+    tags: [String],
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-export const DocumentModel = mongoose.model(
-  "Document",
-  documentSchema
-);
+const Document = mongoose.model("Document", documentSchema);
+
+export default Document;

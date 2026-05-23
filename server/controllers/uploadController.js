@@ -1,48 +1,52 @@
-import { DocumentModel } from "../models/Document.js";
+import Document from "../models/Document.js";
 
 export const uploadDocument = async (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({
-                success: false,
-                message: "No file uploaded",
-            });
-        }
+  try {
 
-        const document = await DocumentModel.create({
-            user: req.user.id,
-            filename: req.file.filename,
-            originalName: req.file.originalname,
-            mimeType: req.file.mimetype,
-            size: req.file.size,
-            path: req.file.path,
-        });
-
-        res.status(201).json({
-            success: true,
-            message: "Document uploaded successfully",
-            document,
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message,
-        });
+    if (!req.file) {
+      return res.status(400).json({
+        message: "No file uploaded",
+      });
     }
+
+    const newDocument = await Document.create({
+      title: req.file.originalname,
+      fileUrl: req.file.path,
+     publicId: req.file.filename || req.file.public_id,
+      fileType: req.file.mimetype,
+      fileSize: req.file.size,
+    });
+
+    res.status(201).json({
+      message: "Document uploaded successfully",
+      document: newDocument,
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      message: error.message,
+    });
+
+  }
 };
 
 export const getDocuments = async (req, res) => {
-    try {
-        const documents = await DocumentModel.find({ user: req.user.id }).sort({ createdAt: -1 });
+  try {
 
-        res.status(200).json({
-            success: true,
-            documents,
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message,
-        });
-    }
+    const documents = await Document.find();
+
+    res.status(200).json({
+      success: true,
+      documents,
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
 };

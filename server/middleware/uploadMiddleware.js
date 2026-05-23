@@ -1,45 +1,16 @@
 import multer from "multer";
-import path from "path";
-import fs from "fs";
-import { fileURLToPath } from "url";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const uploadsDir = path.join(__dirname, "../uploads");
+import cloudinary from "../config/cloudinary.js";
 
-if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, uploadsDir);
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-        cb(null, `${uniqueSuffix}-${file.originalname}`);
-    },
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "documind-documents",
+   allowedFormats: ["jpg", "png", "jpeg", "pdf"],
+  },
 });
 
-const fileFilter = (req, file, cb) => {
-    const allowedTypes = [
-        "application/pdf",
-        "application/msword",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "text/plain",
-        "image/png",
-        "image/jpeg",
-    ];
+const upload = multer({ storage });
 
-    if (allowedTypes.includes(file.mimetype)) {
-        cb(null, true);
-    } else {
-        cb(new Error("Invalid file type"));
-    }
-};
-
-export const upload = multer({
-    storage,
-    limits: { fileSize: 50 * 1024 * 1024 },
-    fileFilter,
-}).single("document");
+export default upload;

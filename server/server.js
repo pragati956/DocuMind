@@ -1,5 +1,6 @@
-import dotenv from "dotenv";
-dotenv.config({ path: "./.env" });
+// import dotenv from "dotenv";
+// dotenv.config({ path: "./.env" });
+import "./config/env.js";
 
 import express from "express";
 import cors from "cors";
@@ -26,7 +27,7 @@ app.use(passport.initialize()); // Initialized passport middleware
 
 // ROUTES
 app.use("/api/auth", authRoutes);
-app.use("/api/upload", uploadRoutes);
+app.use("/api/documents", uploadRoutes);
 
 // TEST ROUTE
 app.get("/", (req, res) => {
