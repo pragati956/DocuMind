@@ -4,10 +4,12 @@ dotenv.config({ path: "./.env" });
 import express from "express";
 import cors from "cors";
 import passport from "passport"; // Imported passport
-import { initializePassport } from "./config/passport.js"; // Import the initialization function
+import { initializePassport } from "./config/passport.js"; 
+// Import the initialization function
 
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
+import uploadRoutes from "./routes/uploadRoutes.js";
 
 // Initialize passport strategies after env vars are loaded
 initializePassport();
@@ -24,6 +26,7 @@ app.use(passport.initialize()); // Initialized passport middleware
 
 // ROUTES
 app.use("/api/auth", authRoutes);
+app.use("/api/upload", uploadRoutes);
 
 // TEST ROUTE
 app.get("/", (req, res) => {
