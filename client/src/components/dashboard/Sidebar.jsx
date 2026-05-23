@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   FiHome, FiFileText, FiSearch, FiZap, FiFolder,
   FiActivity, FiSettings, FiCpu, FiChevronLeft,
@@ -83,6 +83,7 @@ function Tooltip({ label, visible }) {
     </AnimatePresence>
   );
 }
+
 
 /* ─── Nav Item ─── */
 function NavItem({ item, collapsed }) {
@@ -228,6 +229,12 @@ function StorageBar({ collapsed }) {
 function UserCard({ collapsed }) {
   const [hovered, setHovered] = useState(false);
 
+  const navigate = useNavigate();
+const handleLogout = () => {
+  localStorage.removeItem("token");
+  navigate("/");
+};
+  
   return (
     <div
       className="relative"
@@ -266,7 +273,8 @@ function UserCard({ collapsed }) {
 
         <AnimatePresence>
           {!collapsed && (
-            <motion.button
+           <motion.button
+  onClick={handleLogout}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}

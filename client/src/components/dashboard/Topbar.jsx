@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import {
   FiSearch, FiUpload, FiBell, FiMenu, FiX,
   FiPlus, FiFileText, FiZap, FiSettings, FiLogOut,
@@ -297,6 +298,12 @@ function ProfileMenu() {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+  const navigate = useNavigate();
+
+const handleLogout = () => {
+  localStorage.removeItem("token");
+  navigate("/login");
+};
 
   const menuItems = [
     { icon: <FiUser />, label: "Profile", sub: "View your profile" },
@@ -384,7 +391,7 @@ function ProfileMenu() {
 
             {/* Footer */}
             <div className="px-2 pb-2 border-t border-[#1F2937] pt-2">
-              <motion.button
+              <motion.button onClick={handleLogout}
                 whileHover={{ backgroundColor: "rgba(239,68,68,0.06)" }}
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors duration-150 group"
               >
