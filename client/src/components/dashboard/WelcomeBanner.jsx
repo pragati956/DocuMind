@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { AuthContext } from "../../context/AuthContext";
 import {
   FiUpload, FiArrowRight, FiZap, FiFileText,
   FiStar, FiTrendingUp, FiChevronRight, FiX,
@@ -49,85 +50,13 @@ function StatChip({ icon, value, label, delay, color }) {
   );
 }
 
-/* ─── Upload Modal ─── */
-function UploadModal({ onClose }) {
-  const [dragging, setDragging] = useState(false);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-6"
-      style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(10px)" }}
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0, y: 24 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 26 }}
-        onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md rounded-3xl border border-white/10 bg-[#111827] p-8 shadow-2xl"
-      >
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-white font-semibold text-lg">Upload Document</h2>
-          <motion.button
-            whileHover={{ scale: 1.1, rotate: 90 }}
-            onClick={onClose}
-            className="text-gray-500 hover:text-white transition-colors"
-          >
-            <FiX />
-          </motion.button>
-        </div>
-
-        <motion.div
-          onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
-          onDragLeave={() => setDragging(false)}
-          onDrop={() => setDragging(false)}
-          animate={{
-            borderColor: dragging ? "rgba(59,130,246,0.7)" : "rgba(255,255,255,0.09)",
-            background: dragging ? "rgba(59,130,246,0.06)" : "rgba(255,255,255,0.02)",
-          }}
-          transition={{ duration: 0.2 }}
-          className="rounded-2xl border-2 border-dashed p-10 flex flex-col items-center gap-3 cursor-pointer mb-6"
-        >
-          <motion.div
-            animate={{ y: dragging ? -4 : 0 }}
-            transition={{ duration: 0.2 }}
-            className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 text-2xl"
-          >
-            <FiUpload />
-          </motion.div>
-          <p className="text-white font-medium text-sm">Drop files here or click to browse</p>
-          <p className="text-gray-500 text-xs">PDF, DOCX, TXT, PNG — up to 50 MB</p>
-        </motion.div>
-
-        <div className="flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 py-3 rounded-xl border border-white/10 bg-white/5 text-gray-300 text-sm hover:bg-white/10 transition-all"
-          >
-            Cancel
-          </button>
-          <motion.button
-            whileHover={{ scale: 1.02, boxShadow: "0 0 22px rgba(59,130,246,0.45)" }}
-            whileTap={{ scale: 0.98 }}
-            onClick={onClose}
-            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm font-semibold"
-          >
-            Upload & Analyze
-          </motion.button>
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-}
-
 /* ─── Main Welcome Banner ─── */
-export default function WelcomeBanner({ userName = "Alex" }) {
-  const [uploadOpen, setUploadOpen] = useState(false);
+export default function WelcomeBanner({ onUpload }) {
   const [dismissed, setDismissed] = useState(false);
+  const { user } = useContext(AuthContext); // Dynamically access global user context
+
+  // Get the first name or default to 'User'
+  const firstName = user?.name ? user.name.split(" ")[0] : "User";
 
   const particles = Array.from({ length: 18 }, (_, i) => ({
     x: Math.random() * 100,
@@ -259,7 +188,7 @@ export default function WelcomeBanner({ userName = "Alex" }) {
                   >
                     {greeting},{" "}
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-indigo-300 to-purple-300">
-                      {userName} 👋
+                      {firstName} 👋
                     </span>
                   </motion.h1>
 
@@ -287,7 +216,7 @@ export default function WelcomeBanner({ userName = "Alex" }) {
                     <motion.button
                       whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(59,130,246,0.5)" }}
                       whileTap={{ scale: 0.97 }}
-                      onClick={() => setUploadOpen(true)}
+                      onClick={onUpload}
                       className="relative flex items-center gap-2.5 px-6 py-3 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold text-sm overflow-hidden"
                     >
                       {/* shimmer */}
@@ -333,7 +262,6 @@ export default function WelcomeBanner({ userName = "Alex" }) {
                     initial={{ opacity: 0, scale: 0.88, y: 16 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: 0.8, ease: [0.22, 1, 0.36, 1] }}
-                    animate2={{ y: [0, -6, 0] }}
                     className="hidden lg:block w-52 rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl p-4 cursor-default"
                   >
                     <div className="flex items-center gap-2.5 mb-3">
@@ -410,11 +338,6 @@ export default function WelcomeBanner({ userName = "Alex" }) {
             </div>
           </motion.div>
         )}
-      </AnimatePresence>
-
-      {/* Upload Modal */}
-      <AnimatePresence>
-        {uploadOpen && <UploadModal onClose={() => setUploadOpen(false)} />}
       </AnimatePresence>
     </>
   );

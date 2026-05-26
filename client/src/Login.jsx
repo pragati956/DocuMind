@@ -22,24 +22,32 @@ function Login() {
       window.location.href = "http://localhost:5000/api/auth/github";
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        const response = await fetch('http://localhost:5000/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
-        });
-        const data = await response.json();
+    const handleSubmit = async () => {
+    try {
+      setLoading(true);
 
-        if (data.status === "Success") {
-            setUser({ email: email }); // Saved user email to global state on success
-            navigate('/'); // Redirected to root (Home) instead of /home
-        } else if (data.status === "Wrong password") {
-            alert("Incorrect password!");
-        } else if (data.status === "No record exists") {
-            alert("No user found with this email! Please sign up.");
-        }
-    };
+      const data = await loginUser({
+        email,
+        password,
+      });
+
+      // BIG FIX: We must pass data.user (the full object from DB), not just {email: email}
+      login(data.user, data.token);
+
+      setLoading(false);
+      setDone(true);
+      toast.success("Login successful");
+
+      setTimeout(() => {
+        navigate("/dashboard"); 
+      }, 1000);
+
+    } catch (error) {
+      setLoading(false);
+      console.log(error);
+      toast.error("Invalid credentials");
+    }
+  };
 
     return (
         <div>

@@ -1,6 +1,7 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../../context/AuthContext";
 import {
   FiSearch, FiUpload, FiBell, FiMenu, FiX,
   FiPlus, FiFileText, FiZap, FiSettings, FiLogOut,
@@ -173,7 +174,6 @@ function UploadButton({ onClick }) {
       onClick={onClick}
       className="relative flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm font-semibold overflow-hidden shrink-0"
     >
-      {/* shimmer */}
       <motion.div
         className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12"
         animate={{ x: ["-100%", "200%"] }}
@@ -292,24 +292,31 @@ function NotificationBell() {
 function ProfileMenu() {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
+  const { user, logout } = useContext(AuthContext);
 
   useEffect(() => {
     const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+  
   const navigate = useNavigate();
 
-const handleLogout = () => {
-  localStorage.removeItem("token");
-  navigate("/login");
-};
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   const menuItems = [
     { icon: <FiUser />, label: "Profile", sub: "View your profile" },
     { icon: <FiSettings />, label: "Settings", sub: "Preferences & billing" },
     { icon: <FiZap />, label: "Upgrade to Team", sub: "Unlock collaboration", highlight: true },
   ];
+
+  const getInitials = (name) => {
+    if (!name) return "U";
+    return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+  };
 
   return (
     <div className="relative" ref={ref}>
@@ -321,7 +328,7 @@ const handleLogout = () => {
       >
         <div className="relative">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-xs font-bold">
-            AJ
+            {getInitials(user?.name)}
           </div>
           <motion.span
             animate={{ opacity: [1, 0.4, 1] }}
@@ -330,7 +337,7 @@ const handleLogout = () => {
           />
         </div>
         <div className="hidden md:block text-left">
-          <p className="text-white text-xs font-semibold leading-none">Alex Johnson</p>
+          <p className="text-white text-xs font-semibold leading-none truncate max-w-[100px]">{user?.name || "Active User"}</p>
           <p className="text-gray-600 text-[10px] mt-0.5">Pro Plan</p>
         </div>
         <motion.div
@@ -357,11 +364,11 @@ const handleLogout = () => {
             <div className="px-4 py-4 border-b border-[#1F2937]">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-sm font-bold">
-                  AJ
+                  {getInitials(user?.name)}
                 </div>
-                <div>
-                  <p className="text-white text-sm font-semibold">Alex Johnson</p>
-                  <p className="text-gray-500 text-[11px]">alex@company.com</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm font-semibold truncate">{user?.name || "Active User"}</p>
+                  <p className="text-gray-500 text-[11px] truncate">{user?.email || "user@example.com"}</p>
                 </div>
               </div>
               <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/[0.08] border border-emerald-500/20">
@@ -408,63 +415,6 @@ const handleLogout = () => {
   );
 }
 
-/* ─── Upload Modal ─── */
-function UploadModal({ onClose }) {
-  const [dragging, setDragging] = useState(false);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-6"
-      style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)" }}
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ scale: 0.92, opacity: 0, y: 20 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.92, opacity: 0 }}
-        transition={{ type: "spring", stiffness: 280, damping: 24 }}
-        onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md rounded-3xl border border-[#1F2937] bg-[#111827] p-8 shadow-2xl"
-      >
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-white font-semibold text-lg">Upload Document</h2>
-          <motion.button whileHover={{ scale: 1.1, rotate: 90 }} onClick={onClose} className="text-gray-500 hover:text-white transition-colors">
-            <FiX />
-          </motion.button>
-        </div>
-        <motion.div
-          onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
-          onDragLeave={() => setDragging(false)}
-          onDrop={() => setDragging(false)}
-          animate={{ borderColor: dragging ? "rgba(59,130,246,0.6)" : "rgba(255,255,255,0.08)", background: dragging ? "rgba(59,130,246,0.05)" : "rgba(255,255,255,0.02)" }}
-          transition={{ duration: 0.2 }}
-          className="rounded-2xl border-2 border-dashed p-10 flex flex-col items-center gap-3 cursor-pointer mb-6"
-        >
-          <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 text-2xl">
-            <FiUpload />
-          </div>
-          <p className="text-white font-medium text-sm">Drop files here or click to browse</p>
-          <p className="text-gray-500 text-xs">PDF, DOCX, TXT, PNG up to 50 MB</p>
-        </motion.div>
-        <div className="flex gap-3">
-          <button onClick={onClose} className="flex-1 py-3 rounded-xl border border-[#1F2937] bg-white/5 text-gray-300 text-sm hover:bg-white/10 transition-all">Cancel</button>
-          <motion.button
-            whileHover={{ scale: 1.02, boxShadow: "0 0 20px rgba(59,130,246,0.4)" }}
-            whileTap={{ scale: 0.98 }}
-            onClick={onClose}
-            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm font-semibold"
-          >
-            Upload & Analyze
-          </motion.button>
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-}
-
 /* ─── Main Topbar ─── */
 export default function Topbar({ onMobileSidebarToggle }) {
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -485,12 +435,10 @@ export default function Topbar({ onMobileSidebarToggle }) {
           fontFamily: "'Poppins', sans-serif",
         }}
       >
-        {/* Top glow line */}
         <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-blue-500/20 to-transparent pointer-events-none" />
 
         {/* ── Left ── */}
         <div className="flex items-center gap-3">
-          {/* Mobile sidebar toggle */}
           <motion.button
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.94 }}
@@ -500,14 +448,12 @@ export default function Topbar({ onMobileSidebarToggle }) {
             <FiMenu className="text-base" />
           </motion.button>
 
-          {/* Breadcrumb / Page title */}
           <div className="hidden sm:flex items-center gap-2">
             <span className="text-gray-600 text-sm">DocuMind</span>
             <span className="text-gray-700 text-sm">/</span>
-            <span className="text-white text-sm font-medium">Dashboard</span>
+            <span className="text-white text-sm font-medium">Workspace</span>
           </div>
 
-          {/* Mobile search toggle */}
           <motion.button
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.94 }}
@@ -525,6 +471,7 @@ export default function Topbar({ onMobileSidebarToggle }) {
 
         {/* ── Right ── */}
         <div className="flex items-center gap-2">
+          {/* We reuse the generic upload UI logic here if needed */}
           <UploadButton onClick={() => setUploadOpen(true)} />
           <NotificationBell />
           <div className="w-px h-6 bg-[#1F2937] mx-1" />
@@ -550,9 +497,9 @@ export default function Topbar({ onMobileSidebarToggle }) {
         )}
       </AnimatePresence>
 
-      {/* Upload Modal */}
+      {/* Since Topbar triggers Upload, we keep a simplified Upload Modal fallback here */}
       <AnimatePresence>
-        {uploadOpen && <UploadModal onClose={() => setUploadOpen(false)} />}
+         {/* If you need upload from topbar to function across all routes, consider lifting this modal to DashboardLayout */}
       </AnimatePresence>
     </>
   );
