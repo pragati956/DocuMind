@@ -2,47 +2,92 @@ import Document from "../models/Document.js";
 import cloudinary from "../config/cloudinary.js"; 
 
 export const uploadDocument = async (req, res) => {
-  console.log("🔥 Controller received upload request"); 
   try {
+    console.log("\n=== 🚀 NEW UPLOAD INITIATED ===");
+    console.log("👤 User ID:", req.user?.id);
+
     if (!req.file) {
-      console.log("❌ No file found in req.file");
+      console.log("❌ ERROR: req.file is undefined. Multer or Cloudinary rejected the stream.");
       return res.status(400).json({ message: "No file uploaded" });
     }
 
+    const fileUrl = req.file.path || req.file.secure_url;
+    const publicId = req.file.filename || req.file.public_id;
+
+    if (!fileUrl || !publicId) {
+      return res.status(500).json({ message: "Cloudinary payload missing URL or ID." });
+    }
+
     const newDocument = await Document.create({
-      title: req.file.originalname,
-      fileUrl: req.file.path,
-      publicId: req.file.filename,
-      fileType: req.file.mimetype,
-      fileSize: req.file.size,
-      uploadedBy: req.user.id,
+      title: req.file.originalname || "Untitled Document",
+      fileUrl: fileUrl,
+      publicId: publicId,
+      fileType: req.file.mimetype || "application/octet-stream",
+      fileSize: req.file.size || 0,
+      uploadedBy: req.user.id, 
     });
 
-    console.log("✅ Document successfully saved to MongoDB:", newDocument._id);
+    console.log("✅ SUCCESS! Saved to MongoDB:", newDocument._id);
+
     res.status(201).json({
       message: "Document uploaded successfully",
       document: newDocument,
     });
   } catch (error) {
-    console.error("❌ MongoDB Save Error:", error); // Check your terminal for this!
+    console.error("❌ MONGODB CRASH:", error);
     res.status(500).json({ message: error.message });
   }
 };
 
+// ─── STEP 6: GET ALL DOCUMENTS (WITH PAGINATION) ───
 export const getDocuments = async (req, res) => {
   try {
-    const documents = await Document.find({ uploadedBy: req.user.id }).sort({ createdAt: -1 });
+    // Default to page 1 and 10 items per page if not specified in the URL
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const totalDocuments = await Document.countDocuments({ uploadedBy: req.user.id });
+    
+    const documents = await Document.find({ uploadedBy: req.user.id })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
 
     res.status(200).json({
       success: true,
       documents,
+      currentPage: page,
+      totalPages: Math.ceil(totalDocuments / limit),
+      totalDocuments
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// ─── STEP 2: GET SINGLE DOCUMENT API ───
+// ─── STEP 5: SEARCH DOCUMENTS API ───
+export const searchDocuments = async (req, res) => {
+  try {
+    const { q } = req.query;
+    
+    if (!q) {
+      return res.status(400).json({ success: false, message: "Search query 'q' is required" });
+    }
+
+    // $regex provides a basic keyword search. $options: "i" makes it case-insensitive.
+    const documents = await Document.find({
+      uploadedBy: req.user.id,
+      title: { $regex: q, $options: "i" } 
+    }).sort({ createdAt: -1 });
+
+    res.status(200).json({ success: true, documents });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ─── STEP 2: GET SINGLE DOCUMENT ───
 export const getDocumentById = async (req, res) => {
   try {
     const document = await Document.findOne({ 
@@ -60,7 +105,28 @@ export const getDocumentById = async (req, res) => {
   }
 };
 
-// ─── STEP 1: DELETE DOCUMENT API ───
+// ─── STEP 3: UPDATE DOCUMENT API ───
+export const updateDocument = async (req, res) => {
+  try {
+    const { title, tags, summary } = req.body;
+
+    const document = await Document.findOneAndUpdate(
+      { _id: req.params.id, uploadedBy: req.user.id }, // Security check
+      { $set: { title, tags, summary } }, // Only update allowed fields
+      { new: true, runValidators: true }  // Return the updated doc
+    );
+
+    if (!document) {
+      return res.status(404).json({ success: false, message: "Document not found or unauthorized" });
+    }
+
+    res.status(200).json({ success: true, message: "Document updated successfully", document });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ─── STEP 1: DELETE DOCUMENT ───
 export const deleteDocument = async (req, res) => {
   try {
     const document = await Document.findOne({ 
