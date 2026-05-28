@@ -471,8 +471,6 @@ export default function Topbar({ onMobileSidebarToggle }) {
 
         {/* ── Right ── */}
         <div className="flex items-center gap-2">
-          {/* We reuse the generic upload UI logic here if needed */}
-          <UploadButton onClick={() => setUploadOpen(true)} />
           <NotificationBell />
           <div className="w-px h-6 bg-[#1F2937] mx-1" />
           <ProfileMenu />
