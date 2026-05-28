@@ -221,7 +221,7 @@ export default function Sidebar({ defaultCollapsed = false }) {
       <motion.aside
         animate={{ width: collapsed ? 72 : 248 }}
         transition={{ duration: 0.38, ease: [0.4, 0, 0.2, 1] }}
-        className="relative h-screen flex flex-col overflow-hidden border-r border-[#1F2937] bg-[#0B0F19] shrink-0 select-none"
+        className="relative h-screen flex flex-col overflow-visible border-r border-[#1F2937] bg-[#0B0F19] shrink-0 select-none z-40"
         style={{ fontFamily: "'Poppins', sans-serif" }}
       >
         <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-blue-500/30 to-transparent" />
@@ -268,15 +268,20 @@ export default function Sidebar({ defaultCollapsed = false }) {
         {/* ── Storage ── */}
         <StorageBar collapsed={collapsed} />
 
-        {/* ── User ── */}
-        <div className="border-t border-[#1F2937] pt-3">
-          <UserCard collapsed={collapsed} />
-        </div>
-
         {/* ── Collapse toggle ── */}
-        <motion.button whileHover={{ scale: 1.12, backgroundColor: "#374151" }} whileTap={{ scale: 0.92 }} onClick={() => setCollapsed(!collapsed)} className="absolute -right-3.5 top-[72px] w-7 h-7 rounded-full bg-[#1F2937] border border-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors duration-200 z-30 shadow-lg">
-          <motion.div animate={{ rotate: collapsed ? 180 : 0 }} transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}>
-            <FiChevronLeft className="text-xs" />
+        {/* ── Collapse toggle ── */}
+        <motion.button 
+          whileHover={{ scale: 1.15, borderColor: "rgba(255,255,255,0.25)", backgroundColor: "#1e1e24" }} 
+          whileTap={{ scale: 0.90 }} 
+          onClick={() => setCollapsed(!collapsed)} 
+          className="absolute -right-[18px] top-[72px] w-9 h-9 rounded-full bg-[#131314] border border-white/[0.15] flex items-center justify-center text-gray-300 hover:text-white transition-all duration-300 z-50 shadow-[0_4px_20px_rgba(0,0,0,0.5),_0_0_15px_rgba(139,92,246,0.15)] cursor-pointer"
+        >
+          <motion.div 
+            animate={{ rotate: collapsed ? 180 : 0 }} 
+            transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+            className="flex items-center justify-center"
+          >
+            <FiChevronLeft className="text-sm stroke-[2.5]" />
           </motion.div>
         </motion.button>
       </motion.aside>
