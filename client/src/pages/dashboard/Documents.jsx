@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
-import { fetchDocuments } from "../../services/documentService";
+import {
+  fetchDocuments,
+  deleteDocument,
+} from "../../services/documentService";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
@@ -61,8 +64,13 @@ const summaryBadge = {
   },
 };
 
+
 // ── ActionsMenu ────────────────────────────────────────────────────────────────
-function ActionsMenu({ onClose }) {
+function ActionsMenu({
+  onClose,
+  onDelete,
+  documentId,
+}) {
   const actions = [
     { icon: <HiMiniSparkles />, label: "Summarize with AI", accent: true },
     { icon: <HiOutlineDownload />, label: "Download" },
@@ -81,7 +89,14 @@ function ActionsMenu({ onClose }) {
       {actions.map((a, i) => (
         <button
           key={i}
-          onClick={onClose}
+         onClick={() => {
+
+  if (a.label === "Delete") {
+    onDelete(documentId);
+  }
+
+  onClose();
+}}
           className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-sm transition-colors
             ${a.danger ? "text-red-400 hover:bg-red-500/10" : a.accent ? "text-violet-300 hover:bg-violet-500/10" : "text-white/70 hover:bg-white/5 hover:text-white"}`}
         >
@@ -94,7 +109,11 @@ function ActionsMenu({ onClose }) {
 }
 
 // ── DocCard ────────────────────────────────────────────────────────────────────
-function DocCard({ doc, view }) {
+function DocCard({
+  doc,
+  view,
+  onDelete,
+}) {
   const [menuOpen, setMenuOpen] = useState(false);
   const sb = summaryBadge[doc.summary];
   if (view === "list") {
@@ -129,7 +148,15 @@ function DocCard({ doc, view }) {
           >
             <HiOutlineDotsVertical />
           </button>
-          <AnimatePresence>{menuOpen && <ActionsMenu onClose={() => setMenuOpen(false)} />}</AnimatePresence>
+         <AnimatePresence>
+  {menuOpen && (
+    <ActionsMenu
+      onClose={() => setMenuOpen(false)}
+      onDelete={onDelete}
+      documentId={doc.id}
+    />
+  )}
+</AnimatePresence>
         </div>
       </motion.div>
     );
@@ -164,7 +191,15 @@ function DocCard({ doc, view }) {
           >
             <HiOutlineDotsVertical />
           </button>
-          <AnimatePresence>{menuOpen && <ActionsMenu onClose={() => setMenuOpen(false)} />}</AnimatePresence>
+          <AnimatePresence>
+  {menuOpen && (
+    <ActionsMenu
+      onClose={() => setMenuOpen(false)}
+      onDelete={onDelete}
+      documentId={doc.id}
+    />
+  )}
+</AnimatePresence>
         </div>
       </div>
 
@@ -300,10 +335,22 @@ export default function DocumentsPage() {
   // Pagination
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const handleDelete = async (id) => {
+  try {
+
+    await deleteDocument(id);
+
+    await loadDocuments();
+
+  } catch (error) {
+
+    console.error("Delete failed:", error);
+
+  }
+};
   const loadDocuments = async () => {
     try {
       setLoading(true);
-
       const data = await fetchDocuments(page);
       console.log("API RESPONSE:", data);
       setDocuments(data.documents || []);
@@ -511,7 +558,11 @@ export default function DocumentsPage() {
                 ? <EmptyState />
                 : filtered.map((doc, i) => (
                   <motion.div key={doc.id} style={{ transitionDelay: `${i * 30}ms` }}>
-                    <DocCard doc={doc} view={view} />
+                   <DocCard
+  doc={doc}
+  view={view}
+  onDelete={handleDelete}
+/>
                   </motion.div>
                 ))}
             </AnimatePresence>
