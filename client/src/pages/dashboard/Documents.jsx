@@ -1,5 +1,7 @@
-import { useState, useRef } from "react";
+import { useState, useEffect } from "react";
+import { fetchDocuments } from "../../services/documentService";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import {
   HiOutlineSearch,
   HiOutlineUpload,
@@ -24,89 +26,7 @@ import {
 import { HiOutlineDocumentDuplicate, HiMiniSparkles } from "react-icons/hi2";
 import { BsFilePdf, BsFileWord, BsFileText, BsStars } from "react-icons/bs";
 
-// ── data ──────────────────────────────────────────────────────────────────────
-const DOCS = [
-  {
-    id: 1,
-    name: "Q4 Financial Report 2024",
-    type: "PDF",
-    size: "4.2 MB",
-    date: "May 18, 2026",
-    summary: "done",
-    tags: ["Finance", "Q4"],
-    pages: 48,
-  },
-  {
-    id: 2,
-    name: "Product Roadmap v3.1",
-    type: "DOCX",
-    size: "1.8 MB",
-    date: "May 17, 2026",
-    summary: "done",
-    tags: ["Product"],
-    pages: 22,
-  },
-  {
-    id: 3,
-    name: "User Research Synthesis",
-    type: "PDF",
-    size: "6.7 MB",
-    date: "May 15, 2026",
-    summary: "processing",
-    tags: ["Research"],
-    pages: 64,
-  },
-  {
-    id: 4,
-    name: "API Integration Spec",
-    type: "TXT",
-    size: "0.3 MB",
-    date: "May 14, 2026",
-    summary: "done",
-    tags: ["Engineering"],
-    pages: null,
-  },
-  {
-    id: 5,
-    name: "Marketing Strategy 2026",
-    type: "DOCX",
-    size: "2.1 MB",
-    date: "May 12, 2026",
-    summary: "none",
-    tags: ["Marketing"],
-    pages: 35,
-  },
-  {
-    id: 6,
-    name: "Legal Compliance Audit",
-    type: "PDF",
-    size: "9.1 MB",
-    date: "May 10, 2026",
-    summary: "done",
-    tags: ["Legal"],
-    pages: 91,
-  },
-  {
-    id: 7,
-    name: "Onboarding Playbook",
-    type: "DOCX",
-    size: "1.3 MB",
-    date: "May 9, 2026",
-    summary: "processing",
-    tags: ["HR"],
-    pages: 18,
-  },
-  {
-    id: 8,
-    name: "Infrastructure Runbook",
-    type: "TXT",
-    size: "0.5 MB",
-    date: "May 7, 2026",
-    summary: "none",
-    tags: ["Engineering"],
-    pages: null,
-  },
-];
+
 
 const FILTERS = ["All", "PDF", "DOCX", "TXT", "AI Summarized"];
 
@@ -177,7 +97,6 @@ function ActionsMenu({ onClose }) {
 function DocCard({ doc, view }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const sb = summaryBadge[doc.summary];
-
   if (view === "list") {
     return (
       <motion.div
@@ -369,25 +288,79 @@ function UploadModal({ onClose }) {
 
 // ── Main Page ──────────────────────────────────────────────────────────────────
 export default function DocumentsPage() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
   const [view, setView] = useState("grid");
-  const [uploadOpen, setUploadOpen] = useState(false);
+  // const [uploadOpen, setUploadOpen] = useState(false);
+  // Real documents from backend
+  const [documents, setDocuments] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const filtered = DOCS.filter((d) => {
+  // Pagination
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const loadDocuments = async () => {
+    try {
+      setLoading(true);
+
+      const data = await fetchDocuments(page);
+      console.log("API RESPONSE:", data);
+      setDocuments(data.documents || []);
+      setTotalPages(data.totalPages || 1);
+    } catch (error) {
+      console.error("Error fetching documents:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    loadDocuments();
+  }, [page]);
+  const docs = documents.map((doc) => ({
+    id: doc._id,
+    name: doc.title,
+
+    type: doc.fileType?.includes("pdf")
+      ? "PDF"
+      : doc.fileType?.includes("word")
+        ? "DOCX"
+        : "TXT",
+
+    size: `${(doc.fileSize / 1024 / 1024).toFixed(2)} MB`,
+
+    date: new Date(doc.createdAt).toLocaleDateString(),
+
+    summary: doc.summary ? "done" : "none",
+
+    tags: doc.tags || [],
+
+    pages: null,
+
+    fileUrl: doc.fileUrl,
+  }));
+
+  const filtered = docs.filter((d) => {
     const matchSearch = d.name.toLowerCase().includes(search.toLowerCase());
     const matchFilter =
       filter === "All" ? true
-      : filter === "AI Summarized" ? d.summary === "done"
-      : d.type === filter;
+        : filter === "AI Summarized" ? d.summary === "done"
+          : d.type === filter;
     return matchSearch && matchFilter;
   });
 
   const stats = [
-    { label: "Total Files", value: DOCS.length, icon: <HiOutlineDocumentText /> },
-    { label: "AI Summarized", value: DOCS.filter((d) => d.summary === "done").length, icon: <BsStars />, accent: true },
-    { label: "Processing", value: DOCS.filter((d) => d.summary === "processing").length, icon: <HiOutlineLightningBolt /> },
+    { label: "Total Files", value: docs.length, icon: <HiOutlineDocumentText /> },
+    { label: "AI Summarized", value: docs.filter((d) => d.summary === "done").length, icon: <BsStars />, accent: true },
+    { label: "Processing", value: docs.filter((d) => d.summary === "processing").length, icon: <HiOutlineLightningBolt /> },
   ];
+  if (loading) {
+  return (
+    <div className="flex items-center justify-center min-h-screen text-white">
+      Loading documents...
+    </div>
+  );
+}
 
   return (
     <div
@@ -412,7 +385,7 @@ export default function DocumentsPage() {
         <div style={{ position: "absolute", bottom: "10%", left: "-10%", width: 500, height: 500, background: "radial-gradient(circle, rgba(59,130,246,0.05) 0%, transparent 70%)", borderRadius: "50%" }} />
         {/* Subtle grid */}
         <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.025 }}>
-          <defs><pattern id="g" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="0.5"/></pattern></defs>
+          <defs><pattern id="g" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="0.5" /></pattern></defs>
           <rect width="100%" height="100%" fill="url(#g)" />
         </svg>
       </div>
@@ -439,7 +412,7 @@ export default function DocumentsPage() {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.97 }}
-            onClick={() => setUploadOpen(true)}
+           onClick={() => navigate("/dashboard/upload")}
             className="flex items-center gap-2 self-start sm:self-auto rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-all"
             style={{ background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)", boxShadow: "0 4px 24px rgba(109,40,217,0.4)" }}
           >
@@ -537,13 +510,36 @@ export default function DocumentsPage() {
               {filtered.length === 0
                 ? <EmptyState />
                 : filtered.map((doc, i) => (
-                    <motion.div key={doc.id} style={{ transitionDelay: `${i * 30}ms` }}>
-                      <DocCard doc={doc} view={view} />
-                    </motion.div>
-                  ))}
+                  <motion.div key={doc.id} style={{ transitionDelay: `${i * 30}ms` }}>
+                    <DocCard doc={doc} view={view} />
+                  </motion.div>
+                ))}
             </AnimatePresence>
           </motion.div>
         </AnimatePresence>
+        <div className="flex items-center justify-center gap-4 mt-10">
+
+          <button
+            disabled={page === 1}
+            onClick={() => setPage(page - 1)}
+            className="px-4 py-2 rounded-lg bg-white/10 text-white disabled:opacity-40"
+          >
+            Previous
+          </button>
+
+          <span className="text-white">
+            Page {page} of {totalPages}
+          </span>
+
+          <button
+            disabled={page === totalPages}
+            onClick={() => setPage(page + 1)}
+            className="px-4 py-2 rounded-lg bg-white/10 text-white disabled:opacity-40"
+          >
+            Next
+          </button>
+
+        </div>
 
         {/* ── Footer hint ── */}
         {filtered.length > 0 && (
@@ -553,13 +549,13 @@ export default function DocumentsPage() {
             transition={{ delay: 0.5 }}
             className="mt-8 text-center text-xs text-white/20"
           >
-            {filtered.length} of {DOCS.length} documents · Powered by <span className="text-violet-400/60">DocuMind AI</span>
+            {filtered.length} of {docs.length} documents · Powered by <span className="text-violet-400/60">DocuMind AI</span>
           </motion.p>
         )}
       </div>
 
       {/* ── Upload Modal ── */}
-      <AnimatePresence>{uploadOpen && <UploadModal onClose={() => setUploadOpen(false)} />}</AnimatePresence>
+      {/* <AnimatePresence>{uploadOpen && <UploadModal onClose={() => setUploadOpen(false)} />}</AnimatePresence> */}
     </div>
   );
 }
