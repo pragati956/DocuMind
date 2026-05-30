@@ -6,6 +6,8 @@ import express from "express";
 import cors from "cors";
 import passport from "passport"; // Imported passport
 import { initializePassport } from "./config/passport.js"; 
+import dashboardRoutes
+from "./routes/dashboardRoutes.js";
 // Import the initialization function
 
 import connectDB from "./config/db.js";
@@ -28,6 +30,10 @@ app.use(passport.initialize()); // Initialized passport middleware
 // ROUTES
 app.use("/api/auth", authRoutes);
 app.use("/api/documents", uploadRoutes);
+app.use(
+  "/api/dashboard",
+  dashboardRoutes
+);
 
 // TEST ROUTE
 app.get("/", (req, res) => {

@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+} from "react";
+
+import { getDashboardStats } from "../../services/dashboardService";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import {
   FiFileText, FiZap, FiCloud, FiUsers,
@@ -399,14 +405,71 @@ function SectionHeader() {
 
 /* ─── Main Export ─── */
 export default function StatsSection() {
+
+  const [statsData, setStatsData] = useState({
+    totalDocuments: 0,
+    summarizedDocuments: 0,
+    processingDocuments: 0,
+  });
+
+  useEffect(() => {
+
+    const fetchStats = async () => {
+      try {
+
+        const data = await getDashboardStats();
+
+        console.log(
+          "Dashboard Stats:",
+          data
+        );
+
+        setStatsData(data);
+
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchStats();
+
+  }, []);
+
+  const dynamicStats = [
+    {
+      ...stats[0],
+      value: statsData.totalDocuments,
+    },
+    {
+      ...stats[1],
+      value: statsData.summarizedDocuments,
+    },
+    {
+      ...stats[2],
+      value: statsData.totalDocuments,
+    },
+    {
+      ...stats[3],
+      value: statsData.totalDocuments,
+    },
+  ];
+
   return (
     <div style={{ fontFamily: "'Poppins', sans-serif" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');`}</style>
+
       <SectionHeader />
+
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        {stats.map((stat, i) => (
-          <StatCard key={stat.id} stat={stat} index={i} />
+
+        {dynamicStats.map((stat, i) => (
+          <StatCard
+            key={stat.id}
+            stat={stat}
+            index={i}
+          />
         ))}
+
       </div>
     </div>
   );

@@ -1,6 +1,13 @@
-import React, { useState, useContext } from "react";
+import React, {
+  useState,
+  useContext,
+  useEffect,
+} from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AuthContext } from "../../context/AuthContext";
+import {
+  getDashboardStats,
+} from "../../services/dashboardService";
 import {
   FiUpload, FiArrowRight, FiZap, FiFileText,
   FiStar, FiTrendingUp, FiChevronRight, FiX,
@@ -53,7 +60,38 @@ function StatChip({ icon, value, label, delay, color }) {
 /* ─── Main Welcome Banner ─── */
 export default function WelcomeBanner({ onUpload }) {
   const [dismissed, setDismissed] = useState(false);
-  const { user } = useContext(AuthContext); // Dynamically access global user context
+  const { user } = useContext(AuthContext); 
+  const [statsData, setStatsData] =
+  useState({
+    totalDocuments: 0,
+    summarizedDocuments: 0,
+    processingDocuments: 0,
+  });
+
+useEffect(() => {
+
+  const fetchStats = async () => {
+
+    try {
+
+      const data =
+        await getDashboardStats();
+
+      setStatsData(data);
+
+    } catch (error) {
+
+      console.error(
+        "Welcome stats error:",
+        error
+      );
+
+    }
+  };
+
+  fetchStats();
+
+}, []);// Dynamically access global user context
 
   // Get the first name or default to 'User'
   const firstName = user?.name ? user.name.split(" ")[0] : "User";
@@ -66,11 +104,36 @@ export default function WelcomeBanner({ onUpload }) {
   }));
 
   const stats = [
-    { icon: <FiFileText className="text-blue-300" />, value: "1,284", label: "Docs processed", color: "bg-blue-500/15 border border-blue-500/20", delay: 0.55 },
-    { icon: <FiZap className="text-purple-300" />, value: "847", label: "AI summaries", color: "bg-purple-500/15 border border-purple-500/20", delay: 0.65 },
-    { icon: <FiTrendingUp className="text-emerald-300" />, value: "34%", label: "Time saved", color: "bg-emerald-500/15 border border-emerald-500/20", delay: 0.75 },
-  ];
+  {
+    icon: <FiFileText className="text-blue-300" />,
+    value: statsData.totalDocuments,
+    label: "Docs processed",
+    color:
+      "bg-blue-500/15 border border-blue-500/20",
+    delay: 0.55,
+  },
 
+  {
+    icon: <FiZap className="text-purple-300" />,
+    value:
+      statsData.summarizedDocuments,
+    label: "AI summaries",
+    color:
+      "bg-purple-500/15 border border-purple-500/20",
+    delay: 0.65,
+  },
+
+  {
+    icon:
+      <FiTrendingUp className="text-emerald-300" />,
+    value:
+      statsData.processingDocuments,
+    label: "Processing",
+    color:
+      "bg-emerald-500/15 border border-emerald-500/20",
+    delay: 0.75,
+  },
+];
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 
@@ -194,17 +257,21 @@ export default function WelcomeBanner({ onUpload }) {
 
                   {/* Subtext */}
                   <motion.p
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.3 }}
-                    className="text-gray-400 text-sm leading-relaxed mb-6 max-w-md"
-                  >
-                    You have{" "}
-                    <span className="text-white font-semibold">3 documents</span>{" "}
-                    pending AI analysis and{" "}
-                    <span className="text-white font-semibold">2 new summaries</span>{" "}
-                    ready to review. Your workspace is fully synced.
-                  </motion.p>
+  initial={{ opacity: 0, y: 12 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.6, delay: 0.3 }}
+  className="text-gray-400 text-sm leading-relaxed mb-6 max-w-md"
+>
+  You have{" "}
+  <span className="text-white font-semibold">
+    {statsData.processingDocuments}
+  </span>{" "}
+  documents pending AI analysis and{" "}
+  <span className="text-white font-semibold">
+    {statsData.summarizedDocuments}
+  </span>{" "}
+  summaries ready to review.
+</motion.p>
 
                   {/* CTA Buttons */}
                   <motion.div
