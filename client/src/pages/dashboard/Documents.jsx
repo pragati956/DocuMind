@@ -3,8 +3,10 @@ import {
   fetchDocuments,
   deleteDocument,
 } from "../../services/documentService";
+import EditDocumentModal from "../../components/dashboard/EditDocumentModal";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import DocumentPreviewModal from "../../components/dashboard/DocumentPreviewModal";
 import {
   HiOutlineSearch,
   HiOutlineUpload,
@@ -69,14 +71,21 @@ const summaryBadge = {
 function ActionsMenu({
   onClose,
   onDelete,
-  documentId,
+  onView,
+  onEdit,
+  documentData,
 }) {
   const actions = [
+    {icon: <HiOutlineDocumentText />,
+  label: "View",},
     { icon: <HiMiniSparkles />, label: "Summarize with AI", accent: true },
     { icon: <HiOutlineDownload />, label: "Download" },
     { icon: <HiOutlineShare />, label: "Share" },
-    { icon: <HiOutlinePencil />, label: "Rename" },
+    { icon: <HiOutlinePencil />, label: "Edit" },
     { icon: <HiOutlineTrash />, label: "Delete", danger: true },
+    
+  
+
   ];
   return (
     <motion.div
@@ -92,8 +101,14 @@ function ActionsMenu({
          onClick={() => {
 
   if (a.label === "Delete") {
-    onDelete(documentId);
+   onDelete(documentData.id);
   }
+  if (a.label === "View") {
+  onView(documentData);
+}
+if (a.label === "Edit") {
+  onEdit(documentData);
+}
 
   onClose();
 }}
@@ -113,9 +128,11 @@ function DocCard({
   doc,
   view,
   onDelete,
+  onView,
+  onEdit,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const sb = summaryBadge[doc.summary];
+  const sb = summaryBadge[doc.summaryStatus];
   if (view === "list") {
     return (
       <motion.div
@@ -150,11 +167,13 @@ function DocCard({
           </button>
          <AnimatePresence>
   {menuOpen && (
-    <ActionsMenu
-      onClose={() => setMenuOpen(false)}
-      onDelete={onDelete}
-      documentId={doc.id}
-    />
+   <ActionsMenu
+  onClose={() => setMenuOpen(false)}
+  onDelete={onDelete}
+  onView={onView}
+  onEdit={onEdit}
+  documentData={doc}
+/>
   )}
 </AnimatePresence>
         </div>
@@ -194,10 +213,12 @@ function DocCard({
           <AnimatePresence>
   {menuOpen && (
     <ActionsMenu
-      onClose={() => setMenuOpen(false)}
-      onDelete={onDelete}
-      documentId={doc.id}
-    />
+  onClose={() => setMenuOpen(false)}
+  onDelete={onDelete}
+  onView={onView}
+  onEdit={onEdit}
+  documentData={doc}
+/>
   )}
 </AnimatePresence>
         </div>
@@ -327,6 +348,8 @@ export default function DocumentsPage() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
   const [view, setView] = useState("grid");
+  const [selectedDoc, setSelectedDoc] = useState(null);
+  const [editDoc, setEditDoc] = useState(null);
   // const [uploadOpen, setUploadOpen] = useState(false);
   // Real documents from backend
   const [documents, setDocuments] = useState([]);
@@ -378,7 +401,8 @@ export default function DocumentsPage() {
 
     date: new Date(doc.createdAt).toLocaleDateString(),
 
-    summary: doc.summary ? "done" : "none",
+    summary: doc.summary || "",
+summaryStatus: doc.summary ? "done" : "none",
 
     tags: doc.tags || [],
 
@@ -391,15 +415,16 @@ export default function DocumentsPage() {
     const matchSearch = d.name.toLowerCase().includes(search.toLowerCase());
     const matchFilter =
       filter === "All" ? true
-        : filter === "AI Summarized" ? d.summary === "done"
+        : filter === "AI Summarized"
+  ? d.summaryStatus === "done"
           : d.type === filter;
     return matchSearch && matchFilter;
   });
 
   const stats = [
     { label: "Total Files", value: docs.length, icon: <HiOutlineDocumentText /> },
-    { label: "AI Summarized", value: docs.filter((d) => d.summary === "done").length, icon: <BsStars />, accent: true },
-    { label: "Processing", value: docs.filter((d) => d.summary === "processing").length, icon: <HiOutlineLightningBolt /> },
+    { label: "AI Summarized", value: docs.filter((d) => d.summaryStatus === "done").length, icon: <BsStars />, accent: true },
+    { label: "Processing", value: docs.filter((d) => d.summaryStatus === "processing").length, icon: <HiOutlineLightningBolt /> },
   ];
   if (loading) {
   return (
@@ -558,10 +583,12 @@ export default function DocumentsPage() {
                 ? <EmptyState />
                 : filtered.map((doc, i) => (
                   <motion.div key={doc.id} style={{ transitionDelay: `${i * 30}ms` }}>
-                   <DocCard
+         <DocCard
   doc={doc}
   view={view}
   onDelete={handleDelete}
+  onView={setSelectedDoc}
+  onEdit={setEditDoc}
 />
                   </motion.div>
                 ))}
@@ -604,6 +631,26 @@ export default function DocumentsPage() {
           </motion.p>
         )}
       </div>
+      {
+  selectedDoc && (
+    <DocumentPreviewModal
+      document={selectedDoc}
+      onClose={() => setSelectedDoc(null)}
+    />
+  )
+}
+{
+  editDoc && (
+    <EditDocumentModal
+      document={editDoc}
+      onClose={() => setEditDoc(null)}
+      onSuccess={() => {
+        loadDocuments();
+        setEditDoc(null);
+      }}
+    />
+  )
+}
 
       {/* ── Upload Modal ── */}
       {/* <AnimatePresence>{uploadOpen && <UploadModal onClose={() => setUploadOpen(false)} />}</AnimatePresence> */}
