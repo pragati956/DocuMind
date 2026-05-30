@@ -110,11 +110,14 @@ export const updateDocument = async (req, res) => {
   try {
     const { title, tags, summary } = req.body;
 
-    const document = await Document.findOneAndUpdate(
-      { _id: req.params.id, uploadedBy: req.user.id }, // Security check
-      { $set: { title, tags, summary } }, // Only update allowed fields
-      { new: true, runValidators: true }  // Return the updated doc
-    );
+   const document = await Document.findOneAndUpdate(
+  { _id: req.params.id, uploadedBy: req.user.id },
+  { $set: { title, tags, summary } },
+  {
+    returnDocument: "after",
+    runValidators: true,
+  }
+);
 
     if (!document) {
       return res.status(404).json({ success: false, message: "Document not found or unauthorized" });

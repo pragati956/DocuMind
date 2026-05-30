@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import {
   fetchDocuments,
   deleteDocument,
+  searchDocuments,
 } from "../../services/documentService";
 import EditDocumentModal from "../../components/dashboard/EditDocumentModal";
 import { motion, AnimatePresence } from "framer-motion";
@@ -366,8 +367,26 @@ export default function DocumentsPage() {
     await loadDocuments();
 
   } catch (error) {
-
     console.error("Delete failed:", error);
+  }
+};
+const handleSearch = async (value) => {
+  try {
+  
+    setSearch(value);
+    setPage(1);
+    if (!value.trim()) {
+      loadDocuments();
+      return;
+    }
+
+    const data = await searchDocuments(value);
+
+    setDocuments(data.documents || []);
+
+  } catch (error) {
+
+    console.error("Search failed:", error);
 
   }
 };
@@ -375,7 +394,7 @@ export default function DocumentsPage() {
     try {
       setLoading(true);
       const data = await fetchDocuments(page);
-      console.log("API RESPONSE:", data);
+    
       setDocuments(data.documents || []);
       setTotalPages(data.totalPages || 1);
     } catch (error) {
@@ -411,15 +430,18 @@ summaryStatus: doc.summary ? "done" : "none",
     fileUrl: doc.fileUrl,
   }));
 
-  const filtered = docs.filter((d) => {
-    const matchSearch = d.name.toLowerCase().includes(search.toLowerCase());
-    const matchFilter =
-      filter === "All" ? true
-        : filter === "AI Summarized"
-  ? d.summaryStatus === "done"
-          : d.type === filter;
-    return matchSearch && matchFilter;
-  });
+ const filtered = docs.filter((d) => {
+
+  const matchFilter =
+    filter === "All"
+      ? true
+      : filter === "AI Summarized"
+      ? d.summaryStatus === "done"
+      : d.type === filter;
+
+  return matchFilter;
+
+});
 
   const stats = [
     { label: "Total Files", value: docs.length, icon: <HiOutlineDocumentText /> },
@@ -463,7 +485,6 @@ summaryStatus: doc.summary ? "done" : "none",
       </div>
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-8">
-
         {/* ── Header ── */}
         <motion.div
           initial={{ opacity: 0, y: -12 }}
@@ -509,7 +530,6 @@ summaryStatus: doc.summary ? "done" : "none",
             </div>
           ))}
         </motion.div>
-
         {/* ── Search + Filters ── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -520,17 +540,31 @@ summaryStatus: doc.summary ? "done" : "none",
           {/* Search */}
           <div className="relative flex-1">
             <HiOutlineSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30 text-base" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+           <input
+  value={search}
+ onChange={(e) => {
+
+
+
+  handleSearch(
+    e.target.value
+  );
+
+}}
               placeholder="Search documents…"
               className="w-full rounded-xl border border-white/[0.08] bg-white/[0.03] py-2.5 pl-10 pr-4 text-sm text-white placeholder-white/25 outline-none focus:border-violet-500/40 focus:bg-white/[0.05] transition-all"
               style={{ fontFamily: "'DM Sans', sans-serif" }}
             />
             {search && (
-              <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60">
-                <HiOutlineX className="text-sm" />
-              </button>
+<button
+  onClick={() => {
+    setSearch("");
+    loadDocuments();
+  }}
+  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60"
+>
+  <HiOutlineX className="text-sm" />
+</button>
             )}
           </div>
 
