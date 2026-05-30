@@ -1,3 +1,4 @@
+import Activity from "../models/Activity.js";
 import Document from "../models/Document.js";
 import cloudinary from "../config/cloudinary.js"; 
 
@@ -26,6 +27,11 @@ export const uploadDocument = async (req, res) => {
       fileSize: req.file.size || 0,
       uploadedBy: req.user.id, 
     });
+    await Activity.create({
+  userId: req.user.id,
+  action: "uploaded",
+  documentName: newDocument.title,
+});
 
     console.log("✅ SUCCESS! Saved to MongoDB:", newDocument._id);
 
@@ -122,6 +128,11 @@ export const updateDocument = async (req, res) => {
     if (!document) {
       return res.status(404).json({ success: false, message: "Document not found or unauthorized" });
     }
+    await Activity.create({
+  userId: req.user.id,
+  action: "edited",
+  documentName: document.title,
+});
 
     res.status(200).json({ success: true, message: "Document updated successfully", document });
   } catch (error) {
@@ -144,6 +155,11 @@ export const deleteDocument = async (req, res) => {
     const resourceType = (document.fileType.includes("word") || document.fileType.includes("text")) ? "raw" : "image";
 
     await cloudinary.uploader.destroy(document.publicId, { resource_type: resourceType });
+    await Activity.create({
+  userId: req.user.id,
+  action: "deleted",
+  documentName: document.title,
+});
     await Document.findByIdAndDelete(document._id);
 
     res.status(200).json({ success: true, message: "Document deleted successfully" });

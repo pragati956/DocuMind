@@ -1,4 +1,12 @@
-import React, { useState, useRef } from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+} from "react";
+
+import {
+  getActivities,
+} from "../../services/dashboardService";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import {
   FiUpload, FiShare2, FiSearch, FiZap, FiDownload,
@@ -8,176 +16,7 @@ import {
 } from "react-icons/fi";
 
 /* ─── Activity Data ─── */
-const activityData = [
-  {
-    id: 1,
-    user: { name: "You", initials: "AJ", color: "from-blue-500 to-indigo-600" },
-    action: "uploaded",
-    actionLabel: "Uploaded document",
-    target: "Q4 Financial Report.pdf",
-    targetType: "PDF",
-    time: "2 minutes ago",
-    timeShort: "2m",
-    icon: <FiUpload />,
-    iconColor: "text-blue-400",
-    iconBg: "bg-blue-500/10 border-blue-500/20",
-    accentColor: "#3b82f6",
-    accentDim: "rgba(59,130,246,0.08)",
-    accentBorder: "rgba(59,130,246,0.18)",
-    accentText: "text-blue-300",
-    badge: "New",
-    badgeBg: "bg-blue-500/15 border-blue-500/25 text-blue-300",
-    meta: "2.4 MB · 34 pages",
-    group: "today",
-  },
-  {
-    id: 2,
-    user: { name: "AI", initials: "AI", color: "from-purple-500 to-pink-600" },
-    action: "summarized",
-    actionLabel: "AI Summary generated",
-    target: "Q4 Financial Report.pdf",
-    targetType: "Summary",
-    time: "3 minutes ago",
-    timeShort: "3m",
-    icon: <FiZap />,
-    iconColor: "text-purple-400",
-    iconBg: "bg-purple-500/10 border-purple-500/20",
-    accentColor: "#8b5cf6",
-    accentDim: "rgba(139,92,246,0.08)",
-    accentBorder: "rgba(139,92,246,0.18)",
-    accentText: "text-purple-300",
-    badge: "AI",
-    badgeBg: "bg-purple-500/15 border-purple-500/25 text-purple-300",
-    meta: "4 key insights · 97% confidence",
-    group: "today",
-  },
-  {
-    id: 3,
-    user: { name: "Sarah K.", initials: "SK", color: "from-emerald-500 to-teal-600" },
-    action: "shared",
-    actionLabel: "Shared a document",
-    target: "NDA Contract.pdf",
-    targetType: "PDF",
-    time: "14 minutes ago",
-    timeShort: "14m",
-    icon: <FiShare2 />,
-    iconColor: "text-emerald-400",
-    iconBg: "bg-emerald-500/10 border-emerald-500/20",
-    accentColor: "#10b981",
-    accentDim: "rgba(16,185,129,0.08)",
-    accentBorder: "rgba(16,185,129,0.18)",
-    accentText: "text-emerald-300",
-    badge: null,
-    badgeBg: "",
-    meta: "Shared with 3 people",
-    group: "today",
-  },
-  {
-    id: 4,
-    user: { name: "You", initials: "AJ", color: "from-blue-500 to-indigo-600" },
-    action: "searched",
-    actionLabel: "Searched documents",
-    target: '"quarterly revenue 2025"',
-    targetType: "Search",
-    time: "1 hour ago",
-    timeShort: "1h",
-    icon: <FiSearch />,
-    iconColor: "text-cyan-400",
-    iconBg: "bg-cyan-500/10 border-cyan-500/20",
-    accentColor: "#06b6d4",
-    accentDim: "rgba(6,182,212,0.08)",
-    accentBorder: "rgba(6,182,212,0.18)",
-    accentText: "text-cyan-300",
-    badge: null,
-    badgeBg: "",
-    meta: "8 results found",
-    group: "today",
-  },
-  {
-    id: 5,
-    user: { name: "Mark T.", initials: "MT", color: "from-amber-500 to-orange-600" },
-    action: "downloaded",
-    actionLabel: "Downloaded document",
-    target: "Team Meeting Notes.txt",
-    targetType: "TXT",
-    time: "2 hours ago",
-    timeShort: "2h",
-    icon: <FiDownload />,
-    iconColor: "text-amber-400",
-    iconBg: "bg-amber-500/10 border-amber-500/20",
-    accentColor: "#f59e0b",
-    accentDim: "rgba(245,158,11,0.08)",
-    accentBorder: "rgba(245,158,11,0.18)",
-    accentText: "text-amber-300",
-    badge: null,
-    badgeBg: "",
-    meta: "45 KB",
-    group: "today",
-  },
-  {
-    id: 6,
-    user: { name: "You", initials: "AJ", color: "from-blue-500 to-indigo-600" },
-    action: "starred",
-    actionLabel: "Starred a document",
-    target: "Legal Contract — NDA.pdf",
-    targetType: "PDF",
-    time: "3 hours ago",
-    timeShort: "3h",
-    icon: <FiStar />,
-    iconColor: "text-yellow-400",
-    iconBg: "bg-yellow-500/10 border-yellow-500/20",
-    accentColor: "#eab308",
-    accentDim: "rgba(234,179,8,0.08)",
-    accentBorder: "rgba(234,179,8,0.18)",
-    accentText: "text-yellow-300",
-    badge: null,
-    badgeBg: "",
-    meta: "Added to starred",
-    group: "today",
-  },
-  {
-    id: 7,
-    user: { name: "Jamie L.", initials: "JL", color: "from-rose-500 to-pink-600" },
-    action: "edited",
-    actionLabel: "Edited document",
-    target: "Product Roadmap 2025.docx",
-    targetType: "DOCX",
-    time: "Yesterday, 4:30 PM",
-    timeShort: "1d",
-    icon: <FiEdit3 />,
-    iconColor: "text-rose-400",
-    iconBg: "bg-rose-500/10 border-rose-500/20",
-    accentColor: "#f43f5e",
-    accentDim: "rgba(244,63,94,0.08)",
-    accentBorder: "rgba(244,63,94,0.18)",
-    accentText: "text-rose-300",
-    badge: null,
-    badgeBg: "",
-    meta: "12 changes made",
-    group: "yesterday",
-  },
-  {
-    id: 8,
-    user: { name: "Sarah K.", initials: "SK", color: "from-emerald-500 to-teal-600" },
-    action: "viewed",
-    actionLabel: "Viewed document",
-    target: "Brand Guidelines v3.pdf",
-    targetType: "PDF",
-    time: "Yesterday, 2:15 PM",
-    timeShort: "1d",
-    icon: <FiEye />,
-    iconColor: "text-teal-400",
-    iconBg: "bg-teal-500/10 border-teal-500/20",
-    accentColor: "#14b8a6",
-    accentDim: "rgba(20,184,166,0.08)",
-    accentBorder: "rgba(20,184,166,0.18)",
-    accentText: "text-teal-300",
-    badge: null,
-    badgeBg: "",
-    meta: "Viewed for 8 min",
-    group: "yesterday",
-  },
-];
+
 
 const actionFilters = ["All", "Uploads", "AI", "Shared", "Searches"];
 
@@ -423,8 +262,119 @@ export default function ActivityFeed() {
     "Shared": "shared",
     "Searches": "searched",
   };
+  const [activities, setActivities] =
+  useState([]);
+  useEffect(() => {
 
-  const filtered = activityData.filter((a) => {
+  const fetchActivities =
+    async () => {
+
+      try {
+
+        const data =
+          await getActivities();
+
+        console.log(
+          "Activities:",
+          data
+        );
+
+        setActivities(
+          data.activities || []
+        );
+
+      } catch (error) {
+
+        console.error(
+          "Activity Error:",
+          error
+        );
+
+      }
+    };
+
+  fetchActivities();
+
+}, []);
+const mappedActivities =
+  activities.map((activity) => ({
+
+    id: activity._id,
+
+    action: activity.action,
+
+    target:
+      activity.documentName,
+
+    time:
+      new Date(
+        activity.createdAt
+      ).toLocaleString(),
+
+    timeShort:
+      "now",
+
+    group:
+      "today",
+
+    user: {
+      name: "You",
+      initials: "YU",
+      color:
+        "from-blue-500 to-indigo-600",
+    },
+
+    icon:
+      activity.action === "uploaded"
+        ? <FiUpload />
+        : activity.action === "edited"
+        ? <FiEdit3 />
+        : <FiTrash2 />,
+
+    iconColor:
+      activity.action === "uploaded"
+        ? "text-blue-400"
+        : activity.action === "edited"
+        ? "text-yellow-400"
+        : "text-red-400",
+
+    iconBg:
+      activity.action === "uploaded"
+        ? "bg-blue-500/10 border-blue-500/20"
+        : activity.action === "edited"
+        ? "bg-yellow-500/10 border-yellow-500/20"
+        : "bg-red-500/10 border-red-500/20",
+
+    accentColor:
+      activity.action === "uploaded"
+        ? "#3b82f6"
+        : activity.action === "edited"
+        ? "#f59e0b"
+        : "#ef4444",
+
+    accentDim:
+      "rgba(59,130,246,0.08)",
+
+    accentBorder:
+      "rgba(59,130,246,0.18)",
+
+    accentText:
+      "text-blue-300",
+
+    badge: null,
+
+    badgeBg: "",
+
+    meta:
+      activity.action,
+
+    targetType:
+      "Document",
+
+  }));
+
+  const filtered =
+mappedActivities.filter((a) => {
     const f = filterMap[activeFilter];
     return !f || a.action === f;
   });
@@ -455,7 +405,9 @@ export default function ActivityFeed() {
           </div>
           <div>
             <h2 className="text-white font-semibold text-sm">Recent Activity</h2>
-            <p className="text-gray-600 text-[10px]">{activityData.length} events today</p>
+           <p className="text-gray-600 text-[10px]">
+  {mappedActivities.length} events
+</p>
           </div>
           <LiveIndicator />
         </div>

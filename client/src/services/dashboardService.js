@@ -7,3 +7,13 @@ export const getDashboardStats = async () => {
 
   return response.data;
 };
+export const getActivities =
+async () => {
+
+  const response =
+    await API.get(
+      "/dashboard/activities"
+    );
+
+  return response.data;
+};
