@@ -17,7 +17,6 @@ import {
 
 /* ─── Activity Data ─── */
 
-
 const actionFilters = ["All", "Uploads", "AI", "Shared", "Searches"];
 
 /* ─── Avatar ─── */

@@ -1,4 +1,8 @@
+
 import React, { useState, useEffect } from "react";
+import {
+  summarizeDocument,
+} from "../../services/aiService";
 import axios from "axios"; // Added axios to fetch real DB data
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -35,7 +39,15 @@ function StatusBadge({ status, bg }) {
 }
 
 /* ─── Context Menu ─── */
-function ContextMenu({ doc, onClose, accentText, accentDim, accentBorder, onDelete }) {
+function ContextMenu({
+  doc,
+  onClose,
+  accentText,
+  accentDim,
+  accentBorder,
+  onDelete,
+  onSummarize,
+}) {
   const items = [
     { icon: <FiEye />, label: "View document" },
     { icon: <FiZap />, label: "Summarize now" },
@@ -44,12 +56,30 @@ function ContextMenu({ doc, onClose, accentText, accentDim, accentBorder, onDele
     { icon: <FiTrash2 />, label: "Delete", danger: true },
   ];
 
-  const handleAction = async (item) => {
-    if (item.danger) {
-      await onDelete(doc.id);
+ const handleAction = async (item) => {
+
+  try {
+
+    if (item.label === "Summarize now") {
+
+      await onSummarize(doc.id);
+
     }
-    onClose();
+
+    if (item.danger) {
+
+      await onDelete(doc.id);
+
+    }
+
+  } catch (err) {
+
+    console.error(err);
+
   }
+
+  onClose();
+};
 
   return (
     <motion.div
@@ -79,7 +109,7 @@ function ContextMenu({ doc, onClose, accentText, accentDim, accentBorder, onDele
 }
 
 /* ─── Document Row (List View) ─── */
-function DocRow({ doc, index, onDelete }) {
+function DocRow({ doc, index,  onSummarize, onDelete }) {
   const [hovered, setHovered] = useState(false);
   const [starred, setStarred] = useState(doc.starred);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -150,7 +180,7 @@ function DocRow({ doc, index, onDelete }) {
             <FiMoreHorizontal className="text-xs" />
           </motion.button>
           <AnimatePresence>
-            {menuOpen && <ContextMenu doc={doc} onDelete={onDelete} onClose={() => setMenuOpen(false)} accentText={doc.accentText} accentDim={doc.accentDim} accentBorder={doc.accentBorder} />}
+            {menuOpen && <ContextMenu doc={doc} onDelete={onDelete}   onSummarize={onSummarize} onClose={() => setMenuOpen(false)} accentText={doc.accentText} accentDim={doc.accentDim} accentBorder={doc.accentBorder} />}
           </AnimatePresence>
         </div>
       </div>
@@ -159,7 +189,7 @@ function DocRow({ doc, index, onDelete }) {
 }
 
 /* ─── Document Card (Grid View) ─── */
-function DocCard({ doc, index, onDelete }) {
+function DocCard({ doc, index,onSummarize, onDelete }) {
   const [hovered, setHovered] = useState(false);
   const [starred, setStarred] = useState(doc.starred);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -205,7 +235,7 @@ function DocCard({ doc, index, onDelete }) {
             <FiMoreHorizontal className="text-xs" />
           </motion.button>
           <AnimatePresence>
-            {menuOpen && <ContextMenu doc={doc} onDelete={onDelete} onClose={() => setMenuOpen(false)} accentText={doc.accentText} accentDim={doc.accentDim} accentBorder={doc.accentBorder} />}
+            {menuOpen && <ContextMenu doc={doc} onDelete={onDelete}  onSummarize={onSummarize} onClose={() => setMenuOpen(false)} accentText={doc.accentText} accentDim={doc.accentDim} accentBorder={doc.accentBorder} />}
           </AnimatePresence>
         </div>
       </div>
@@ -316,6 +346,39 @@ export default function RecentDocuments({ onUpload }) {
       console.error("Failed to delete", err);
     }
   };
+  const handleSummarize = async (docId) => {
+
+  try {
+
+    const token =
+      localStorage.getItem("token");
+
+    const response =
+      await summarizeDocument(
+        docId,
+        token
+      );
+
+    console.log(
+      "Summary generated:",
+      response
+    );
+
+    alert(
+      "AI Summary Generated Successfully"
+    );
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      "Failed to generate summary"
+    );
+
+  }
+
+};
 
   const filtered = docs.filter((d) => {
     const matchFilter = activeFilter === "All" ? true
@@ -409,7 +472,7 @@ export default function RecentDocuments({ onUpload }) {
                 {filtered.length > 0
                   ? filtered.map((doc, i) => (
                       <React.Fragment key={doc.id}>
-                        <DocRow doc={doc} index={i} onDelete={handleDelete} />
+                        <DocRow doc={doc} index={i} onDelete={handleDelete} onSummarize={handleSummarize} />
                         {i < filtered.length - 1 && <div className="mx-5 h-px bg-[#1F2937]" />}
                       </React.Fragment>
                     ))
@@ -424,7 +487,7 @@ export default function RecentDocuments({ onUpload }) {
               <AnimatePresence>
                 {filtered.length > 0
                   ? <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {filtered.map((doc, i) => <DocCard key={doc.id} doc={doc} index={i} onDelete={handleDelete} />)}
+                      {filtered.map((doc, i) => <DocCard key={doc.id} doc={doc} index={i} onDelete={handleDelete} onSummarize={handleSummarize} />)}
                     </div>
                   : <EmptyState onUpload={onUpload} />
                 }

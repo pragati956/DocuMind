@@ -1,4 +1,12 @@
-import React, { useState } from "react";
+import ReactMarkdown from "react-markdown";
+import {
+  useEffect,
+  useState,
+} from "react";
+
+import {
+  getSummaries,
+} from "../../services/aiService";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiZap, FiStar, FiTag, FiEye, FiCopy, FiShare2,
@@ -8,88 +16,88 @@ import {
 } from "react-icons/fi";
 
 /* ─── Data ─── */
-const summaries = [
-  {
-    id: 1,
-    title: "Q4 Financial Report",
-    file: "Q4_Financial_Report.pdf",
-    fileType: "PDF",
-    insight: "Revenue increased 34% YoY reaching $4.2M. Operating margin improved to 22% driven by lower CAC. Three key risks identified: rising enterprise acquisition costs, delayed product launches in APAC, and FX headwinds in EU markets. Board recommends accelerating Series B discussions in Q1.",
-    tags: ["Finance", "Q4", "Revenue"],
-    starred: true,
-    time: "2m ago",
-    readTime: "45 sec read",
-    keyPoints: 4,
-    confidence: 97,
-    color: "from-blue-500 to-indigo-600",
-    accent: "#3b82f6",
-    accentDim: "rgba(59,130,246,0.1)",
-    accentBorder: "rgba(59,130,246,0.2)",
-    accentText: "text-blue-300",
-    tagBg: "bg-blue-500/10 border-blue-500/20 text-blue-300",
-    keyInsights: ["Revenue +34% YoY", "Margin improved to 22%", "3 key risks flagged", "Series B recommended"],
-  },
-  {
-    id: 2,
-    title: "Product Roadmap 2025",
-    file: "Product_Roadmap_2025.docx",
-    fileType: "DOCX",
-    insight: "Three major feature launches planned: AI-powered semantic search (Q1), native mobile application for iOS & Android (Q2), and a public REST API v3 with webhook support (Q3). Engineering headcount expected to grow 40%. Design system overhaul to unify product surface.",
-    tags: ["Product", "Strategy", "2025"],
-    starred: false,
-    time: "18m ago",
-    readTime: "1 min read",
-    keyPoints: 5,
-    confidence: 94,
-    color: "from-purple-500 to-pink-600",
-    accent: "#8b5cf6",
-    accentDim: "rgba(139,92,246,0.1)",
-    accentBorder: "rgba(139,92,246,0.2)",
-    accentText: "text-purple-300",
-    tagBg: "bg-purple-500/10 border-purple-500/20 text-purple-300",
-    keyInsights: ["AI Search launch Q1", "Mobile app Q2", "API v3 in Q3", "+40% engineering", "Design system refresh"],
-  },
-  {
-    id: 3,
-    title: "Legal Contract — NDA",
-    file: "Legal_NDA_Contract.pdf",
-    fileType: "PDF",
-    insight: "Standard mutual non-disclosure agreement with a 2-year term. No unusual or non-standard clauses detected. Jurisdiction is set to Delaware. IP ownership section (§4.2) warrants closer legal review. Both parties retain pre-existing IP. Recommended signing pending counsel review.",
-    tags: ["Legal", "Contract"],
-    starred: true,
-    time: "1h ago",
-    readTime: "30 sec read",
-    keyPoints: 3,
-    confidence: 99,
-    color: "from-emerald-500 to-teal-600",
-    accent: "#10b981",
-    accentDim: "rgba(16,185,129,0.1)",
-    accentBorder: "rgba(16,185,129,0.2)",
-    accentText: "text-emerald-300",
-    tagBg: "bg-emerald-500/10 border-emerald-500/20 text-emerald-300",
-    keyInsights: ["2-year mutual NDA", "Delaware jurisdiction", "Review §4.2 IP clause", "Pre-existing IP retained"],
-  },
-  {
-    id: 4,
-    title: "Team Meeting Notes",
-    file: "Meeting_Notes_Dec.txt",
-    fileType: "TXT",
-    insight: "Sprint review covered 7 completed tickets. Three blockers identified in the auth service integration. Design handoff for onboarding flow v2 scheduled for Friday. Action items assigned to 4 team members. Next sync set for Thursday 10AM PST.",
-    tags: ["Meeting", "Sprint"],
-    starred: false,
-    time: "3h ago",
-    readTime: "20 sec read",
-    keyPoints: 3,
-    confidence: 91,
-    color: "from-amber-500 to-orange-600",
-    accent: "#f59e0b",
-    accentDim: "rgba(245,158,11,0.1)",
-    accentBorder: "rgba(245,158,11,0.2)",
-    accentText: "text-amber-300",
-    tagBg: "bg-amber-500/10 border-amber-500/20 text-amber-300",
-    keyInsights: ["7 tickets closed", "3 auth blockers", "Design handoff Friday", "4 action items"],
-  },
-];
+// const summaries = [
+//   {
+//     id: 1,
+//     title: "Q4 Financial Report",
+//     file: "Q4_Financial_Report.pdf",
+//     fileType: "PDF",
+//     insight: "Revenue increased 34% YoY reaching $4.2M. Operating margin improved to 22% driven by lower CAC. Three key risks identified: rising enterprise acquisition costs, delayed product launches in APAC, and FX headwinds in EU markets. Board recommends accelerating Series B discussions in Q1.",
+//     tags: ["Finance", "Q4", "Revenue"],
+//     starred: true,
+//     time: "2m ago",
+//     readTime: "45 sec read",
+//     keyPoints: 4,
+//     confidence: 97,
+//     color: "from-blue-500 to-indigo-600",
+//     accent: "#3b82f6",
+//     accentDim: "rgba(59,130,246,0.1)",
+//     accentBorder: "rgba(59,130,246,0.2)",
+//     accentText: "text-blue-300",
+//     tagBg: "bg-blue-500/10 border-blue-500/20 text-blue-300",
+//     keyInsights: ["Revenue +34% YoY", "Margin improved to 22%", "3 key risks flagged", "Series B recommended"],
+//   },
+//   {
+//     id: 2,
+//     title: "Product Roadmap 2025",
+//     file: "Product_Roadmap_2025.docx",
+//     fileType: "DOCX",
+//     insight: "Three major feature launches planned: AI-powered semantic search (Q1), native mobile application for iOS & Android (Q2), and a public REST API v3 with webhook support (Q3). Engineering headcount expected to grow 40%. Design system overhaul to unify product surface.",
+//     tags: ["Product", "Strategy", "2025"],
+//     starred: false,
+//     time: "18m ago",
+//     readTime: "1 min read",
+//     keyPoints: 5,
+//     confidence: 94,
+//     color: "from-purple-500 to-pink-600",
+//     accent: "#8b5cf6",
+//     accentDim: "rgba(139,92,246,0.1)",
+//     accentBorder: "rgba(139,92,246,0.2)",
+//     accentText: "text-purple-300",
+//     tagBg: "bg-purple-500/10 border-purple-500/20 text-purple-300",
+//     keyInsights: ["AI Search launch Q1", "Mobile app Q2", "API v3 in Q3", "+40% engineering", "Design system refresh"],
+//   },
+//   {
+//     id: 3,
+//     title: "Legal Contract — NDA",
+//     file: "Legal_NDA_Contract.pdf",
+//     fileType: "PDF",
+//     insight: "Standard mutual non-disclosure agreement with a 2-year term. No unusual or non-standard clauses detected. Jurisdiction is set to Delaware. IP ownership section (§4.2) warrants closer legal review. Both parties retain pre-existing IP. Recommended signing pending counsel review.",
+//     tags: ["Legal", "Contract"],
+//     starred: true,
+//     time: "1h ago",
+//     readTime: "30 sec read",
+//     keyPoints: 3,
+//     confidence: 99,
+//     color: "from-emerald-500 to-teal-600",
+//     accent: "#10b981",
+//     accentDim: "rgba(16,185,129,0.1)",
+//     accentBorder: "rgba(16,185,129,0.2)",
+//     accentText: "text-emerald-300",
+//     tagBg: "bg-emerald-500/10 border-emerald-500/20 text-emerald-300",
+//     keyInsights: ["2-year mutual NDA", "Delaware jurisdiction", "Review §4.2 IP clause", "Pre-existing IP retained"],
+//   },
+//   {
+//     id: 4,
+//     title: "Team Meeting Notes",
+//     file: "Meeting_Notes_Dec.txt",
+//     fileType: "TXT",
+//     insight: "Sprint review covered 7 completed tickets. Three blockers identified in the auth service integration. Design handoff for onboarding flow v2 scheduled for Friday. Action items assigned to 4 team members. Next sync set for Thursday 10AM PST.",
+//     tags: ["Meeting", "Sprint"],
+//     starred: false,
+//     time: "3h ago",
+//     readTime: "20 sec read",
+//     keyPoints: 3,
+//     confidence: 91,
+//     color: "from-amber-500 to-orange-600",
+//     accent: "#f59e0b",
+//     accentDim: "rgba(245,158,11,0.1)",
+//     accentBorder: "rgba(245,158,11,0.2)",
+//     accentText: "text-amber-300",
+//     tagBg: "bg-amber-500/10 border-amber-500/20 text-amber-300",
+//     keyInsights: ["7 tickets closed", "3 auth blockers", "Design handoff Friday", "4 action items"],
+//   },
+// ];
 
 /* ─── Confidence Ring ─── */
 function ConfidenceRing({ value, color }) {
@@ -120,7 +128,7 @@ function CopyButton({ text, accent }) {
   const [copied, setCopied] = useState(false);
   const handleCopy = (e) => {
     e.stopPropagation();
-    navigator.clipboard?.writeText(text).catch(() => {});
+    navigator.clipboard?.writeText(text).catch(() => { });
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
   };
@@ -266,12 +274,24 @@ function SummaryCard({ summary, index }) {
         {/* Insight text */}
         <div className="mb-3">
           <AnimatePresence initial={false}>
-            <motion.p
+            <motion.div
               className="text-gray-400 text-xs leading-relaxed"
               animate={{ height: expanded ? "auto" : undefined }}
             >
-              {expanded ? summary.insight : summary.insight.slice(0, 110) + (summary.insight.length > 110 ? "…" : "")}
-            </motion.p>
+              <div
+  className="
+    prose
+    prose-invert
+    max-w-none
+    text-sm
+  "
+>
+  <ReactMarkdown>
+    {summary.insight}
+  </ReactMarkdown>
+</div>
+              
+            </motion.div>
           </AnimatePresence>
 
           {summary.insight.length > 110 && (
@@ -377,11 +397,10 @@ function FilterBar({ active, setActive }) {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.97 }}
           onClick={() => setActive(f)}
-          className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all duration-200 shrink-0 ${
-            active === f
+          className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all duration-200 shrink-0 ${active === f
               ? "bg-blue-500/15 border border-blue-500/25 text-blue-300"
               : "text-gray-500 hover:text-gray-300 border border-transparent hover:border-white/[0.07] hover:bg-white/[0.04]"
-          }`}
+            }`}
         >
           {f}
         </motion.button>
@@ -392,18 +411,81 @@ function FilterBar({ active, setActive }) {
 
 /* ─── Main Export ─── */
 export default function AiSummaries() {
+  const [summaries, setSummaries] =
+    useState([]);
+
+  const [loading, setLoading] =
+    useState(true);
   const [activeFilter, setActiveFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
+  const fetchSummaries = async () => {
+    try {
+      const token = localStorage.getItem("token");
 
-  const filtered = summaries.filter((s) => {
-    const matchFilter =
-      activeFilter === "All" ? true
-      : activeFilter === "Starred" ? s.starred
-      : s.tags.some((t) => t.toLowerCase() === activeFilter.toLowerCase());
-    const matchSearch = searchQuery === "" || s.title.toLowerCase().includes(searchQuery.toLowerCase()) || s.insight.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchFilter && matchSearch;
-  });
+      const data = await getSummaries(token);
+
+      console.log("SUMMARIES:", data);
+
+      setSummaries(
+        data.documents.map((doc) => ({
+          _id: doc._id,
+
+          title: doc.title,
+
+          insight: doc.summary,
+
+          file: doc.title,
+
+          readTime: "30 sec read",
+
+          confidence: 95,
+
+          keyPoints: 4,
+
+          time: "Just now",
+
+          starred: false,
+
+          tags: doc.tags || ["AI"],
+
+          keyInsights: ["AI Generated"],
+
+          color: "from-purple-500 to-pink-600",
+
+          accent: "#8b5cf6",
+
+          accentDim: "rgba(139,92,246,0.1)",
+
+          accentBorder: "rgba(139,92,246,0.2)",
+
+          accentText: "text-purple-300",
+
+          tagBg:
+            "bg-purple-500/10 border-purple-500/20 text-purple-300",
+        }))
+      );
+
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    fetchSummaries();
+  }, []);
+
+ const filtered = summaries.filter((s) => {
+  const matchSearch =
+    searchQuery === "" ||
+    s.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (s.insight || "")
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+
+  return matchSearch;
+});
 
   return (
     <div style={{ fontFamily: "'Poppins', sans-serif" }}>
@@ -480,8 +562,14 @@ export default function AiSummaries() {
       <AnimatePresence mode="popLayout">
         {filtered.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filtered.map((summary, i) => (
-              <SummaryCard key={summary.id} summary={summary} index={i} />
+            {filtered.map((summary, index) => (
+
+              <SummaryCard
+                key={summary._id}
+                summary={summary}
+                index={index}
+              />
+
             ))}
           </div>
         ) : (

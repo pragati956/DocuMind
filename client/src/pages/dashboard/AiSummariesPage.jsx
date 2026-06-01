@@ -1,4 +1,5 @@
-import React, { useState, useRef } from "react";
+import { useEffect, useState } from "react";
+import { getSummaries } from "../../services/aiService";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import {
   FiZap, FiStar, FiTag, FiEye, FiCopy, FiShare2,
@@ -9,195 +10,195 @@ import {
 } from "react-icons/fi";
 
 /* ─── Data ─── */
-const summariesData = [
-  {
-    id: 1,
-    title: "Q4 Financial Report",
-    file: "Q4_Financial_Report.pdf",
-    fileType: "PDF",
-    category: "Finance",
-    generatedAt: "2 min ago",
-    readTime: "45 sec",
-    confidence: 97,
-    starred: true,
-    bookmarked: false,
-    tags: ["Revenue", "Q4", "Growth"],
-    gradient: "from-blue-500 to-indigo-600",
-    accent: "#3b82f6",
-    accentDim: "rgba(59,130,246,0.1)",
-    accentBorder: "rgba(59,130,246,0.22)",
-    accentText: "text-blue-300",
-    tagBg: "bg-blue-500/10 border-blue-500/20 text-blue-300",
-    summary: "Revenue increased 34% YoY to $4.2M in Q4. Operating margin improved significantly to 22%, driven by optimized customer acquisition costs. Three critical risk factors identified: rising enterprise CAC, APAC launch delays, and EU FX headwinds. Board recommends accelerating Series B discussions ahead of Q1 market window.",
-    keyInsights: [
-      "Revenue +34% YoY → $4.2M in Q4",
-      "Operating margin reached 22% (from 16%)",
-      "3 risk factors flagged for board review",
-      "Series B timeline moved to Q1 2025",
-    ],
-    sentiment: "Positive",
-    sentimentColor: "text-emerald-400",
-    pages: 34,
-    wordCount: "12,400 words",
-    status: "Complete",
-  },
-  {
-    id: 2,
-    title: "Product Roadmap 2025",
-    file: "Product_Roadmap_2025.docx",
-    fileType: "DOCX",
-    category: "Product",
-    generatedAt: "18 min ago",
-    readTime: "1 min",
-    confidence: 94,
-    starred: false,
-    bookmarked: true,
-    tags: ["Strategy", "Q1", "Launch"],
-    gradient: "from-purple-500 to-pink-600",
-    accent: "#8b5cf6",
-    accentDim: "rgba(139,92,246,0.1)",
-    accentBorder: "rgba(139,92,246,0.22)",
-    accentText: "text-purple-300",
-    tagBg: "bg-purple-500/10 border-purple-500/20 text-purple-300",
-    summary: "Three major product launches planned across 2025: AI-powered semantic search scheduled for Q1, native iOS/Android mobile applications for Q2, and a fully public REST API v3 with webhook support for Q3. Engineering headcount projected to grow 40% to support these initiatives. A comprehensive design system overhaul is planned to unify product surface across all touchpoints.",
-    keyInsights: [
-      "AI Search launch planned for Q1 2025",
-      "Mobile apps (iOS + Android) launching Q2",
-      "Public REST API v3 with webhooks in Q3",
-      "Engineering team to grow 40%",
-      "Full design system overhaul scheduled",
-    ],
-    sentiment: "Optimistic",
-    sentimentColor: "text-purple-400",
-    pages: 12,
-    wordCount: "4,200 words",
-    status: "Complete",
-  },
-  {
-    id: 3,
-    title: "Legal Contract — NDA",
-    file: "Legal_NDA_Contract.pdf",
-    fileType: "PDF",
-    category: "Legal",
-    generatedAt: "1h ago",
-    readTime: "30 sec",
-    confidence: 99,
-    starred: true,
-    bookmarked: false,
-    tags: ["NDA", "Contract", "2024"],
-    gradient: "from-emerald-500 to-teal-600",
-    accent: "#10b981",
-    accentDim: "rgba(16,185,129,0.1)",
-    accentBorder: "rgba(16,185,129,0.22)",
-    accentText: "text-emerald-300",
-    tagBg: "bg-emerald-500/10 border-emerald-500/20 text-emerald-300",
-    summary: "Standard mutual non-disclosure agreement with a 2-year term. No unusual or non-standard clauses detected during AI analysis. Delaware jurisdiction confirmed. IP ownership clause in §4.2 warrants closer review by counsel — language around derivative works is broader than typical. Both parties retain pre-existing intellectual property. Recommended for signing pending legal counsel review of §4.2.",
-    keyInsights: [
-      "2-year mutual NDA — standard terms",
-      "Delaware jurisdiction confirmed",
-      "§4.2 IP clause needs legal review",
-      "No non-standard clauses detected",
-    ],
-    sentiment: "Neutral",
-    sentimentColor: "text-gray-400",
-    pages: 8,
-    wordCount: "2,100 words",
-    status: "Complete",
-  },
-  {
-    id: 4,
-    title: "Team Meeting Notes — Q4 Sprint",
-    file: "Meeting_Notes_Q4.txt",
-    fileType: "TXT",
-    category: "Meetings",
-    generatedAt: "3h ago",
-    readTime: "20 sec",
-    confidence: 91,
-    starred: false,
-    bookmarked: false,
-    tags: ["Sprint", "Action Items", "Q4"],
-    gradient: "from-amber-500 to-orange-600",
-    accent: "#f59e0b",
-    accentDim: "rgba(245,158,11,0.1)",
-    accentBorder: "rgba(245,158,11,0.22)",
-    accentText: "text-amber-300",
-    tagBg: "bg-amber-500/10 border-amber-500/20 text-amber-300",
-    summary: "Sprint review covered 7 completed tickets with 3 carried over. Critical blockers identified in the auth service integration affecting the login flow. Design handoff for onboarding flow v2 is scheduled for this Friday. 4 action items assigned across the team with clear owners. Next sync scheduled for Thursday 10AM PST — attendance required for all senior engineers.",
-    keyInsights: [
-      "7 tickets closed, 3 carried to next sprint",
-      "Auth service blocker — login flow affected",
-      "Design handoff for onboarding v2 on Friday",
-      "4 action items with assigned owners",
-    ],
-    sentiment: "Neutral",
-    sentimentColor: "text-gray-400",
-    pages: 4,
-    wordCount: "850 words",
-    status: "Complete",
-  },
-  {
-    id: 5,
-    title: "Market Research 2025",
-    file: "Market_Research_2025.pdf",
-    fileType: "PDF",
-    category: "Research",
-    generatedAt: "Yesterday",
-    readTime: "2 min",
-    confidence: 88,
-    starred: false,
-    bookmarked: true,
-    tags: ["Market", "Analysis", "TAM"],
-    gradient: "from-cyan-500 to-blue-600",
-    accent: "#06b6d4",
-    accentDim: "rgba(6,182,212,0.1)",
-    accentBorder: "rgba(6,182,212,0.22)",
-    accentText: "text-cyan-300",
-    tagBg: "bg-cyan-500/10 border-cyan-500/20 text-cyan-300",
-    summary: "Total addressable market estimated at $12B with a serviceable market of $2.4B in the document intelligence vertical. Primary competitors hold 64% market share combined. Three untapped segments identified: mid-market legal firms (22% TAM), healthcare compliance (18% TAM), and government procurement (12% TAM). Customer acquisition cost benchmarks show 40% lower CAC in inbound-led GTM motions.",
-    keyInsights: [
-      "$12B TAM in document intelligence vertical",
-      "3 untapped segments with strong fit",
-      "Inbound GTM 40% lower CAC",
-      "Competitors hold 64% combined share",
-    ],
-    sentiment: "Positive",
-    sentimentColor: "text-emerald-400",
-    pages: 22,
-    wordCount: "8,600 words",
-    status: "Complete",
-  },
-  {
-    id: 6,
-    title: "Brand Guidelines v3",
-    file: "Brand_Guidelines_v3.pdf",
-    fileType: "PDF",
-    category: "Design",
-    generatedAt: "3d ago",
-    readTime: "1.5 min",
-    confidence: 82,
-    starred: false,
-    bookmarked: false,
-    tags: ["Brand", "Design", "Style"],
-    gradient: "from-rose-500 to-pink-600",
-    accent: "#f43f5e",
-    accentDim: "rgba(244,63,94,0.1)",
-    accentBorder: "rgba(244,63,94,0.22)",
-    accentText: "text-rose-300",
-    tagBg: "bg-rose-500/10 border-rose-500/20 text-rose-300",
-    summary: "Updated brand guidelines introduce a refreshed primary color palette moving to midnight blue (#1E2A4A) with cyan accent (#00D4FF). Typography now uses Inter for UI and Fraunces for editorial contexts. Motion design principles added for the first time, covering micro-interactions, page transitions, and loading states. Logo usage rules updated with 14 new application examples across digital and print.",
-    keyInsights: [
-      "New midnight blue primary color palette",
-      "Inter + Fraunces typography system",
-      "Motion design principles added",
-      "14 new logo usage examples",
-    ],
-    sentiment: "Positive",
-    sentimentColor: "text-emerald-400",
-    pages: 48,
-    wordCount: "6,800 words",
-    status: "Complete",
-  },
-];
+// const summariesData = [
+//   {
+//     id: 1,
+//     title: "Q4 Financial Report",
+//     file: "Q4_Financial_Report.pdf",
+//     fileType: "PDF",
+//     category: "Finance",
+//     generatedAt: "2 min ago",
+//     readTime: "45 sec",
+//     confidence: 97,
+//     starred: true,
+//     bookmarked: false,
+//     tags: ["Revenue", "Q4", "Growth"],
+//     gradient: "from-blue-500 to-indigo-600",
+//     accent: "#3b82f6",
+//     accentDim: "rgba(59,130,246,0.1)",
+//     accentBorder: "rgba(59,130,246,0.22)",
+//     accentText: "text-blue-300",
+//     tagBg: "bg-blue-500/10 border-blue-500/20 text-blue-300",
+//     summary: "Revenue increased 34% YoY to $4.2M in Q4. Operating margin improved significantly to 22%, driven by optimized customer acquisition costs. Three critical risk factors identified: rising enterprise CAC, APAC launch delays, and EU FX headwinds. Board recommends accelerating Series B discussions ahead of Q1 market window.",
+//     keyInsights: [
+//       "Revenue +34% YoY → $4.2M in Q4",
+//       "Operating margin reached 22% (from 16%)",
+//       "3 risk factors flagged for board review",
+//       "Series B timeline moved to Q1 2025",
+//     ],
+//     sentiment: "Positive",
+//     sentimentColor: "text-emerald-400",
+//     pages: 34,
+//     wordCount: "12,400 words",
+//     status: "Complete",
+//   },
+//   {
+//     id: 2,
+//     title: "Product Roadmap 2025",
+//     file: "Product_Roadmap_2025.docx",
+//     fileType: "DOCX",
+//     category: "Product",
+//     generatedAt: "18 min ago",
+//     readTime: "1 min",
+//     confidence: 94,
+//     starred: false,
+//     bookmarked: true,
+//     tags: ["Strategy", "Q1", "Launch"],
+//     gradient: "from-purple-500 to-pink-600",
+//     accent: "#8b5cf6",
+//     accentDim: "rgba(139,92,246,0.1)",
+//     accentBorder: "rgba(139,92,246,0.22)",
+//     accentText: "text-purple-300",
+//     tagBg: "bg-purple-500/10 border-purple-500/20 text-purple-300",
+//     summary: "Three major product launches planned across 2025: AI-powered semantic search scheduled for Q1, native iOS/Android mobile applications for Q2, and a fully public REST API v3 with webhook support for Q3. Engineering headcount projected to grow 40% to support these initiatives. A comprehensive design system overhaul is planned to unify product surface across all touchpoints.",
+//     keyInsights: [
+//       "AI Search launch planned for Q1 2025",
+//       "Mobile apps (iOS + Android) launching Q2",
+//       "Public REST API v3 with webhooks in Q3",
+//       "Engineering team to grow 40%",
+//       "Full design system overhaul scheduled",
+//     ],
+//     sentiment: "Optimistic",
+//     sentimentColor: "text-purple-400",
+//     pages: 12,
+//     wordCount: "4,200 words",
+//     status: "Complete",
+//   },
+//   {
+//     id: 3,
+//     title: "Legal Contract — NDA",
+//     file: "Legal_NDA_Contract.pdf",
+//     fileType: "PDF",
+//     category: "Legal",
+//     generatedAt: "1h ago",
+//     readTime: "30 sec",
+//     confidence: 99,
+//     starred: true,
+//     bookmarked: false,
+//     tags: ["NDA", "Contract", "2024"],
+//     gradient: "from-emerald-500 to-teal-600",
+//     accent: "#10b981",
+//     accentDim: "rgba(16,185,129,0.1)",
+//     accentBorder: "rgba(16,185,129,0.22)",
+//     accentText: "text-emerald-300",
+//     tagBg: "bg-emerald-500/10 border-emerald-500/20 text-emerald-300",
+//     summary: "Standard mutual non-disclosure agreement with a 2-year term. No unusual or non-standard clauses detected during AI analysis. Delaware jurisdiction confirmed. IP ownership clause in §4.2 warrants closer review by counsel — language around derivative works is broader than typical. Both parties retain pre-existing intellectual property. Recommended for signing pending legal counsel review of §4.2.",
+//     keyInsights: [
+//       "2-year mutual NDA — standard terms",
+//       "Delaware jurisdiction confirmed",
+//       "§4.2 IP clause needs legal review",
+//       "No non-standard clauses detected",
+//     ],
+//     sentiment: "Neutral",
+//     sentimentColor: "text-gray-400",
+//     pages: 8,
+//     wordCount: "2,100 words",
+//     status: "Complete",
+//   },
+//   {
+//     id: 4,
+//     title: "Team Meeting Notes — Q4 Sprint",
+//     file: "Meeting_Notes_Q4.txt",
+//     fileType: "TXT",
+//     category: "Meetings",
+//     generatedAt: "3h ago",
+//     readTime: "20 sec",
+//     confidence: 91,
+//     starred: false,
+//     bookmarked: false,
+//     tags: ["Sprint", "Action Items", "Q4"],
+//     gradient: "from-amber-500 to-orange-600",
+//     accent: "#f59e0b",
+//     accentDim: "rgba(245,158,11,0.1)",
+//     accentBorder: "rgba(245,158,11,0.22)",
+//     accentText: "text-amber-300",
+//     tagBg: "bg-amber-500/10 border-amber-500/20 text-amber-300",
+//     summary: "Sprint review covered 7 completed tickets with 3 carried over. Critical blockers identified in the auth service integration affecting the login flow. Design handoff for onboarding flow v2 is scheduled for this Friday. 4 action items assigned across the team with clear owners. Next sync scheduled for Thursday 10AM PST — attendance required for all senior engineers.",
+//     keyInsights: [
+//       "7 tickets closed, 3 carried to next sprint",
+//       "Auth service blocker — login flow affected",
+//       "Design handoff for onboarding v2 on Friday",
+//       "4 action items with assigned owners",
+//     ],
+//     sentiment: "Neutral",
+//     sentimentColor: "text-gray-400",
+//     pages: 4,
+//     wordCount: "850 words",
+//     status: "Complete",
+//   },
+//   {
+//     id: 5,
+//     title: "Market Research 2025",
+//     file: "Market_Research_2025.pdf",
+//     fileType: "PDF",
+//     category: "Research",
+//     generatedAt: "Yesterday",
+//     readTime: "2 min",
+//     confidence: 88,
+//     starred: false,
+//     bookmarked: true,
+//     tags: ["Market", "Analysis", "TAM"],
+//     gradient: "from-cyan-500 to-blue-600",
+//     accent: "#06b6d4",
+//     accentDim: "rgba(6,182,212,0.1)",
+//     accentBorder: "rgba(6,182,212,0.22)",
+//     accentText: "text-cyan-300",
+//     tagBg: "bg-cyan-500/10 border-cyan-500/20 text-cyan-300",
+//     summary: "Total addressable market estimated at $12B with a serviceable market of $2.4B in the document intelligence vertical. Primary competitors hold 64% market share combined. Three untapped segments identified: mid-market legal firms (22% TAM), healthcare compliance (18% TAM), and government procurement (12% TAM). Customer acquisition cost benchmarks show 40% lower CAC in inbound-led GTM motions.",
+//     keyInsights: [
+//       "$12B TAM in document intelligence vertical",
+//       "3 untapped segments with strong fit",
+//       "Inbound GTM 40% lower CAC",
+//       "Competitors hold 64% combined share",
+//     ],
+//     sentiment: "Positive",
+//     sentimentColor: "text-emerald-400",
+//     pages: 22,
+//     wordCount: "8,600 words",
+//     status: "Complete",
+//   },
+//   {
+//     id: 6,
+//     title: "Brand Guidelines v3",
+//     file: "Brand_Guidelines_v3.pdf",
+//     fileType: "PDF",
+//     category: "Design",
+//     generatedAt: "3d ago",
+//     readTime: "1.5 min",
+//     confidence: 82,
+//     starred: false,
+//     bookmarked: false,
+//     tags: ["Brand", "Design", "Style"],
+//     gradient: "from-rose-500 to-pink-600",
+//     accent: "#f43f5e",
+//     accentDim: "rgba(244,63,94,0.1)",
+//     accentBorder: "rgba(244,63,94,0.22)",
+//     accentText: "text-rose-300",
+//     tagBg: "bg-rose-500/10 border-rose-500/20 text-rose-300",
+//     summary: "Updated brand guidelines introduce a refreshed primary color palette moving to midnight blue (#1E2A4A) with cyan accent (#00D4FF). Typography now uses Inter for UI and Fraunces for editorial contexts. Motion design principles added for the first time, covering micro-interactions, page transitions, and loading states. Logo usage rules updated with 14 new application examples across digital and print.",
+//     keyInsights: [
+//       "New midnight blue primary color palette",
+//       "Inter + Fraunces typography system",
+//       "Motion design principles added",
+//       "14 new logo usage examples",
+//     ],
+//     sentiment: "Positive",
+//     sentimentColor: "text-emerald-400",
+//     pages: 48,
+//     wordCount: "6,800 words",
+//     status: "Complete",
+//   },
+// ];
 
 const categories = ["All", "Finance", "Product", "Legal", "Meetings", "Research", "Design"];
 
@@ -512,17 +513,72 @@ function EmptyState() {
 
 /* ─── Main Page ─── */
 export default function AiSummariesPage() {
+  const [summariesData, setSummariesData] =
+  useState([]);
+
   const [activeCategory, setActiveCategory] = useState("All");
+  useEffect(() => {
+
+  const fetchSummaries = async () => {
+
+    try {
+
+      const token =
+        localStorage.getItem("token");
+
+      const data =
+        await getSummaries(token);
+
+      console.log(
+        "SUMMARIES:",
+        data
+      );
+
+      setSummariesData(
+        data.documents
+      );
+
+    } catch (error) {
+
+      console.error(
+        "Fetch Summary Error:",
+        error
+      );
+
+    }
+
+  };
+
+  fetchSummaries();
+
+}, []);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
   const [view, setView] = useState("grid");
   const [sortBy, setSortBy] = useState("newest");
 
-  const filtered = summariesData.filter((s) => {
-    const matchCat = activeCategory === "All" || s.category === activeCategory;
-    const matchSearch = !searchQuery || s.title.toLowerCase().includes(searchQuery.toLowerCase()) || s.summary.toLowerCase().includes(searchQuery.toLowerCase()) || s.tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase()));
-    return matchCat && matchSearch;
-  }).sort((a, b) => {
+  const filtered =
+  summariesData.filter((s) => {
+
+    const matchSearch =
+      !searchQuery ||
+
+      s.title
+        .toLowerCase()
+        .includes(
+          searchQuery.toLowerCase()
+        ) ||
+
+      (s.summary || "")
+        .toLowerCase()
+        .includes(
+          searchQuery.toLowerCase()
+        );
+
+    return matchSearch;
+  });
+    
+  filtered.sort((a, b) => {
     if (sortBy === "confidence") return b.confidence - a.confidence;
     if (sortBy === "starred") return Number(b.starred) - Number(a.starred);
     return 0;
@@ -572,7 +628,7 @@ export default function AiSummariesPage() {
         </motion.div>
 
         {/* Stats */}
-        <StatsBar summaries={summariesData} />
+        {/* <StatsBar summaries={summariesData} /> */}
 
         {/* Toolbar */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
@@ -636,11 +692,82 @@ export default function AiSummariesPage() {
           {view === "grid" ? (
             <motion.div key="grid" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-              {filtered.length > 0 ? filtered.map((s, i) => <SummaryCard key={s.id} summary={s} index={i} view="grid" />) : <EmptyState />}
+             {filtered.length > 0 ? (
+
+  filtered.map((doc) => (
+
+    <div
+      key={doc._id}
+      className="
+      bg-[#111827]
+      border
+      border-[#1F2937]
+      rounded-xl
+      p-5
+      "
+    >
+
+      <h2
+        className="
+        text-white
+        text-lg
+        font-semibold
+        mb-3
+        "
+      >
+        {doc.title}
+      </h2>
+
+      <p
+        className="
+        text-gray-400
+        whitespace-pre-wrap
+        text-sm
+        "
+      >
+        {doc.summary}
+      </p>
+
+    </div>
+
+  ))
+
+) : (
+  <EmptyState />
+)}
             </motion.div>
           ) : (
             <motion.div key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
-              {filtered.length > 0 ? filtered.map((s, i) => <SummaryCard key={s.id} summary={s} index={i} view="list" />) : <EmptyState />}
+             {filtered.length > 0 ? (
+
+  filtered.map((doc) => (
+
+    <div
+      key={doc._id}
+      className="
+      bg-[#111827]
+      border
+      border-[#1F2937]
+      rounded-xl
+      p-5
+      "
+    >
+
+      <h2 className="text-white font-semibold">
+        {doc.title}
+      </h2>
+
+      <p className="text-gray-400 mt-2">
+        {doc.summary}
+      </p>
+
+    </div>
+
+  ))
+
+) : (
+  <EmptyState />
+)}
             </motion.div>
           )}
         </AnimatePresence>

@@ -6,6 +6,8 @@ import express from "express";
 import cors from "cors";
 import passport from "passport"; // Imported passport
 import { initializePassport } from "./config/passport.js"; 
+import aiRoutes
+from "./routes/aiRoutes.js";
 import dashboardRoutes
 from "./routes/dashboardRoutes.js";
 // Import the initialization function
@@ -33,6 +35,10 @@ app.use("/api/documents", uploadRoutes);
 app.use(
   "/api/dashboard",
   dashboardRoutes
+);
+app.use(
+  "/api/ai",
+  aiRoutes
 );
 
 // TEST ROUTE
