@@ -3,6 +3,7 @@ import React, {
   useContext,
   useEffect,
 } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { AuthContext } from "../../context/AuthContext";
 import {
@@ -59,39 +60,40 @@ function StatChip({ icon, value, label, delay, color }) {
 
 /* ─── Main Welcome Banner ─── */
 export default function WelcomeBanner({ onUpload }) {
+  const navigate = useNavigate();
   const [dismissed, setDismissed] = useState(false);
-  const { user } = useContext(AuthContext); 
+  const { user } = useContext(AuthContext);
   const [statsData, setStatsData] =
-  useState({
-    totalDocuments: 0,
-    summarizedDocuments: 0,
-    processingDocuments: 0,
-  });
+    useState({
+      totalDocuments: 0,
+      summarizedDocuments: 0,
+      processingDocuments: 0,
+    });
 
-useEffect(() => {
+  useEffect(() => {
 
-  const fetchStats = async () => {
+    const fetchStats = async () => {
 
-    try {
+      try {
 
-      const data =
-        await getDashboardStats();
+        const data =
+          await getDashboardStats();
 
-      setStatsData(data);
+        setStatsData(data);
 
-    } catch (error) {
+      } catch (error) {
 
-      console.error(
-        "Welcome stats error:",
-        error
-      );
+        console.error(
+          "Welcome stats error:",
+          error
+        );
 
-    }
-  };
+      }
+    };
 
-  fetchStats();
+    fetchStats();
 
-}, []);// Dynamically access global user context
+  }, []);// Dynamically access global user context
 
   // Get the first name or default to 'User'
   const firstName = user?.name ? user.name.split(" ")[0] : "User";
@@ -104,36 +106,36 @@ useEffect(() => {
   }));
 
   const stats = [
-  {
-    icon: <FiFileText className="text-blue-300" />,
-    value: statsData.totalDocuments,
-    label: "Docs processed",
-    color:
-      "bg-blue-500/15 border border-blue-500/20",
-    delay: 0.55,
-  },
+    {
+      icon: <FiFileText className="text-blue-300" />,
+      value: statsData.totalDocuments,
+      label: "Docs processed",
+      color:
+        "bg-blue-500/15 border border-blue-500/20",
+      delay: 0.55,
+    },
 
-  {
-    icon: <FiZap className="text-purple-300" />,
-    value:
-      statsData.summarizedDocuments,
-    label: "AI summaries",
-    color:
-      "bg-purple-500/15 border border-purple-500/20",
-    delay: 0.65,
-  },
+    {
+      icon: <FiZap className="text-purple-300" />,
+      value:
+        statsData.summarizedDocuments,
+      label: "AI summaries",
+      color:
+        "bg-purple-500/15 border border-purple-500/20",
+      delay: 0.65,
+    },
 
-  {
-    icon:
-      <FiTrendingUp className="text-emerald-300" />,
-    value:
-      statsData.processingDocuments,
-    label: "Processing",
-    color:
-      "bg-emerald-500/15 border border-emerald-500/20",
-    delay: 0.75,
-  },
-];
+    {
+      icon:
+        <FiTrendingUp className="text-emerald-300" />,
+      value:
+        statsData.processingDocuments,
+      label: "Processing",
+      color:
+        "bg-emerald-500/15 border border-emerald-500/20",
+      delay: 0.75,
+    },
+  ];
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 
@@ -257,21 +259,21 @@ useEffect(() => {
 
                   {/* Subtext */}
                   <motion.p
-  initial={{ opacity: 0, y: 12 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ duration: 0.6, delay: 0.3 }}
-  className="text-gray-400 text-sm leading-relaxed mb-6 max-w-md"
->
-  You have{" "}
-  <span className="text-white font-semibold">
-    {statsData.processingDocuments}
-  </span>{" "}
-  documents pending AI analysis and{" "}
-  <span className="text-white font-semibold">
-    {statsData.summarizedDocuments}
-  </span>{" "}
-  summaries ready to review.
-</motion.p>
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.3 }}
+                    className="text-gray-400 text-sm leading-relaxed mb-6 max-w-md"
+                  >
+                    You have{" "}
+                    <span className="text-white font-semibold">
+                      {statsData.processingDocuments}
+                    </span>{" "}
+                    documents pending AI analysis and{" "}
+                    <span className="text-white font-semibold">
+                      {statsData.summarizedDocuments}
+                    </span>{" "}
+                    summaries ready to review.
+                  </motion.p>
 
                   {/* CTA Buttons */}
                   <motion.div
@@ -304,8 +306,11 @@ useEffect(() => {
                     </motion.button>
 
                     <motion.button
-                      whileHover={{ scale: 1.04, borderColor: "rgba(255,255,255,0.15)", backgroundColor: "rgba(255,255,255,0.07)" }}
+                      whileHover={{ scale: 1.04 }}
                       whileTap={{ scale: 0.97 }}
+                      onClick={() =>
+                        navigate("/dashboard/summaries")
+                      }
                       className="flex items-center gap-2 px-5 py-3 rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl text-gray-300 text-sm font-medium transition-all duration-200"
                     >
                       <FiZap className="text-purple-300" />
@@ -324,84 +329,8 @@ useEffect(() => {
                     ))}
                   </div>
 
-                  {/* Mini doc preview card */}
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.88, y: 16 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.8, ease: [0.22, 1, 0.36, 1] }}
-                    className="hidden lg:block w-52 rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl p-4 cursor-default"
-                  >
-                    <div className="flex items-center gap-2.5 mb-3">
-                      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white text-xs">
-                        <FiFileText />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-white text-[11px] font-semibold truncate">Q4 Financial.pdf</p>
-                        <p className="text-gray-600 text-[10px]">2.4 MB · Just now</p>
-                      </div>
-                    </div>
-
-                    {/* skeleton lines */}
-                    {[100, 80, 90, 60].map((w, i) => (
-                      <motion.div
-                        key={i}
-                        initial={{ width: 0 }}
-                        animate={{ width: `${w}%` }}
-                        transition={{ duration: 0.7, delay: 1 + i * 0.1, ease: "easeOut" }}
-                        className="h-1.5 rounded-full bg-white/10 mb-1.5"
-                      />
-                    ))}
-
-                    <motion.div
-                      initial={{ opacity: 0, y: 4 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 1.6 }}
-                      className="mt-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20"
-                    >
-                      <FiZap className="text-purple-300 text-[10px]" />
-                      <span className="text-purple-300 text-[10px] font-medium">Summary ready</span>
-                      <motion.span
-                        animate={{ opacity: [1, 0.3, 1] }}
-                        transition={{ duration: 1.2, repeat: Infinity }}
-                        className="ml-auto w-1.5 h-1.5 rounded-full bg-purple-400"
-                      />
-                    </motion.div>
-                  </motion.div>
                 </div>
               </div>
-
-              {/* ── Bottom progress strip ── */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.9 }}
-                className="mt-7 pt-5 border-t border-white/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-              >
-                <div className="flex items-center gap-2.5">
-                  <FiStar className="text-amber-400 text-sm shrink-0" />
-                  <p className="text-gray-400 text-xs">
-                    <span className="text-white font-medium">Pro Plan</span> — 24.6 GB of 50 GB used
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-3 flex-1 sm:max-w-xs">
-                  <div className="flex-1 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: "49%" }}
-                      transition={{ duration: 1.4, delay: 1, ease: "easeOut" }}
-                      className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-400"
-                    />
-                  </div>
-                  <span className="text-gray-500 text-[11px] shrink-0">49%</span>
-                  <motion.button
-                    whileHover={{ scale: 1.04, color: "#93c5fd" }}
-                    className="text-blue-400 text-[11px] font-semibold flex items-center gap-1 shrink-0 transition-colors"
-                  >
-                    Upgrade <FiArrowRight className="text-[10px]" />
-                  </motion.button>
-                </div>
-              </motion.div>
             </div>
           </motion.div>
         )}

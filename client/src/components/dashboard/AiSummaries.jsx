@@ -3,7 +3,7 @@ import {
   useEffect,
   useState,
 } from "react";
-
+import { useNavigate } from "react-router-dom";
 import {
   getSummaries,
 } from "../../services/aiService";
@@ -98,6 +98,7 @@ import {
 //     keyInsights: ["7 tickets closed", "3 auth blockers", "Design handoff Friday", "4 action items"],
 //   },
 // ];
+
 
 /* ─── Confidence Ring ─── */
 function ConfidenceRing({ value, color }) {
@@ -279,18 +280,18 @@ function SummaryCard({ summary, index }) {
               animate={{ height: expanded ? "auto" : undefined }}
             >
               <div
-  className="
+                className="
     prose
     prose-invert
     max-w-none
     text-sm
   "
->
-  <ReactMarkdown>
-    {summary.insight}
-  </ReactMarkdown>
-</div>
-              
+              >
+                <ReactMarkdown>
+                  {summary.insight}
+                </ReactMarkdown>
+              </div>
+
             </motion.div>
           </AnimatePresence>
 
@@ -398,8 +399,8 @@ function FilterBar({ active, setActive }) {
           whileTap={{ scale: 0.97 }}
           onClick={() => setActive(f)}
           className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all duration-200 shrink-0 ${active === f
-              ? "bg-blue-500/15 border border-blue-500/25 text-blue-300"
-              : "text-gray-500 hover:text-gray-300 border border-transparent hover:border-white/[0.07] hover:bg-white/[0.04]"
+            ? "bg-blue-500/15 border border-blue-500/25 text-blue-300"
+            : "text-gray-500 hover:text-gray-300 border border-transparent hover:border-white/[0.07] hover:bg-white/[0.04]"
             }`}
         >
           {f}
@@ -411,6 +412,7 @@ function FilterBar({ active, setActive }) {
 
 /* ─── Main Export ─── */
 export default function AiSummaries() {
+  const navigate = useNavigate();
   const [summaries, setSummaries] =
     useState([]);
 
@@ -476,16 +478,16 @@ export default function AiSummaries() {
     fetchSummaries();
   }, []);
 
- const filtered = summaries.filter((s) => {
-  const matchSearch =
-    searchQuery === "" ||
-    s.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (s.insight || "")
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
+  const filtered = summaries.filter((s) => {
+    const matchSearch =
+      searchQuery === "" ||
+      s.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (s.insight || "")
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
 
-  return matchSearch;
-});
+    return matchSearch;
+  });
 
   return (
     <div style={{ fontFamily: "'Poppins', sans-serif" }}>
@@ -544,7 +546,12 @@ export default function AiSummaries() {
             <FiFilter className="text-[10px]" /> Filter
           </motion.button>
 
-          <button className="text-gray-500 hover:text-gray-300 text-xs transition-colors">View all</button>
+          <button
+            onClick={() => navigate("/dashboard/summaries")}
+            className="text-gray-500 hover:text-gray-300 text-xs transition-colors"
+          >
+            View all
+          </button>
         </div>
       </motion.div>
 

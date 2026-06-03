@@ -1,22 +1,29 @@
-import React, { useState, useContext } from "react";
+import React, {
+  useState,
+  useContext,
+  useEffect
+} from "react";
+import {
+  getDashboardStats
+} from "../../services/dashboardService";
 import { motion, AnimatePresence } from "framer-motion";
 import { NavLink, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 import {
   FiHome, FiFileText, FiSearch, FiZap, FiFolder,
   FiActivity, FiSettings, FiCpu, FiChevronLeft,
-  FiPlus, FiHelpCircle, FiLogOut, FiChevronRight,
+   FiHelpCircle, FiLogOut, FiChevronRight,
 } from "react-icons/fi";
 
 /* ─── Nav Data ─── */
-const navMain = [
-  { icon: <FiHome />, label: "Dashboard", path: "/dashboard" },
-  { icon: <FiFileText />, label: "Documents", badge: "1.2k", path: "/dashboard/documents" },
-  { icon: <FiSearch />, label: "Smart Search", path: "/dashboard/search" },
-  { icon: <FiZap />, label: "AI Summaries", badge: "3", path: "/dashboard/summaries" },
-  { icon: <FiFolder />, label: "Collections", path: "/dashboard/collections" },
-  { icon: <FiActivity />, label: "Analytics", path: "/dashboard/analytics" },
-];
+// const navMain = [
+//   { icon: <FiHome />, label: "Dashboard", path: "/dashboard" },
+//   { icon: <FiFileText />, label: "Documents", badge: "1.2k", path: "/dashboard/documents" },
+//   { icon: <FiSearch />, label: "Smart Search", path: "/dashboard/search" },
+//   { icon: <FiZap />, label: "AI Summaries", badge: "3", path: "/dashboard/summaries" },
+//   { icon: <FiFolder />, label: "Collections", path: "/dashboard/collections" },
+//   { icon: <FiActivity />, label: "Analytics", path: "/dashboard/analytics" },
+// ];
 
 const navBottom = [
   { icon: <FiHelpCircle />, label: "Help & Support", path: "/dashboard/help" },
@@ -178,25 +185,27 @@ function UserCard({ collapsed }) {
 }
 
 /* ─── New Document Button ─── */
-function NewDocButton({ collapsed }) {
-  const [hovered, setHovered] = useState(false);
+// function NewDocButton({ collapsed ,  onUpload}) {
+//   const [hovered, setHovered] = useState(false);
 
-  return (
-    <div className="relative px-2 mb-4" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
-      <motion.button whileHover={{ scale: 1.03, boxShadow: "0 0 20px rgba(59,130,246,0.3)" }} whileTap={{ scale: 0.97 }} className={`w-full flex items-center gap-2.5 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm font-semibold shadow-[0_0_14px_rgba(59,130,246,0.25)] transition-all duration-200 ${collapsed ? "justify-center px-0" : "px-4"}`}>
-        <FiPlus className="text-base shrink-0" />
-        <AnimatePresence>
-          {!collapsed && (
-            <motion.span initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -4 }} transition={{ duration: 0.15 }} className="whitespace-nowrap">
-              New Document
-            </motion.span>
-          )}
-        </AnimatePresence>
-      </motion.button>
-      {collapsed && <Tooltip label="New Document" visible={hovered} />}
-    </div>
-  );
-}
+//   return (
+//     <div className="relative px-2 mb-4" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
+//       <motion.button
+//        onClick={onUpload}
+//        whileHover={{ scale: 1.03, boxShadow: "0 0 20px rgba(59,130,246,0.3)" }} whileTap={{ scale: 0.97 }} className={`w-full flex items-center gap-2.5 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm font-semibold shadow-[0_0_14px_rgba(59,130,246,0.25)] transition-all duration-200 ${collapsed ? "justify-center px-0" : "px-4"}`}>
+//         <FiPlus className="text-base shrink-0" />
+//         <AnimatePresence>
+//           {!collapsed && (
+//             <motion.span initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -4 }} transition={{ duration: 0.15 }} className="whitespace-nowrap">
+//               New Document
+//             </motion.span>
+//           )}
+//         </AnimatePresence>
+//       </motion.button>
+//       {collapsed && <Tooltip label="New Document" visible={hovered} />}
+//     </div>
+//   );
+// }
 
 /* ─── Section Label ─── */
 function SectionLabel({ label, collapsed }) {
@@ -209,11 +218,91 @@ function SectionLabel({ label, collapsed }) {
       )}
     </AnimatePresence>
   );
-}
+} 
 
 /* ─── Main Sidebar ─── */
 export default function Sidebar({ defaultCollapsed = false }) {
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
+  const [statsData, setStatsData] =
+useState({
+  totalDocuments: 0,
+  summarizedDocuments: 0,
+});
+
+useEffect(() => {
+
+  const fetchStats =
+  async () => {
+
+    try {
+
+      const data =
+      await getDashboardStats();
+
+      setStatsData(data);
+
+    } catch (error) {
+
+      console.error(
+        "Sidebar stats error:",
+        error
+      );
+
+    }
+  };
+
+  fetchStats();
+
+}, []);
+const navMain = [
+  {
+    icon: <FiHome />,
+    label: "Dashboard",
+    path: "/dashboard",
+  },
+
+  {
+    icon: <FiFileText />,
+    label: "Documents",
+    badge:
+      statsData.totalDocuments
+        .toString(),
+    path:
+      "/dashboard/documents",
+  },
+
+  {
+    icon: <FiSearch />,
+    label: "Smart Search",
+    path:
+      "/dashboard/search",
+  },
+
+  {
+    icon: <FiZap />,
+    label: "AI Summaries",
+    badge:
+      statsData
+        .summarizedDocuments
+        .toString(),
+    path:
+      "/dashboard/summaries",
+  },
+
+  {
+    icon: <FiFolder />,
+    label: "Collections",
+    path:
+      "/dashboard/collections",
+  },
+
+  {
+    icon: <FiActivity />,
+    label: "Analytics",
+    path:
+      "/dashboard/analytics",
+  },
+];
 
   return (
     <>
@@ -246,9 +335,12 @@ export default function Sidebar({ defaultCollapsed = false }) {
         </div>
 
         {/* ── New Doc button ── */}
-        <div className="pt-4">
-          <NewDocButton collapsed={collapsed} />
-        </div>
+        {/* <div className="pt-4">
+         <NewDocButton
+  collapsed={collapsed}
+  onUpload={onUpload}
+/>
+        </div> */}
 
         {/* ── Navigation ── */}
         <nav className="flex-1 px-2 overflow-y-auto overflow-x-hidden space-y-0.5 pb-2" style={{ scrollbarWidth: "none" }}>
@@ -271,6 +363,7 @@ export default function Sidebar({ defaultCollapsed = false }) {
         {/* ── Collapse toggle ── */}
         {/* ── Collapse toggle ── */}
         <motion.button 
+         
           whileHover={{ scale: 1.15, borderColor: "rgba(255,255,255,0.25)", backgroundColor: "#1e1e24" }} 
           whileTap={{ scale: 0.90 }} 
           onClick={() => setCollapsed(!collapsed)} 

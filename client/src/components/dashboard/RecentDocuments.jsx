@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import {
   summarizeDocument,
 } from "../../services/aiService";
@@ -363,18 +364,17 @@ export default function RecentDocuments({ onUpload }) {
       "Summary generated:",
       response
     );
-
-    alert(
-      "AI Summary Generated Successfully"
-    );
+toast.success(
+  "AI Summary Generated Successfully"
+);
 
   } catch (error) {
 
     console.error(error);
 
-    alert(
-      "Failed to generate summary"
-    );
+    toast.error(
+  "Failed to generate summary"
+);
 
   }
 

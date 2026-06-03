@@ -43,7 +43,11 @@ const Dashboard = () => {
                     <div className="grid xl:grid-cols-[1fr_380px] gap-6 mt-6">
 
                         <div>
-                            <RecentDocuments />
+                           <RecentDocuments
+  onUpload={() =>
+    setUploadOpen(true)
+  }
+/>
                             <AiSummaries />
                         </div>
 

@@ -1,8 +1,9 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiUpload, FiSearch, FiZap, FiTrendingUp,
-  FiArrowRight, FiCommand, FiPlus, FiChevronRight,
+  FiArrowRight,  FiCommand,FiPlus,
 } from "react-icons/fi";
 
 /* ─── Actions Data ─── */
@@ -70,48 +71,48 @@ const actions = [
 ];
 
 /* ─── Upload Modal ─── */
-function UploadModal({ onClose }) {
-  const [dragging, setDragging] = useState(false);
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-6"
-      style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(10px)" }}
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0, y: 20 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 26 }}
-        onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md rounded-3xl border border-white/10 bg-[#111827] p-8 shadow-2xl"
-      >
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-white font-semibold text-lg">Upload Document</h2>
-          <motion.button whileHover={{ scale: 1.1, rotate: 90 }} onClick={onClose} className="text-gray-500 hover:text-white transition-colors text-xl">×</motion.button>
-        </div>
-        <motion.div
-          onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
-          onDragLeave={() => setDragging(false)}
-          onDrop={() => setDragging(false)}
-          animate={{ borderColor: dragging ? "rgba(59,130,246,0.7)" : "rgba(255,255,255,0.09)" }}
-          className="rounded-2xl border-2 border-dashed p-10 flex flex-col items-center gap-3 cursor-pointer mb-6"
-        >
-          <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 text-2xl"><FiUpload /></div>
-          <p className="text-white font-medium text-sm">Drop files or click to browse</p>
-          <p className="text-gray-500 text-xs">PDF, DOCX, TXT up to 50 MB</p>
-        </motion.div>
-        <div className="flex gap-3">
-          <button onClick={onClose} className="flex-1 py-3 rounded-xl border border-white/10 bg-white/5 text-gray-300 text-sm hover:bg-white/10 transition-all">Cancel</button>
-          <motion.button whileHover={{ scale: 1.02, boxShadow: "0 0 20px rgba(59,130,246,0.4)" }} whileTap={{ scale: 0.98 }} onClick={onClose} className="flex-1 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm font-semibold">Upload & Analyze</motion.button>
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-}
+// function UploadModal({ onClose }) {
+//   const [dragging, setDragging] = useState(false);
+//   return (
+//     <motion.div
+//       initial={{ opacity: 0 }}
+//       animate={{ opacity: 1 }}
+//       exit={{ opacity: 0 }}
+//       className="fixed inset-0 z-50 flex items-center justify-center p-6"
+//       style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(10px)" }}
+//       onClick={onClose}
+//     >
+//       <motion.div
+//         initial={{ scale: 0.9, opacity: 0, y: 20 }}
+//         animate={{ scale: 1, opacity: 1, y: 0 }}
+//         exit={{ scale: 0.9, opacity: 0 }}
+//         transition={{ type: "spring", stiffness: 300, damping: 26 }}
+//         onClick={(e) => e.stopPropagation()}
+//         className="w-full max-w-md rounded-3xl border border-white/10 bg-[#111827] p-8 shadow-2xl"
+//       >
+//         <div className="flex items-center justify-between mb-6">
+//           <h2 className="text-white font-semibold text-lg">Upload Document</h2>
+//           <motion.button whileHover={{ scale: 1.1, rotate: 90 }} onClick={onClose} className="text-gray-500 hover:text-white transition-colors text-xl">×</motion.button>
+//         </div>
+//         <motion.div
+//           onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+//           onDragLeave={() => setDragging(false)}
+//           onDrop={() => setDragging(false)}
+//           animate={{ borderColor: dragging ? "rgba(59,130,246,0.7)" : "rgba(255,255,255,0.09)" }}
+//           className="rounded-2xl border-2 border-dashed p-10 flex flex-col items-center gap-3 cursor-pointer mb-6"
+//         >
+//           <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 text-2xl"><FiUpload /></div>
+//           <p className="text-white font-medium text-sm">Drop files or click to browse</p>
+//           <p className="text-gray-500 text-xs">PDF, DOCX, TXT up to 50 MB</p>
+//         </motion.div>
+//         <div className="flex gap-3">
+//           <button onClick={onClose} className="flex-1 py-3 rounded-xl border border-white/10 bg-white/5 text-gray-300 text-sm hover:bg-white/10 transition-all">Cancel</button>
+//           <motion.button whileHover={{ scale: 1.02, boxShadow: "0 0 20px rgba(59,130,246,0.4)" }} whileTap={{ scale: 0.98 }} onClick={onClose} className="flex-1 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm font-semibold">Upload & Analyze</motion.button>
+//         </div>
+//       </motion.div>
+//     </motion.div>
+//   );
+// }
 
 /* ─── Action Card ─── */
 function ActionCard({ action, index, onClick }) {
@@ -241,12 +242,44 @@ function ActionCard({ action, index, onClick }) {
 }
 
 /* ─── Main Export ─── */
-export default function QuickActions() {
-  const [uploadOpen, setUploadOpen] = useState(false);
+export default function QuickActions({
+  onUpload
+}) {
+  const navigate =
+useNavigate();
+const handleAction = (id) => {
 
-  const handleAction = (id) => {
-    if (id === "upload") setUploadOpen(true);
-  };
+  switch(id){
+
+    case "upload":
+      onUpload();
+      break;
+
+    case "search":
+      navigate(
+        "/dashboard/documents"
+      );
+      break;
+
+    case "summarize":
+      navigate(
+        "/dashboard/summaries"
+      );
+      break;
+
+    case "analytics":
+      navigate(
+        "/dashboard/analytics"
+      );
+      break;
+
+    default:
+      break;
+  }
+};
+  
+
+  
 
   return (
     <>
@@ -266,12 +299,16 @@ export default function QuickActions() {
             </div>
             <h2 className="text-white font-semibold text-sm">Quick Actions</h2>
           </div>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            className="flex items-center gap-1 text-gray-600 hover:text-gray-300 text-xs transition-colors"
-          >
-            <FiPlus className="text-[10px]" /> Customize
-          </motion.button>
+        <motion.button
+  whileHover={{ scale: 1.05 }}
+  onClick={() =>
+    navigate("/dashboard/settings")
+  }
+  className="flex items-center gap-1 text-gray-600 hover:text-gray-300 text-xs transition-colors"
+>
+  <FiPlus className="text-[10px]" />
+  Customize
+</motion.button>
         </motion.div>
 
         {/* Grid */}
@@ -286,21 +323,10 @@ export default function QuickActions() {
           ))}
         </div>
 
-        {/* Hint strip */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          className="mt-3 flex items-center gap-1.5 text-gray-700 text-[10px]"
-        >
-          <FiCommand className="text-[9px]" />
-          <span>Use keyboard shortcuts to trigger actions instantly</span>
-        </motion.div>
+        
       </div>
 
-      <AnimatePresence>
-        {uploadOpen && <UploadModal onClose={() => setUploadOpen(false)} />}
-      </AnimatePresence>
+     
     </>
   );
 }

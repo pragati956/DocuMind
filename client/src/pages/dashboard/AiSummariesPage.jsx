@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState,useRef  } from "react";
+import { useNavigate } from "react-router-dom";
 import { getSummaries } from "../../services/aiService";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import {
@@ -201,7 +202,6 @@ import {
 // ];
 
 const categories = ["All", "Finance", "Product", "Legal", "Meetings", "Research", "Design"];
-
 /* ─── Confidence Ring ─── */
 function ConfidenceRing({ value, color, size = 44 }) {
   const ref = useRef(null);
@@ -237,7 +237,7 @@ function CopyButton({ text, className = "" }) {
     <motion.button
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.9 }}
-      onClick={(e) => { e.stopPropagation(); navigator.clipboard?.writeText(text).catch(() => {}); setCopied(true); setTimeout(() => setCopied(false), 1800); }}
+      onClick={(e) => { e.stopPropagation(); navigator.clipboard?.writeText(text).catch(() => { }); setCopied(true); setTimeout(() => setCopied(false), 1800); }}
       className={`w-7 h-7 rounded-lg bg-white/5 border border-white/[0.07] flex items-center justify-center transition-all hover:bg-white/10 ${className}`}
     >
       <AnimatePresence mode="wait">
@@ -449,6 +449,7 @@ function SummaryCard({ summary: s, index, view }) {
             </motion.button>
           </div>
           <motion.button whileHover={{ scale: 1.04, x: 2 }} whileTap={{ scale: 0.97 }}
+            onClick={() => navigate("/dashboard/documents")}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold border transition-all ${s.accentText}`}
             style={{ background: s.accentDim, borderColor: s.accentBorder }}>
             <FiEye className="text-[10px]" /> View Full
@@ -513,71 +514,72 @@ function EmptyState() {
 
 /* ─── Main Page ─── */
 export default function AiSummariesPage() {
+  const navigate = useNavigate();
   const [summariesData, setSummariesData] =
-  useState([]);
+    useState([]);
 
   const [activeCategory, setActiveCategory] = useState("All");
   useEffect(() => {
 
-  const fetchSummaries = async () => {
+    const fetchSummaries = async () => {
 
-    try {
+      try {
 
-      const token =
-        localStorage.getItem("token");
+        const token =
+          localStorage.getItem("token");
 
-      const data =
-        await getSummaries(token);
+        const data =
+          await getSummaries(token);
 
-      console.log(
-        "SUMMARIES:",
-        data
-      );
+        console.log(
+          "SUMMARIES:",
+          data
+        );
 
-      setSummariesData(
-        data.documents
-      );
+        setSummariesData(
+          data.documents
+        );
 
-    } catch (error) {
+      } catch (error) {
 
-      console.error(
-        "Fetch Summary Error:",
-        error
-      );
+        console.error(
+          "Fetch Summary Error:",
+          error
+        );
 
-    }
+      }
 
-  };
+    };
 
-  fetchSummaries();
+    fetchSummaries();
 
-}, []);
+  }, []);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
   const [view, setView] = useState("grid");
   const [sortBy, setSortBy] = useState("newest");
 
   const filtered =
-  summariesData.filter((s) => {
+    summariesData.filter((s) => {
 
-    const matchSearch =
-      !searchQuery ||
+      const matchSearch =
+        !searchQuery ||
 
-      s.title
-        .toLowerCase()
-        .includes(
-          searchQuery.toLowerCase()
-        ) ||
+        s.title
+          .toLowerCase()
+          .includes(
+            searchQuery.toLowerCase()
+          ) ||
 
-      (s.summary || "")
-        .toLowerCase()
-        .includes(
-          searchQuery.toLowerCase()
-        );
+        (s.summary || "")
+          .toLowerCase()
+          .includes(
+            searchQuery.toLowerCase()
+          );
 
-    return matchSearch;
-  });
-    
+      return matchSearch;
+    });
+
   filtered.sort((a, b) => {
     if (sortBy === "confidence") return b.confidence - a.confidence;
     if (sortBy === "starred") return Number(b.starred) - Number(a.starred);
@@ -619,6 +621,7 @@ export default function AiSummariesPage() {
             </div>
           </div>
           <motion.button whileHover={{ scale: 1.04, boxShadow: "0 0 24px rgba(139,92,246,0.4)" }} whileTap={{ scale: 0.97 }}
+            onClick={() => navigate("/dashboard/documents")}
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-sm font-semibold relative overflow-hidden shrink-0">
             <motion.div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12"
               animate={{ x: ["-100%", "200%"] }} transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 2 }} />
@@ -637,11 +640,10 @@ export default function AiSummariesPage() {
           <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5" style={{ scrollbarWidth: "none" }}>
             {categories.map((cat) => (
               <motion.button key={cat} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} onClick={() => setActiveCategory(cat)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all shrink-0 ${
-                  activeCategory === cat
+                className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all shrink-0 ${activeCategory === cat
                     ? "bg-purple-500/15 border border-purple-500/25 text-purple-300"
                     : "text-gray-500 hover:text-gray-300 border border-transparent hover:border-white/[0.07] hover:bg-white/[0.04]"
-                }`}>
+                  }`}>
                 {cat}
               </motion.button>
             ))}
@@ -692,82 +694,82 @@ export default function AiSummariesPage() {
           {view === "grid" ? (
             <motion.div key="grid" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-             {filtered.length > 0 ? (
+              {filtered.length > 0 ? (
 
-  filtered.map((doc) => (
+                filtered.map((doc) => (
 
-    <div
-      key={doc._id}
-      className="
+                  <div
+                    key={doc._id}
+                    className="
       bg-[#111827]
       border
       border-[#1F2937]
       rounded-xl
       p-5
       "
-    >
+                  >
 
-      <h2
-        className="
+                    <h2
+                      className="
         text-white
         text-lg
         font-semibold
         mb-3
         "
-      >
-        {doc.title}
-      </h2>
+                    >
+                      {doc.title}
+                    </h2>
 
-      <p
-        className="
+                    <p
+                      className="
         text-gray-400
         whitespace-pre-wrap
         text-sm
         "
-      >
-        {doc.summary}
-      </p>
+                    >
+                      {doc.summary}
+                    </p>
 
-    </div>
+                  </div>
 
-  ))
+                ))
 
-) : (
-  <EmptyState />
-)}
+              ) : (
+                <EmptyState />
+              )}
             </motion.div>
           ) : (
             <motion.div key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
-             {filtered.length > 0 ? (
+              {filtered.length > 0 ? (
 
-  filtered.map((doc) => (
+                filtered.map((doc) => (
 
-    <div
-      key={doc._id}
-      className="
+                  <div
+                    key={doc._id}
+                    className="
       bg-[#111827]
       border
       border-[#1F2937]
       rounded-xl
       p-5
       "
-    >
+                  >
 
-      <h2 className="text-white font-semibold">
-        {doc.title}
-      </h2>
+                    <h2 className="text-white font-semibold">
+                      {doc.title}
+                    </h2>
 
-      <p className="text-gray-400 mt-2">
-        {doc.summary}
-      </p>
+                    <p className="text-gray-400 mt-2">
+                      {doc.summary}
+                    </p>
 
-    </div>
+                  </div>
 
-  ))
+                ))
 
-) : (
-  <EmptyState />
-)}
+              ) : (
+                <EmptyState />
+              )}
             </motion.div>
           )}
         </AnimatePresence>

@@ -4,6 +4,8 @@ import {
   deleteDocument,
   searchDocuments,
 } from "../../services/documentService";
+import { summarizeDocument } from "../../services/aiService";
+import { toast } from "react-hot-toast";
 import EditDocumentModal from "../../components/dashboard/EditDocumentModal";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -74,8 +76,9 @@ function ActionsMenu({
   onDelete,
   onView,
   onEdit,
+  onSummarize,
   documentData,
-}) {
+}){
   const actions = [
     {icon: <HiOutlineDocumentText />,
   label: "View",},
@@ -110,6 +113,14 @@ function ActionsMenu({
 if (a.label === "Edit") {
   onEdit(documentData);
 }
+if (
+  a.label ===
+  "Summarize with AI"
+) {
+  onSummarize(
+    documentData.id
+  );
+}
 
   onClose();
 }}
@@ -131,6 +142,7 @@ function DocCard({
   onDelete,
   onView,
   onEdit,
+  onSummarize,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const sb = summaryBadge[doc.summaryStatus];
@@ -173,6 +185,7 @@ function DocCard({
   onDelete={onDelete}
   onView={onView}
   onEdit={onEdit}
+   onSummarize={onSummarize}
   documentData={doc}
 />
   )}
@@ -218,6 +231,7 @@ function DocCard({
   onDelete={onDelete}
   onView={onView}
   onEdit={onEdit}
+  onSummarize={onSummarize}
   documentData={doc}
 />
   )}
@@ -370,6 +384,46 @@ export default function DocumentsPage() {
     console.error("Delete failed:", error);
   }
 };
+const handleSummarize = async (id) => {
+  try {
+
+    const token =
+      localStorage.getItem("token");
+
+    toast.loading(
+      "Generating AI Summary...",
+      {
+        id: "summary",
+      }
+    );
+
+    await summarizeDocument(
+      id,
+      token
+    );
+
+    toast.success(
+      "AI Summary Generated",
+      {
+        id: "summary",
+      }
+    );
+
+    await loadDocuments();
+
+  } catch (error) {
+
+    console.error(error);
+
+    toast.error(
+      "Failed to generate summary",
+      {
+        id: "summary",
+      }
+    );
+  }
+};
+
 const handleSearch = async (value) => {
   try {
   
@@ -623,6 +677,7 @@ summaryStatus: doc.summary ? "done" : "none",
   onDelete={handleDelete}
   onView={setSelectedDoc}
   onEdit={setEditDoc}
+  onSummarize={handleSummarize}
 />
                   </motion.div>
                 ))}

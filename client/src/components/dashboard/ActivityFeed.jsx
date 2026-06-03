@@ -3,17 +3,24 @@ import React, {
   useRef,
   useEffect,
 } from "react";
+import { useContext } from "react";
+import { AuthContext } from "../../context/AuthContext";
 
 import {
   getActivities,
 } from "../../services/dashboardService";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import {
-  FiUpload, FiShare2, FiSearch, FiZap, FiDownload,
-  FiTrash2, FiEye, FiEdit3, FiUsers, FiStar,
-  FiActivity, FiFilter, FiCheck, FiMoreHorizontal,
-  FiClock, FiChevronDown, FiRefreshCw, FiFolder,
-} from "react-icons/fi";
+  FiUpload,
+  FiZap,
+  FiTrash2,
+  FiEdit3,
+  FiActivity,
+  FiMoreHorizontal,
+  FiClock,
+  FiChevronDown,
+  FiRefreshCw,
+} from "react-icons/fi"; 
 
 /* ─── Activity Data ─── */
 
@@ -177,10 +184,12 @@ function ActivityItem({ item, index, isLast }) {
                           style={{ background: "rgba(17,24,39,0.98)", backdropFilter: "blur(16px)" }}
                         >
                           {[
-                            { icon: <FiEye />, label: "View" },
-                            { icon: <FiShare2 />, label: "Share" },
-                            { icon: <FiTrash2 />, label: "Dismiss", danger: true },
-                          ].map((m, i) => (
+  {
+    icon: <FiTrash2 />,
+    label: "Dismiss",
+    danger: true,
+  },
+].map((m, i) => (
                             <motion.button
                               key={i}
                               whileHover={{ backgroundColor: m.danger ? "rgba(239,68,68,0.07)" : "rgba(255,255,255,0.04)" }}
@@ -250,6 +259,8 @@ function LiveIndicator() {
 
 /* ─── Main Export ─── */
 export default function ActivityFeed() {
+  const { user } =
+  useContext(AuthContext);
   const [activeFilter, setActiveFilter] = useState("All");
   const [showAll, setShowAll] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -263,38 +274,66 @@ export default function ActivityFeed() {
   };
   const [activities, setActivities] =
   useState([]);
-  useEffect(() => {
-
   const fetchActivities =
-    async () => {
+  async () => {
 
-      try {
+    try {
 
-        const data =
-          await getActivities();
+      const data =
+        await getActivities();
 
-        console.log(
-          "Activities:",
-          data
-        );
+      console.log(
+        "Activities:",
+        data
+      );
 
-        setActivities(
-          data.activities || []
-        );
+      setActivities(
+        data.activities || []
+      );
 
-      } catch (error) {
+    } catch (error) {
 
-        console.error(
-          "Activity Error:",
-          error
-        );
+      console.error(
+        "Activity Error:",
+        error
+      );
 
-      }
-    };
-
+    }
+  };
+ useEffect(() => {
   fetchActivities();
-
 }, []);
+const getTimeAgo = (
+  dateString
+) => {
+
+  const diff =
+    Math.floor(
+      (
+        Date.now() -
+        new Date(
+          dateString
+        )
+      ) / 1000
+    );
+
+  if (diff < 60)
+    return `${diff}s`;
+
+  if (diff < 3600)
+    return `${Math.floor(
+      diff / 60
+    )}m`;
+
+  if (diff < 86400)
+    return `${Math.floor(
+      diff / 3600
+    )}h`;
+
+  return `${Math.floor(
+    diff / 86400
+  )}d`;
+};
 const mappedActivities =
   activities.map((activity) => ({
 
@@ -311,14 +350,28 @@ const mappedActivities =
       ).toLocaleString(),
 
     timeShort:
-      "now",
-
+  getTimeAgo(
+    activity.createdAt
+  ),
     group:
-      "today",
+  new Date(
+    activity.createdAt
+  ).toDateString() ===
+  new Date()
+    .toDateString()
+    ? "today"
+    : "yesterday",
 
     user: {
-      name: "You",
-      initials: "YU",
+     name:
+  user?.name || "User",
+
+initials:
+  user?.name
+    ?.split(" ")
+    .map(n => n[0])
+    .join("")
+    .toUpperCase() || "U",
       color:
         "from-blue-500 to-indigo-600",
     },
@@ -382,9 +435,15 @@ mappedActivities.filter((a) => {
   const todayItems = visible.filter(a => a.group === "today");
   const yesterdayItems = visible.filter(a => a.group === "yesterday");
 
-  const handleRefresh = () => {
+  const handleRefresh =
+  async () => {
+
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1200);
+
+    await fetchActivities();
+
+    setRefreshing(false);
+
   };
 
   return (
@@ -422,7 +481,7 @@ mappedActivities.filter((a) => {
               <FiRefreshCw className="text-xs" />
             </motion.div>
           </motion.button>
-          <button className="text-gray-600 hover:text-gray-300 text-xs transition-colors">Clear all</button>
+         
         </div>
       </motion.div>
 
