@@ -8,10 +8,18 @@ import { useNavigate } from "react-router-dom";
 // notification service is used via NotificationContext
 import { AuthContext } from "../../context/AuthContext";
 import {
-  FiSearch, FiBell, FiMenu, FiX,
-  FiFileText, FiZap, FiSettings, FiLogOut,
-  FiUser, FiChevronDown,
+  FiSearch,
+  FiBell,
+  FiMenu,
+  FiX,
+  FiFileText,
+  FiZap,
+  FiSettings,
+  FiLogOut,
+  FiUser,
+  FiChevronDown,
   FiCommand,
+  FiStar
 } from "react-icons/fi";
 import {
   searchDocuments
@@ -316,23 +324,19 @@ function NotificationBell() {
 
       
 
-        if (
-          notification.action ===
-          "summary"
-        ) {
+       if (notification.documentId) {
 
-          navigate(
-            "/dashboard/summaries"
-          );
+ navigate(
+  `/dashboard/documents?id=${notification.documentId}`
+ );
 
-        }
-        else {
+} else {
 
-          navigate(
-            "/dashboard/documents"
-          );
+ navigate(
+  "/dashboard/documents"
+ );
 
-        }
+}
 
         setOpen(false);
 
@@ -450,11 +454,28 @@ function NotificationBell() {
                   >
                     {!n.isRead && <div className="absolute left-2 top-1/2 -translate-y-1/2 w-1 h-1 rounded-full bg-blue-400" />}
                     <div className={`w-8 h-8 rounded-xl bg-white/5 border border-white/[0.07] flex items-center justify-center text-blue-400 text-sm shrink-0 mt-0.5`}>
-                      {n.action === "uploaded" ? <FiFileText /> : n.action === "summary" ? <FiZap /> : n.action === "edited" ? <FiSettings /> : n.action === "deleted" ? <FiX /> : <FiBell />}
-                    </div>
+{n.action === "uploaded" ? <FiFileText />
+ : n.action === "summary" ? <FiZap />
+ : n.action === "edited" ? <FiSettings />
+ : n.action === "deleted" ? <FiX />
+ : n.action === "starred" ? <FiStar />
+ : <FiBell />}                    </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-white text-xs font-semibold mb-0.5">{n.action === "uploaded" ? "Document Uploaded" : n.action === "summary" ? "AI Summary Ready" : n.action === "edited" ? "Document Updated" : n.action === "deleted" ? "Document Deleted" : n.action}</p>
-                      <p className="text-gray-500 text-[11px] truncate">{n.documentName}</p>
+<p className="text-white text-xs font-semibold mb-0.5">
+{
+ n.action === "uploaded"
+ ? "Document Uploaded"
+ : n.action === "summary"
+ ? "AI Summary Ready"
+ : n.action === "edited"
+ ? "Document Updated"
+ : n.action === "deleted"
+ ? "Document Deleted"
+ : n.action === "starred"
+ ? "Document Starred"
+ : n.action
+}
+</p>                      <p className="text-gray-500 text-[11px] truncate">{n.documentName}</p>
                     </div>
                     <button
                       onClick={(e) => {

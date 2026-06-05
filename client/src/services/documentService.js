@@ -74,3 +74,24 @@ export const deleteDocument = async (
 
   return response.data;
 };
+export const toggleStarDocument =
+ async (id) => {
+
+ const token =
+  localStorage.getItem("token");
+
+ const response =
+  await axios.patch(
+   `${API_URL}/${id}/star`,
+   {},
+   {
+    headers: {
+     Authorization:
+      `Bearer ${token}`,
+    },
+   }
+  );
+
+ return response.data;
+
+};

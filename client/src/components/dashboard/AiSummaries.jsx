@@ -431,7 +431,7 @@ export default function AiSummaries() {
 
       setSummaries(
         data.documents.map((doc) => ({
-          _id: doc._id,
+          _id: doc.id,
 
           title: doc.title,
 

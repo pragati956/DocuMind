@@ -1,4 +1,4 @@
-import { useEffect, useState,useRef  } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { getSummaries } from "../../services/aiService";
 import { motion, AnimatePresence, useInView } from "framer-motion";
@@ -641,8 +641,8 @@ export default function AiSummariesPage() {
             {categories.map((cat) => (
               <motion.button key={cat} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} onClick={() => setActiveCategory(cat)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all shrink-0 ${activeCategory === cat
-                    ? "bg-purple-500/15 border border-purple-500/25 text-purple-300"
-                    : "text-gray-500 hover:text-gray-300 border border-transparent hover:border-white/[0.07] hover:bg-white/[0.04]"
+                  ? "bg-purple-500/15 border border-purple-500/25 text-purple-300"
+                  : "text-gray-500 hover:text-gray-300 border border-transparent hover:border-white/[0.07] hover:bg-white/[0.04]"
                   }`}>
                 {cat}
               </motion.button>
@@ -699,7 +699,7 @@ export default function AiSummariesPage() {
                 filtered.map((doc) => (
 
                   <div
-                    key={doc._id}
+                    key={doc.id}
                     className="
       bg-[#111827]
       border
@@ -745,7 +745,7 @@ export default function AiSummariesPage() {
                 filtered.map((doc) => (
 
                   <div
-                    key={doc._id}
+                    key={doc.id}
                     className="
       bg-[#111827]
       border

@@ -29,8 +29,8 @@ function StatusBadge({ status, bg }) {
   const icon = status === "Summarized"
     ? <FiZap className="text-[9px]" />
     : status === "Processing"
-    ? <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}><FiClock className="text-[9px]" /></motion.div>
-    : <FiClock className="text-[9px]" />;
+      ? <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}><FiClock className="text-[9px]" /></motion.div>
+      : <FiClock className="text-[9px]" />;
 
   return (
     <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border shrink-0 ${bg}`}>
@@ -57,30 +57,70 @@ function ContextMenu({
     { icon: <FiTrash2 />, label: "Delete", danger: true },
   ];
 
- const handleAction = async (item) => {
+  const handleAction = async (item) => {
 
-  try {
+    try {
+      if(
+ item.label ===
+ "View document"
+){
+ window.open(
+  doc.fileUrl,
+  "_blank"
+ );
+}
+if(
+ item.label ===
+ "Download"
+){
 
-    if (item.label === "Summarize now") {
+ const link =
+  document.createElement("a");
 
-      await onSummarize(doc.id);
+ link.href =
+  doc.fileUrl;
+
+ link.download =
+  doc.name;
+
+ link.click();
+}
+if(
+ item.label ===
+ "Share"
+){
+
+ await navigator
+  .clipboard
+  .writeText(
+    doc.fileUrl
+  );
+
+ toast.success(
+  "Link copied"
+ );
+}
+
+      if (item.label === "Summarize now") {
+
+        await onSummarize(doc.id);
+
+      }
+
+      if (item.danger) {
+
+        await onDelete(doc.id);
+
+      }
+
+    } catch (err) {
+
+      console.error(err);
 
     }
 
-    if (item.danger) {
-
-      await onDelete(doc.id);
-
-    }
-
-  } catch (err) {
-
-    console.error(err);
-
-  }
-
-  onClose();
-};
+    onClose();
+  };
 
   return (
     <motion.div
@@ -97,9 +137,8 @@ function ContextMenu({
           key={i}
           whileHover={{ backgroundColor: item.danger ? "rgba(239,68,68,0.07)" : "rgba(255,255,255,0.04)" }}
           onClick={() => handleAction(item)}
-          className={`w-full flex items-center gap-3 px-4 py-2.5 text-xs transition-colors duration-150 ${
-            item.danger ? "text-red-400" : "text-gray-300"
-          } ${i !== 0 ? "border-t border-white/[0.04]" : ""}`}
+          className={`w-full flex items-center gap-3 px-4 py-2.5 text-xs transition-colors duration-150 ${item.danger ? "text-red-400" : "text-gray-300"
+            } ${i !== 0 ? "border-t border-white/[0.04]" : ""}`}
         >
           <span className={item.danger ? "text-red-400" : "text-gray-500"}>{item.icon}</span>
           {item.label}
@@ -110,9 +149,15 @@ function ContextMenu({
 }
 
 /* ─── Document Row (List View) ─── */
-function DocRow({ doc, index,  onSummarize, onDelete }) {
+function DocRow({
+  doc,
+  index,
+  onSummarize,
+  onDelete,
+  onToggleStar
+}) {
   const [hovered, setHovered] = useState(false);
-  const [starred, setStarred] = useState(doc.starred);
+
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -142,7 +187,7 @@ function DocRow({ doc, index,  onSummarize, onDelete }) {
           <p className={`text-sm font-medium truncate transition-colors duration-200 ${hovered ? "text-white" : "text-gray-200"}`}>
             {doc.name}
           </p>
-          {starred && <FiStar className="text-amber-400 text-xs shrink-0" style={{ fill: "#f59e0b" }} />}
+          {doc.starred && <FiStar className="text-amber-400 text-xs shrink-0" style={{ fill: "#f59e0b" }} />}
         </div>
         <div className="flex items-center gap-2 mt-0.5">
           <span className="text-gray-600 text-[11px] uppercase font-semibold">{doc.ext}</span>
@@ -166,14 +211,24 @@ function DocRow({ doc, index,  onSummarize, onDelete }) {
 
       <div className={`flex items-center gap-1.5 transition-opacity duration-200 ${hovered ? "opacity-100" : "opacity-0"}`}>
         <motion.button whileHover={{ scale: 1.12 }} whileTap={{ scale: 0.9 }}
-          onClick={(e) => { e.stopPropagation(); setStarred(!starred); }}
+          onClick={(e) => { e.stopPropagation(); onToggleStar(doc.id); }}
           className="w-7 h-7 rounded-lg bg-white/5 border border-white/[0.07] flex items-center justify-center hover:bg-white/10 transition-all">
-          <FiStar className={`text-xs ${starred ? "text-amber-400" : "text-gray-600"}`} style={{ fill: starred ? "#f59e0b" : "none" }} />
+          <FiStar className={`text-xs ${doc.starred ? "text-amber-400" : "text-gray-600"}`} style={{ fill: doc.starred ? "#f59e0b" : "none" }} />
         </motion.button>
-        <motion.button whileHover={{ scale: 1.12 }} whileTap={{ scale: 0.9 }}
-          className="w-7 h-7 rounded-lg bg-white/5 border border-white/[0.07] flex items-center justify-center text-gray-600 hover:text-gray-200 hover:bg-white/10 transition-all">
-          <FiEye className="text-xs" />
-        </motion.button>
+      <motion.button
+ whileHover={{ scale: 1.12 }}
+ whileTap={{ scale: 0.9 }}
+ onClick={(e)=>{
+   e.stopPropagation();
+   window.open(
+     doc.fileUrl,
+     "_blank"
+   );
+ }}
+ className="..."
+>
+ <FiEye className="text-xs" />
+</motion.button>
         <div className="relative">
           <motion.button whileHover={{ scale: 1.12 }} whileTap={{ scale: 0.9 }}
             onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); }}
@@ -181,7 +236,7 @@ function DocRow({ doc, index,  onSummarize, onDelete }) {
             <FiMoreHorizontal className="text-xs" />
           </motion.button>
           <AnimatePresence>
-            {menuOpen && <ContextMenu doc={doc} onDelete={onDelete}   onSummarize={onSummarize} onClose={() => setMenuOpen(false)} accentText={doc.accentText} accentDim={doc.accentDim} accentBorder={doc.accentBorder} />}
+            {menuOpen && <ContextMenu doc={doc} onDelete={onDelete} onToggleStar={onToggleStar} onSummarize={onSummarize} onClose={() => setMenuOpen(false)} accentText={doc.accentText} accentDim={doc.accentDim} accentBorder={doc.accentBorder} />}
           </AnimatePresence>
         </div>
       </div>
@@ -190,9 +245,9 @@ function DocRow({ doc, index,  onSummarize, onDelete }) {
 }
 
 /* ─── Document Card (Grid View) ─── */
-function DocCard({ doc, index,onSummarize, onDelete }) {
+function DocCard({ doc, index, onSummarize, onDelete, onToggleStar }) {
   const [hovered, setHovered] = useState(false);
-  const [starred, setStarred] = useState(doc.starred);
+
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -225,9 +280,9 @@ function DocCard({ doc, index,onSummarize, onDelete }) {
 
       <div className="absolute top-3 right-3 flex items-center gap-1.5">
         <motion.button whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }}
-          onClick={(e) => { e.stopPropagation(); setStarred(!starred); }}
+          onClick={(e) => { e.stopPropagation(); onToggleStar(doc.id); }}
           className="w-6 h-6 rounded-lg bg-black/30 backdrop-blur-sm flex items-center justify-center">
-          <FiStar className={`text-xs ${starred ? "text-amber-400" : "text-white/50"}`} style={{ fill: starred ? "#f59e0b" : "none" }} />
+          <FiStar className={`text-xs ${doc.starred ? "text-amber-400" : "text-white/50"}`} style={{ fill: doc.starred ? "#f59e0b" : "none" }} />
         </motion.button>
         <div className="relative">
           <motion.button whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }}
@@ -236,7 +291,7 @@ function DocCard({ doc, index,onSummarize, onDelete }) {
             <FiMoreHorizontal className="text-xs" />
           </motion.button>
           <AnimatePresence>
-            {menuOpen && <ContextMenu doc={doc} onDelete={onDelete}  onSummarize={onSummarize} onClose={() => setMenuOpen(false)} accentText={doc.accentText} accentDim={doc.accentDim} accentBorder={doc.accentBorder} />}
+            {menuOpen && <ContextMenu doc={doc} onDelete={onDelete} onToggleStar={onToggleStar} onSummarize={onSummarize} onClose={() => setMenuOpen(false)} accentText={doc.accentText} accentDim={doc.accentDim} accentBorder={doc.accentBorder} />}
           </AnimatePresence>
         </div>
       </div>
@@ -282,55 +337,110 @@ export default function RecentDocuments({ onUpload }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
   const [activeFilter, setActiveFilter] = useState("All");
-  
+
   // REAL DATABASE STATE
   const [docs, setDocs] = useState([]);
-  const filters = ["All", "PDF", "DOCX", "TXT", "Starred"];
+  const filters = [
+    "All",
+    ...new Set(
+      docs.map(
+        doc => doc.ext.toUpperCase()
+      )
+    ),
+    "Starred"
+  ];
+  const fetchDocuments = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get("http://localhost:5000/api/documents/all", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (res.data.success) {
+        // Transform backend schema to frontend card format
+        const formattedDocs = res.data.documents.map(d => {
+          const ext = d.title.split('.').pop().toLowerCase();
+          let accent="#3b82f6";
+
+if(ext==="pdf")
+ accent="#ef4444";
+
+if(ext==="docx")
+ accent="#3b82f6";
+
+if(ext==="pptx")
+ accent="#f59e0b";
+
+if(ext==="xlsx")
+ accent="#10b981";
+        let accentData;
+
+if(ext==="pdf"){
+ accentData={
+  grad:"from-red-500 to-rose-600",
+  text:"text-red-300"
+ };
+}
+else if(ext==="docx"){
+ accentData={
+  grad:"from-blue-500 to-indigo-600",
+  text:"text-blue-300"
+ };
+}
+else if(ext==="pptx"){
+ accentData={
+  grad:"from-orange-500 to-amber-600",
+  text:"text-orange-300"
+ };
+}
+else if(ext==="xlsx"){
+ accentData={
+  grad:"from-emerald-500 to-green-600",
+  text:"text-emerald-300"
+ };
+}
+else{
+ accentData={
+  grad:"from-purple-500 to-pink-600",
+  text:"text-purple-300"
+ };
+}
+          return {
+            id: d._id,
+            name: d.title,
+            fileUrl:d.fileUrl,
+            ext: ext,
+            size: (d.fileSize / 1024 / 1024).toFixed(2) + " MB",
+            time: new Date(d.createdAt).toLocaleDateString(),
+            status: d.summary ? "Summarized" : "Queued",
+            starred: d.starred,
+            owner:
+ d.uploadedBy?.name
+ || "Unknown",
+            gradient: accentData.grad,
+            accent,
+            accentDim: "rgba(59,130,246,0.1)",
+            accentBorder: "rgba(59,130,246,0.22)",
+            accentText: accentData.text,
+            statusBg: d.summary ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-300" : "bg-amber-500/10 border-amber-500/25 text-amber-300",
+           tag:
+ d.tags?.[0]
+ || "Document",
+          }
+        });
+        setDocs(formattedDocs);
+      }
+    } catch (err) {
+      console.error("Fetch docs error:", err);
+    }
+  };
 
   // DYNAMIC FETCH FROM MONGODB
   useEffect(() => {
-    const fetchDocuments = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get("http://localhost:5000/api/documents/all", {
-          headers: { Authorization: `Bearer ${token}` }
-        });
 
-        if(res.data.success) {
-          // Transform backend schema to frontend card format
-          const formattedDocs = res.data.documents.map(d => {
-            const ext = d.title.split('.').pop().toLowerCase();
-            const accentData = ext === 'pdf' ? { grad: "from-blue-500 to-indigo-600", text: "text-blue-300" } : 
-                               ext === 'docx' ? { grad: "from-purple-500 to-pink-600", text: "text-purple-300" } : 
-                               { grad: "from-emerald-500 to-teal-600", text: "text-emerald-300" };
 
-            return {
-              id: d._id,
-              name: d.title,
-              ext: ext,
-              size: (d.fileSize / 1024 / 1024).toFixed(2) + " MB",
-              time: new Date(d.createdAt).toLocaleDateString(),
-              status: d.summary ? "Summarized" : "Queued",
-              starred: false,
-              owner: "You",
-              gradient: accentData.grad,
-              accent: "#3b82f6",
-              accentDim: "rgba(59,130,246,0.1)",
-              accentBorder: "rgba(59,130,246,0.22)",
-              accentText: accentData.text,
-              statusBg: d.summary ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-300" : "bg-amber-500/10 border-amber-500/25 text-amber-300",
-              tag: "Document",
-            }
-          });
-          setDocs(formattedDocs);
-        }
-      } catch (err) {
-        console.error("Fetch docs error:", err);
-      }
-    };
-    
     fetchDocuments();
-    
+
     // Auto-refresh interval so new uploads appear without refreshing the whole page
     const interval = setInterval(fetchDocuments, 5000);
     return () => clearInterval(interval);
@@ -347,43 +457,72 @@ export default function RecentDocuments({ onUpload }) {
       console.error("Failed to delete", err);
     }
   };
+  const handleToggleStar =
+    async (docId) => {
+
+      try {
+
+        const token =
+          localStorage.getItem("token");
+
+        await axios.patch(
+          `http://localhost:5000/api/documents/${docId}/star`,
+          {},
+          {
+            headers: {
+              Authorization:
+                `Bearer ${token}`
+            }
+          }
+        );
+
+        fetchDocuments();
+
+      } catch (error) {
+
+        console.error(error);
+
+      }
+
+    };
   const handleSummarize = async (docId) => {
 
-  try {
+    try {
 
-    const token =
-      localStorage.getItem("token");
+      const token =
+        localStorage.getItem("token");
 
-    const response =
-      await summarizeDocument(
-        docId,
-        token
+      const response =
+        await summarizeDocument(
+          docId,
+          token
+        );
+
+      console.log(
+        "Summary generated:",
+        response
+      );
+      toast.success(
+        "AI Summary Generated Successfully"
+      );
+      await fetchDocuments();
+
+    } catch (error) {
+
+      console.error(error);
+
+      toast.error(
+        "Failed to generate summary"
       );
 
-    console.log(
-      "Summary generated:",
-      response
-    );
-toast.success(
-  "AI Summary Generated Successfully"
-);
+    }
 
-  } catch (error) {
-
-    console.error(error);
-
-    toast.error(
-  "Failed to generate summary"
-);
-
-  }
-
-};
+  };
 
   const filtered = docs.filter((d) => {
     const matchFilter = activeFilter === "All" ? true
       : activeFilter === "Starred" ? d.starred
-      : d.ext.toLowerCase() === activeFilter.toLowerCase();
+        : d.ext.toLowerCase() === activeFilter.toLowerCase();
     const matchSearch = !searchQuery || d.name.toLowerCase().includes(searchQuery.toLowerCase());
     return matchFilter && matchSearch;
   });
@@ -446,11 +585,10 @@ toast.success(
           className="flex items-center gap-2 mb-4 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
           {filters.map((f) => (
             <motion.button key={f} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} onClick={() => setActiveFilter(f)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all duration-200 shrink-0 ${
-                activeFilter === f
+              className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all duration-200 shrink-0 ${activeFilter === f
                   ? "bg-blue-500/15 border border-blue-500/25 text-blue-300"
                   : "text-gray-500 hover:text-gray-300 border border-transparent hover:border-white/[0.07] hover:bg-white/[0.04]"
-              }`}>
+                }`}>
               {f}
             </motion.button>
           ))}
@@ -471,11 +609,11 @@ toast.success(
               <AnimatePresence>
                 {filtered.length > 0
                   ? filtered.map((doc, i) => (
-                      <React.Fragment key={doc.id}>
-                        <DocRow doc={doc} index={i} onDelete={handleDelete} onSummarize={handleSummarize} />
-                        {i < filtered.length - 1 && <div className="mx-5 h-px bg-[#1F2937]" />}
-                      </React.Fragment>
-                    ))
+                    <React.Fragment key={doc.id}>
+                      <DocRow doc={doc} index={i} onDelete={handleDelete} onSummarize={handleSummarize} onToggleStar={handleToggleStar} />
+                      {i < filtered.length - 1 && <div className="mx-5 h-px bg-[#1F2937]" />}
+                    </React.Fragment>
+                  ))
                   : <EmptyState onUpload={onUpload} />
                 }
               </AnimatePresence>
@@ -487,8 +625,8 @@ toast.success(
               <AnimatePresence>
                 {filtered.length > 0
                   ? <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {filtered.map((doc, i) => <DocCard key={doc.id} doc={doc} index={i} onDelete={handleDelete} onSummarize={handleSummarize} />)}
-                    </div>
+                    {filtered.map((doc, i) => <DocCard key={doc.id} doc={doc} index={i} onDelete={handleDelete} onSummarize={handleSummarize} onToggleStar={handleToggleStar} />)}
+                  </div>
                   : <EmptyState onUpload={onUpload} />
                 }
               </AnimatePresence>

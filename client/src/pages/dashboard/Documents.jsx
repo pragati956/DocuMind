@@ -78,17 +78,19 @@ function ActionsMenu({
   onEdit,
   onSummarize,
   documentData,
-}){
+}) {
   const actions = [
-    {icon: <HiOutlineDocumentText />,
-  label: "View",},
+    {
+      icon: <HiOutlineDocumentText />,
+      label: "View",
+    },
     { icon: <HiMiniSparkles />, label: "Summarize with AI", accent: true },
     { icon: <HiOutlineDownload />, label: "Download" },
     { icon: <HiOutlineShare />, label: "Share" },
     { icon: <HiOutlinePencil />, label: "Edit" },
     { icon: <HiOutlineTrash />, label: "Delete", danger: true },
-    
-  
+
+
 
   ];
   return (
@@ -102,28 +104,28 @@ function ActionsMenu({
       {actions.map((a, i) => (
         <button
           key={i}
-         onClick={() => {
+          onClick={() => {
 
-  if (a.label === "Delete") {
-   onDelete(documentData.id);
-  }
-  if (a.label === "View") {
-  onView(documentData);
-}
-if (a.label === "Edit") {
-  onEdit(documentData);
-}
-if (
-  a.label ===
-  "Summarize with AI"
-) {
-  onSummarize(
-    documentData.id
-  );
-}
+            if (a.label === "Delete") {
+              onDelete(documentData.id);
+            }
+            if (a.label === "View") {
+              onView(documentData);
+            }
+            if (a.label === "Edit") {
+              onEdit(documentData);
+            }
+            if (
+              a.label ===
+              "Summarize with AI"
+            ) {
+              onSummarize(
+                documentData.id
+              );
+            }
 
-  onClose();
-}}
+            onClose();
+          }}
           className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-sm transition-colors
             ${a.danger ? "text-red-400 hover:bg-red-500/10" : a.accent ? "text-violet-300 hover:bg-violet-500/10" : "text-white/70 hover:bg-white/5 hover:text-white"}`}
         >
@@ -178,18 +180,18 @@ function DocCard({
           >
             <HiOutlineDotsVertical />
           </button>
-         <AnimatePresence>
-  {menuOpen && (
-   <ActionsMenu
-  onClose={() => setMenuOpen(false)}
-  onDelete={onDelete}
-  onView={onView}
-  onEdit={onEdit}
-   onSummarize={onSummarize}
-  documentData={doc}
-/>
-  )}
-</AnimatePresence>
+          <AnimatePresence>
+            {menuOpen && (
+              <ActionsMenu
+                onClose={() => setMenuOpen(false)}
+                onDelete={onDelete}
+                onView={onView}
+                onEdit={onEdit}
+                onSummarize={onSummarize}
+                documentData={doc}
+              />
+            )}
+          </AnimatePresence>
         </div>
       </motion.div>
     );
@@ -225,17 +227,17 @@ function DocCard({
             <HiOutlineDotsVertical />
           </button>
           <AnimatePresence>
-  {menuOpen && (
-    <ActionsMenu
-  onClose={() => setMenuOpen(false)}
-  onDelete={onDelete}
-  onView={onView}
-  onEdit={onEdit}
-  onSummarize={onSummarize}
-  documentData={doc}
-/>
-  )}
-</AnimatePresence>
+            {menuOpen && (
+              <ActionsMenu
+                onClose={() => setMenuOpen(false)}
+                onDelete={onDelete}
+                onView={onView}
+                onEdit={onEdit}
+                onSummarize={onSummarize}
+                documentData={doc}
+              />
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
@@ -374,81 +376,81 @@ export default function DocumentsPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const handleDelete = async (id) => {
-  try {
+    try {
 
-    await deleteDocument(id);
+      await deleteDocument(id);
 
-    await loadDocuments();
+      await loadDocuments();
 
-  } catch (error) {
-    console.error("Delete failed:", error);
-  }
-};
-const handleSummarize = async (id) => {
-  try {
-
-    const token =
-      localStorage.getItem("token");
-
-    toast.loading(
-      "Generating AI Summary...",
-      {
-        id: "summary",
-      }
-    );
-
-    await summarizeDocument(
-      id,
-      token
-    );
-
-    toast.success(
-      "AI Summary Generated",
-      {
-        id: "summary",
-      }
-    );
-
-    await loadDocuments();
-
-  } catch (error) {
-
-    console.error(error);
-
-    toast.error(
-      "Failed to generate summary",
-      {
-        id: "summary",
-      }
-    );
-  }
-};
-
-const handleSearch = async (value) => {
-  try {
-  
-    setSearch(value);
-    setPage(1);
-    if (!value.trim()) {
-      loadDocuments();
-      return;
+    } catch (error) {
+      console.error("Delete failed:", error);
     }
+  };
+  const handleSummarize = async (id) => {
+    try {
 
-    const data = await searchDocuments(value);
+      const token =
+        localStorage.getItem("token");
 
-    setDocuments(data.documents || []);
+      toast.loading(
+        "Generating AI Summary...",
+        {
+          id: "summary",
+        }
+      );
 
-  } catch (error) {
+      await summarizeDocument(
+        id,
+        token
+      );
 
-    console.error("Search failed:", error);
+      toast.success(
+        "AI Summary Generated",
+        {
+          id: "summary",
+        }
+      );
 
-  }
-};
+      await loadDocuments();
+
+    } catch (error) {
+
+      console.error(error);
+
+      toast.error(
+        "Failed to generate summary",
+        {
+          id: "summary",
+        }
+      );
+    }
+  };
+
+  const handleSearch = async (value) => {
+    try {
+
+      setSearch(value);
+      setPage(1);
+      if (!value.trim()) {
+        loadDocuments();
+        return;
+      }
+
+      const data = await searchDocuments(value);
+
+      setDocuments(data.documents || []);
+
+    } catch (error) {
+
+      console.error("Search failed:", error);
+
+    }
+  };
   const loadDocuments = async () => {
     try {
       setLoading(true);
       const data = await fetchDocuments(page);
-    
+
       setDocuments(data.documents || []);
       setTotalPages(data.totalPages || 1);
     } catch (error) {
@@ -461,7 +463,7 @@ const handleSearch = async (value) => {
     loadDocuments();
   }, [page]);
   const docs = documents.map((doc) => ({
-    id: doc._id,
+    id: doc.id,
     name: doc.title,
 
     type: doc.fileType?.includes("pdf")
@@ -475,7 +477,7 @@ const handleSearch = async (value) => {
     date: new Date(doc.createdAt).toLocaleDateString(),
 
     summary: doc.summary || "",
-summaryStatus: doc.summary ? "done" : "none",
+    summaryStatus: doc.summary ? "done" : "none",
 
     tags: doc.tags || [],
 
@@ -484,18 +486,18 @@ summaryStatus: doc.summary ? "done" : "none",
     fileUrl: doc.fileUrl,
   }));
 
- const filtered = docs.filter((d) => {
+  const filtered = docs.filter((d) => {
 
-  const matchFilter =
-    filter === "All"
-      ? true
-      : filter === "AI Summarized"
-      ? d.summaryStatus === "done"
-      : d.type === filter;
+    const matchFilter =
+      filter === "All"
+        ? true
+        : filter === "AI Summarized"
+          ? d.summaryStatus === "done"
+          : d.type === filter;
 
-  return matchFilter;
+    return matchFilter;
 
-});
+  });
 
   const stats = [
     { label: "Total Files", value: docs.length, icon: <HiOutlineDocumentText /> },
@@ -503,12 +505,12 @@ summaryStatus: doc.summary ? "done" : "none",
     { label: "Processing", value: docs.filter((d) => d.summaryStatus === "processing").length, icon: <HiOutlineLightningBolt /> },
   ];
   if (loading) {
-  return (
-    <div className="flex items-center justify-center min-h-screen text-white">
-      Loading documents...
-    </div>
-  );
-}
+    return (
+      <div className="flex items-center justify-center min-h-screen text-white">
+        Loading documents...
+      </div>
+    );
+  }
 
   return (
     <div
@@ -559,7 +561,7 @@ summaryStatus: doc.summary ? "done" : "none",
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.97 }}
-           onClick={() => navigate("/dashboard/upload")}
+            onClick={() => navigate("/dashboard/upload")}
             className="flex items-center gap-2 self-start sm:self-auto rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-all"
             style={{ background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)", boxShadow: "0 4px 24px rgba(109,40,217,0.4)" }}
           >
@@ -594,31 +596,31 @@ summaryStatus: doc.summary ? "done" : "none",
           {/* Search */}
           <div className="relative flex-1">
             <HiOutlineSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30 text-base" />
-           <input
-  value={search}
- onChange={(e) => {
+            <input
+              value={search}
+              onChange={(e) => {
 
 
 
-  handleSearch(
-    e.target.value
-  );
+                handleSearch(
+                  e.target.value
+                );
 
-}}
+              }}
               placeholder="Search documents…"
               className="w-full rounded-xl border border-white/[0.08] bg-white/[0.03] py-2.5 pl-10 pr-4 text-sm text-white placeholder-white/25 outline-none focus:border-violet-500/40 focus:bg-white/[0.05] transition-all"
               style={{ fontFamily: "'DM Sans', sans-serif" }}
             />
             {search && (
-<button
-  onClick={() => {
-    setSearch("");
-    loadDocuments();
-  }}
-  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60"
->
-  <HiOutlineX className="text-sm" />
-</button>
+              <button
+                onClick={() => {
+                  setSearch("");
+                  loadDocuments();
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60"
+              >
+                <HiOutlineX className="text-sm" />
+              </button>
             )}
           </div>
 
@@ -671,14 +673,14 @@ summaryStatus: doc.summary ? "done" : "none",
                 ? <EmptyState />
                 : filtered.map((doc, i) => (
                   <motion.div key={doc.id} style={{ transitionDelay: `${i * 30}ms` }}>
-         <DocCard
-  doc={doc}
-  view={view}
-  onDelete={handleDelete}
-  onView={setSelectedDoc}
-  onEdit={setEditDoc}
-  onSummarize={handleSummarize}
-/>
+                    <DocCard
+                      doc={doc}
+                      view={view}
+                      onDelete={handleDelete}
+                      onView={setSelectedDoc}
+                      onEdit={setEditDoc}
+                      onSummarize={handleSummarize}
+                    />
                   </motion.div>
                 ))}
             </AnimatePresence>
@@ -721,25 +723,25 @@ summaryStatus: doc.summary ? "done" : "none",
         )}
       </div>
       {
-  selectedDoc && (
-    <DocumentPreviewModal
-      document={selectedDoc}
-      onClose={() => setSelectedDoc(null)}
-    />
-  )
-}
-{
-  editDoc && (
-    <EditDocumentModal
-      document={editDoc}
-      onClose={() => setEditDoc(null)}
-      onSuccess={() => {
-        loadDocuments();
-        setEditDoc(null);
-      }}
-    />
-  )
-}
+        selectedDoc && (
+          <DocumentPreviewModal
+            document={selectedDoc}
+            onClose={() => setSelectedDoc(null)}
+          />
+        )
+      }
+      {
+        editDoc && (
+          <EditDocumentModal
+            document={editDoc}
+            onClose={() => setEditDoc(null)}
+            onSuccess={() => {
+              loadDocuments();
+              setEditDoc(null);
+            }}
+          />
+        )
+      }
 
       {/* ── Upload Modal ── */}
       {/* <AnimatePresence>{uploadOpen && <UploadModal onClose={() => setUploadOpen(false)} />}</AnimatePresence> */}
