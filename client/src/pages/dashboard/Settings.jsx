@@ -1,5 +1,6 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { AuthContext } from "../../context/AuthContext";
 import {
   HiOutlineUser,
   HiOutlineMail,
@@ -28,16 +29,22 @@ import { HiOutlineDocumentDuplicate, HiMiniSparkles } from "react-icons/hi2";
 
 // ─── constants ────────────────────────────────────────────────────────────────
 const NAV = [
-  { id: "profile",       label: "Profile",       icon: <HiOutlineUser /> },
-  { id: "account",       label: "Account",       icon: <HiOutlineMail /> },
-  { id: "security",      label: "Security",      icon: <HiOutlineLockClosed /> },
+  { id: "profile", label: "Profile", icon: <HiOutlineUser /> },
+  { id: "account", label: "Account", icon: <HiOutlineMail /> },
+  { id: "security", label: "Security", icon: <HiOutlineLockClosed /> },
   { id: "notifications", label: "Notifications", icon: <HiOutlineBell /> },
-  { id: "storage",       label: "Storage & Plan",icon: <HiOutlineDatabase /> },
-  { id: "integrations",  label: "Integrations",  icon: <HiOutlineGlobe /> },
-  { id: "danger",        label: "Danger Zone",   icon: <HiOutlineTrash />, danger: true },
+  { id: "storage", label: "Storage & Plan", icon: <HiOutlineDatabase /> },
+  { id: "integrations", label: "Integrations", icon: <HiOutlineGlobe /> },
+  { id: "danger", label: "Danger Zone", icon: <HiOutlineTrash />, danger: true },
 ];
 
-const AVATAR_INITIALS = "AJ";
+const getInitials = (name) =>
+  name
+    ?.split(" ")
+    .map(word => word[0])
+    .join("")
+    .toUpperCase();
+
 const PLAN_COLORS = { Pro: "#7c3aed", Free: "#6b7280", Enterprise: "#f59e0b" };
 
 // ─── tiny helpers ─────────────────────────────────────────────────────────────
@@ -70,7 +77,7 @@ function Toggle({ value, onChange }) {
       className="relative flex h-5 w-9 shrink-0 items-center rounded-full border transition-colors"
       animate={{
         backgroundColor: value ? "rgba(124,58,237,0.25)" : "rgba(255,255,255,0.04)",
-        borderColor:     value ? "rgba(124,58,237,0.5)"  : "rgba(255,255,255,0.1)",
+        borderColor: value ? "rgba(124,58,237,0.5)" : "rgba(255,255,255,0.1)",
       }}
     >
       <motion.span
@@ -147,9 +154,9 @@ function Btn({ children, variant = "ghost", onClick, danger, icon, small }) {
   const base = "inline-flex items-center gap-2 rounded-xl font-medium transition-all";
   const size = small ? "px-3 py-1.5 text-xs" : "px-4 py-2.5 text-sm";
   const styles = {
-    ghost:   "border border-white/[0.08] bg-white/[0.03] text-white/55 hover:bg-white/[0.07] hover:text-white/80",
+    ghost: "border border-white/[0.08] bg-white/[0.03] text-white/55 hover:bg-white/[0.07] hover:text-white/80",
     primary: "text-white shadow-lg",
-    danger:  "border border-red-500/20 bg-red-500/8 text-red-400 hover:bg-red-500/15 hover:text-red-300",
+    danger: "border border-red-500/20 bg-red-500/8 text-red-400 hover:bg-red-500/15 hover:text-red-300",
   };
   return (
     <motion.button
@@ -171,9 +178,16 @@ function Btn({ children, variant = "ghost", onClick, danger, icon, small }) {
 // ═════════════════════════════════════════════════════════════════════════════
 
 function ProfileSection() {
-  const [name, setName]   = useState("Alex Johnson");
-  const [role, setRole]   = useState("Senior Product Manager");
-  const [bio, setBio]     = useState("Building great products with AI-powered document intelligence.");
+  const [role, setRole] =
+  useState("Student");
+  const { user } = useContext(AuthContext);
+
+  const [name, setName] =
+    useState(user?.name || "");
+
+  const [email, setEmail] =
+    useState(user?.email || "");
+  const [bio, setBio] = useState("Building great products with AI-powered document intelligence.");
   const [saved, setSaved] = useState(false);
 
   const save = () => {
@@ -194,7 +208,7 @@ function ProfileSection() {
                 className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border border-white/10 text-2xl font-bold text-violet-300"
                 style={{ background: "linear-gradient(135deg,rgba(124,58,237,0.25),rgba(91,33,182,0.15))" }}
               >
-                {AVATAR_INITIALS}
+                {getInitials(name)}
               </div>
               <button className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity text-white/80">
                 <HiOutlinePencil className="text-sm" />
@@ -245,8 +259,9 @@ function ProfileSection() {
 }
 
 function AccountSection() {
-  const [email, setEmail] = useState("alex.johnson@company.com");
-  const [lang, setLang]   = useState("English (US)");
+  const { user } = useContext(AuthContext);
+  const [email, setEmail] = useState(user?.email || "");
+  const [lang, setLang] = useState("English (US)");
   const [theme, setTheme] = useState("dark");
   const [saved, setSaved] = useState(false);
 
@@ -266,7 +281,7 @@ function AccountSection() {
           <Divider />
           <Row icon={<HiOutlineColorSwatch />} label="Appearance" sub="Choose your interface theme">
             <div className="flex items-center gap-1.5">
-              {["dark","light","system"].map((t) => (
+              {["dark", "light", "system"].map((t) => (
                 <button key={t} onClick={() => setTheme(t)}
                   className={`rounded-lg px-2.5 py-1.5 text-xs capitalize font-medium transition-all border
                     ${theme === t
@@ -284,7 +299,7 @@ function AccountSection() {
               className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-xs text-white/60 outline-none focus:border-violet-500/30 cursor-pointer"
               style={{ fontFamily: "inherit" }}
             >
-              {["English (US)","English (UK)","Français","Deutsch","日本語"].map((l) => (
+              {["English (US)", "English (UK)", "Français", "Deutsch", "日本語"].map((l) => (
                 <option key={l} value={l} style={{ background: "#111" }}>{l}</option>
               ))}
             </select>
@@ -303,19 +318,20 @@ function AccountSection() {
 }
 
 function SecuritySection() {
-  const [showCurr, setShowCurr]     = useState(false);
-  const [showNew, setShowNew]       = useState(false);
+  const [showCurr, setShowCurr] = useState(false);
+  const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [curr, setCurr]             = useState("");
-  const [newP, setNewP]             = useState("");
-  const [confirm, setConfirm]       = useState(false);
-  const [twoFA, setTwoFA]           = useState(true);
-  const [sessions, setSessions]     = useState(true);
-  const [copied, setCopied]         = useState(false);
+  const [curr, setCurr] = useState("");
+  const [newP, setNewP] = useState("");
+  const [confirm, setConfirm] =
+  useState("");
+  const [twoFA, setTwoFA] = useState(true);
+  const [sessions, setSessions] = useState(true);
+  const [copied, setCopied] = useState(false);
 
   const strength = newP.length === 0 ? 0 : newP.length < 6 ? 1 : newP.length < 10 ? 2 : 3;
-  const strengthColors = ["transparent","#ef4444","#f59e0b","#10b981"];
-  const strengthLabels = ["","Weak","Fair","Strong"];
+  const strengthColors = ["transparent", "#ef4444", "#f59e0b", "#10b981"];
+  const strengthLabels = ["", "Weak", "Fair", "Strong"];
 
   return (
     <div className="space-y-4">
@@ -347,7 +363,7 @@ function SecuritySection() {
           {newP.length > 0 && (
             <div>
               <div className="flex gap-1 mb-1">
-                {[1,2,3].map((i) => (
+                {[1, 2, 3].map((i) => (
                   <motion.div key={i} animate={{ backgroundColor: i <= strength ? strengthColors[strength] : "rgba(255,255,255,0.07)" }}
                     className="h-1 flex-1 rounded-full" />
                 ))}
@@ -403,15 +419,15 @@ function SecuritySection() {
 
 function NotificationsSection() {
   const [notifs, setNotifs] = useState({
-    upload:    true,
-    summary:   true,
-    weekly:    false,
-    mentions:  true,
-    security:  true,
-    product:   false,
-    email:     true,
-    slack:     false,
-    browser:   true,
+    upload: true,
+    summary: true,
+    weekly: false,
+    mentions: true,
+    security: true,
+    product: false,
+    email: true,
+    slack: false,
+    browser: true,
   });
 
   const toggle = (key) => setNotifs((n) => ({ ...n, [key]: !n[key] }));
@@ -420,30 +436,30 @@ function NotificationsSection() {
     {
       title: "Document Activity",
       rows: [
-        { key: "upload",   label: "Upload Complete",      sub: "When a document finishes uploading",        icon: <HiOutlineDocumentDuplicate /> },
-        { key: "summary",  label: "AI Summary Ready",     sub: "When DocuMind AI finishes summarizing",     icon: <BsStars /> },
-        { key: "mentions", label: "Mentions & Comments",  sub: "When someone mentions you in a document",   icon: <HiOutlineBell /> },
+        { key: "upload", label: "Upload Complete", sub: "When a document finishes uploading", icon: <HiOutlineDocumentDuplicate /> },
+        { key: "summary", label: "AI Summary Ready", sub: "When DocuMind AI finishes summarizing", icon: <BsStars /> },
+        { key: "mentions", label: "Mentions & Comments", sub: "When someone mentions you in a document", icon: <HiOutlineBell /> },
       ],
     },
     {
       title: "Reports & Digests",
       rows: [
-        { key: "weekly",   label: "Weekly Digest",        sub: "Summary of your weekly document activity",  icon: <HiOutlineMail /> },
-        { key: "product",  label: "Product Updates",      sub: "New features and improvements",             icon: <HiMiniSparkles /> },
+        { key: "weekly", label: "Weekly Digest", sub: "Summary of your weekly document activity", icon: <HiOutlineMail /> },
+        { key: "product", label: "Product Updates", sub: "New features and improvements", icon: <HiMiniSparkles /> },
       ],
     },
     {
       title: "Security",
       rows: [
-        { key: "security", label: "Security Alerts",      sub: "Login from new device or location",        icon: <HiOutlineShieldCheck /> },
+        { key: "security", label: "Security Alerts", sub: "Login from new device or location", icon: <HiOutlineShieldCheck /> },
       ],
     },
     {
       title: "Delivery Channels",
       rows: [
-        { key: "email",    label: "Email Notifications",  sub: "alex.johnson@company.com",                  icon: <HiOutlineMail /> },
-        { key: "browser",  label: "Browser Push",         sub: "In-browser desktop notifications",          icon: <HiOutlineGlobe /> },
-        { key: "slack",    label: "Slack Integration",    sub: "Receive updates in your Slack workspace",   icon: <BsSlack /> },
+        { key: "email", label: "Email Notifications", sub: "alex.johnson@company.com", icon: <HiOutlineMail /> },
+        { key: "browser", label: "Browser Push", sub: "In-browser desktop notifications", icon: <HiOutlineGlobe /> },
+        { key: "slack", label: "Slack Integration", sub: "Receive updates in your Slack workspace", icon: <BsSlack /> },
       ],
     },
   ];
@@ -473,10 +489,10 @@ function StorageSection() {
   const used = 68;
   const total = 100;
   const breakdown = [
-    { label: "PDF Files",    size: "32.4 GB", pct: 48, color: "#ff6b6b" },
-    { label: "DOCX Files",   size: "14.8 GB", pct: 22, color: "#4fc3f7" },
-    { label: "Images",       size: "12.1 GB", pct: 18, color: "#ffb74d" },
-    { label: "Text Files",   size: "8.4 GB",  pct: 12, color: "#81c784" },
+    { label: "PDF Files", size: "32.4 GB", pct: 48, color: "#ff6b6b" },
+    { label: "DOCX Files", size: "14.8 GB", pct: 22, color: "#4fc3f7" },
+    { label: "Images", size: "12.1 GB", pct: 18, color: "#ffb74d" },
+    { label: "Text Files", size: "8.4 GB", pct: 12, color: "#81c784" },
   ];
 
   return (
@@ -642,13 +658,13 @@ function DangerSection() {
 // MAIN
 // ═════════════════════════════════════════════════════════════════════════════
 const SECTIONS = {
-  profile:       <ProfileSection />,
-  account:       <AccountSection />,
-  security:      <SecuritySection />,
+  profile: <ProfileSection />,
+  account: <AccountSection />,
+  security: <SecuritySection />,
   notifications: <NotificationsSection />,
-  storage:       <StorageSection />,
-  integrations:  <IntegrationsSection />,
-  danger:        <DangerSection />,
+  storage: <StorageSection />,
+  integrations: <IntegrationsSection />,
+  danger: <DangerSection />,
 };
 
 export default function SettingsPage() {
@@ -672,11 +688,11 @@ export default function SettingsPage() {
 
       {/* ambient */}
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
-        <div style={{ position:"absolute", top:"-15%", right:"-5%", width:600, height:600, background:"radial-gradient(circle, rgba(109,40,217,0.07) 0%, transparent 70%)", borderRadius:"50%" }} />
-        <div style={{ position:"absolute", bottom:"5%", left:"-8%", width:450, height:450, background:"radial-gradient(circle, rgba(14,165,233,0.04) 0%, transparent 70%)", borderRadius:"50%" }} />
+        <div style={{ position: "absolute", top: "-15%", right: "-5%", width: 600, height: 600, background: "radial-gradient(circle, rgba(109,40,217,0.07) 0%, transparent 70%)", borderRadius: "50%" }} />
+        <div style={{ position: "absolute", bottom: "5%", left: "-8%", width: 450, height: 450, background: "radial-gradient(circle, rgba(14,165,233,0.04) 0%, transparent 70%)", borderRadius: "50%" }} />
         <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.02 }}>
           <defs><pattern id="g" width="44" height="44" patternUnits="userSpaceOnUse">
-            <path d="M 44 0 L 0 0 0 44" fill="none" stroke="white" strokeWidth="0.5"/>
+            <path d="M 44 0 L 0 0 0 44" fill="none" stroke="white" strokeWidth="0.5" />
           </pattern></defs>
           <rect width="100%" height="100%" fill="url(#g)" />
         </svg>

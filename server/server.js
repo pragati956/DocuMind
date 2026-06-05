@@ -8,6 +8,8 @@ import passport from "passport"; // Imported passport
 import { initializePassport } from "./config/passport.js"; 
 import aiRoutes
 from "./routes/aiRoutes.js";
+import notificationRoutes
+from "./routes/notificationRoutes.js";
 import dashboardRoutes
 from "./routes/dashboardRoutes.js";
 // Import the initialization function
@@ -39,6 +41,10 @@ app.use(
 app.use(
   "/api/ai",
   aiRoutes
+);
+app.use(
+ "/api/notifications",
+ notificationRoutes
 );
 
 // TEST ROUTE

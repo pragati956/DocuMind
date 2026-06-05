@@ -1,38 +1,88 @@
 import React, { useState, useRef, useEffect, useContext } from "react";
+import {
+ useCallback
+} from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNotifications } from "../../context/NotificationContext";
 import { useNavigate } from "react-router-dom";
+// notification service is used via NotificationContext
 import { AuthContext } from "../../context/AuthContext";
 import {
-  FiSearch, FiUpload, FiBell, FiMenu, FiX,
-  FiPlus, FiFileText, FiZap, FiSettings, FiLogOut,
-  FiUser, FiChevronDown, FiCheck, FiClock, FiStar,
-  FiCommand, FiMoon, FiSun,
+  FiSearch, FiBell, FiMenu, FiX,
+  FiFileText, FiZap, FiSettings, FiLogOut,
+  FiUser, FiChevronDown,
+  FiCommand,
 } from "react-icons/fi";
+import {
+  searchDocuments
+}
+  from "../../services/documentService";
 
 /* ─── Mock Data ─── */
-const notifications = [
-  { id: 1, icon: <FiZap />, color: "text-purple-400", bg: "bg-purple-500/10", border: "border-purple-500/20", title: "AI summary ready", desc: "Q4 Financial Report summarized", time: "2m ago", unread: true },
-  { id: 2, icon: <FiFileText />, color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20", title: "Document uploaded", desc: "Product Roadmap 2025.docx", time: "18m ago", unread: true },
-  { id: 3, icon: <FiStar />, color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20", title: "Team shared a file", desc: "Legal NDA — shared by Sarah K.", time: "1h ago", unread: true },
-  { id: 4, icon: <FiCheck />, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20", title: "Export complete", desc: "Meeting Notes exported as PDF", time: "3h ago", unread: false },
-];
+// const notifications = [
+//   { id: 1, icon: <FiZap />, color: "text-purple-400", bg: "bg-purple-500/10", border: "border-purple-500/20", title: "AI summary ready", desc: "Q4 Financial Report summarized", time: "2m ago", unread: true },
+//   { id: 2, icon: <FiFileText />, color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20", title: "Document uploaded", desc: "Product Roadmap 2025.docx", time: "18m ago", unread: true },
+//   { id: 3, icon: <FiStar />, color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20", title: "Team shared a file", desc: "Legal NDA — shared by Sarah K.", time: "1h ago", unread: true },
+//   { id: 4, icon: <FiCheck />, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20", title: "Export complete", desc: "Meeting Notes exported as PDF", time: "3h ago", unread: false },
+// ];
 
-const searchSuggestions = [
-  { icon: <FiFileText />, label: "Q4 Financial Report.pdf", type: "Document" },
-  { icon: <FiZap />, label: "Product Roadmap Summary", type: "AI Summary" },
-  { icon: <FiFileText />, label: "Legal Contract — NDA.pdf", type: "Document" },
-  { icon: <FiClock />, label: "Team Meeting Notes.txt", type: "Recent" },
-];
+// const searchSuggestions = [
+//   { icon: <FiFileText />, label: "Q4 Financial Report.pdf", type: "Document" },
+//   { icon: <FiZap />, label: "Product Roadmap Summary", type: "AI Summary" },
+//   { icon: <FiFileText />, label: "Legal Contract — NDA.pdf", type: "Document" },
+//   { icon: <FiClock />, label: "Team Meeting Notes.txt", type: "Recent" },
+// ];
 
 /* ─── Search Bar ─── */
 function SearchBar() {
+
+  const [results,
+    setResults] =
+    useState([]);
   const [focused, setFocused] = useState(false);
   const [query, setQuery] = useState("");
+  const navigate = useNavigate();
+  useEffect(() => {
+
+    const timer =
+      setTimeout(async () => {
+
+        if (!query.trim()) {
+
+          setResults([]);
+
+          return;
+
+        }
+
+        try {
+
+          const data =
+            await searchDocuments(
+              query
+            );
+
+          setResults(
+            data.documents || []
+          );
+
+        } catch (err) {
+
+          console.error(err);
+
+        }
+
+      }, 300);
+
+    return () =>
+      clearTimeout(timer);
+
+  }, [query]);
   const ref = useRef(null);
 
-  const filtered = query.length > 0
-    ? searchSuggestions.filter((s) => s.label.toLowerCase().includes(query.toLowerCase()))
-    : searchSuggestions;
+  // const filtered = query.length > 0
+  //   ? searchSuggestions.filter((s) => s.label.toLowerCase().includes(query.toLowerCase()))
+  //   : searchSuggestions;
 
   useEffect(() => {
     const handler = (e) => {
@@ -71,6 +121,19 @@ function SearchBar() {
         </motion.div>
 
         <input
+          onKeyDown={(e) => {
+
+            if (
+              e.key === "Enter"
+            ) {
+
+              navigate(
+                `/dashboard/search?q=${query}`
+              );
+
+            }
+
+          }}
           ref={ref}
           type="text"
           value={query}
@@ -126,21 +189,32 @@ function SearchBar() {
               <p className="text-[10px] text-gray-600 font-semibold uppercase tracking-widest px-1 mb-2">
                 {query ? "Results" : "Recent"}
               </p>
-              {filtered.map((item, i) => (
+              {query &&
+                results.length === 0 && (
+
+                  <div className="p-4 text-center text-gray-500">
+                    No documents found
+                  </div>
+
+                )}
+              {results.map((item, i) => (
                 <motion.div
                   key={i}
                   initial={{ opacity: 0, x: -6 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.04 }}
                   whileHover={{ backgroundColor: "rgba(59,130,246,0.07)" }}
+                  onClick={() => navigate(
+                    `/dashboard/documents?id=${item._id}`
+                  )}
                   className="flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-colors duration-150"
                 >
                   <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/[0.07] flex items-center justify-center text-blue-400 text-sm shrink-0">
-                    {item.icon}
+                    <FiFileText />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-white text-xs font-medium truncate">{item.label}</p>
-                    <p className="text-gray-600 text-[10px]">{item.type}</p>
+                    <p className="text-white text-xs font-medium truncate">{item.title}</p>
+                    <p className="text-gray-600 text-[10px]">{item.fileType}</p>
                   </div>
                   <FiChevronDown className="text-gray-700 text-xs rotate-[-90deg] shrink-0" />
                 </motion.div>
@@ -166,46 +240,129 @@ function SearchBar() {
 }
 
 /* ─── Upload Button ─── */
-function UploadButton({ onClick }) {
-  return (
-    <motion.button
-      whileHover={{ scale: 1.04, boxShadow: "0 0 22px rgba(59,130,246,0.4)" }}
-      whileTap={{ scale: 0.97 }}
-      onClick={onClick}
-      className="relative flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm font-semibold overflow-hidden shrink-0"
-    >
-      <motion.div
-        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12"
-        animate={{ x: ["-100%", "200%"] }}
-        transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 2 }}
-      />
-      <FiPlus className="text-sm relative z-10" />
-      <span className="hidden sm:inline relative z-10">Upload</span>
-    </motion.button>
-  );
-}
+// function UploadButton({ onClick }) {
+//   return (
+//     <motion.button
+//       whileHover={{ scale: 1.04, boxShadow: "0 0 22px rgba(59,130,246,0.4)" }}
+//       whileTap={{ scale: 0.97 }}
+//       onClick={onClick}
+//       className="relative flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm font-semibold overflow-hidden shrink-0"
+//     >
+//       <motion.div
+//         className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12"
+//         animate={{ x: ["-100%", "200%"] }}
+//         transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 2 }}
+//       />
+//       <FiPlus className="text-sm relative z-10" />
+//       <span className="hidden sm:inline relative z-10">Upload</span>
+//     </motion.button>
+//   );
+// }
+
 
 /* ─── Notification Bell ─── */
 function NotificationBell() {
+  
+  const timeAgo = (date) => {
+
+    const seconds =
+      Math.floor(
+        (Date.now() - new Date(date)) / 1000
+      );
+
+    if (seconds < 60)
+      return "Just now";
+
+    if (seconds < 3600)
+      return `${Math.floor(seconds / 60)}m ago`;
+
+    if (seconds < 86400)
+      return `${Math.floor(seconds / 3600)}h ago`;
+
+    return `${Math.floor(seconds / 86400)}d ago`;
+
+  };
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const [notifications_local, setNotifications] = useState(notifications);
-  const unreadCount = notifications_local.filter((n) => n.unread).length;
+  // const [notifications_local, setNotifications] = useState(notifications);
+  const {
+    notifications,
+    loading,
+    unreadCount,
+    loadNotifications,
+    markRead,
+    markAll,
+    clearAll,
+    deleteNotification,
+  } = useNotifications();
+  
+
   const ref = useRef(null);
+
 
   useEffect(() => {
     const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+  const handleNotificationClick =
+    async (notification) => {
 
-  const markAllRead = () => setNotifications((n) => n.map((item) => ({ ...item, unread: false })));
+      try {
+
+        await markRead(
+          notification._id
+        );
+
+      
+
+        if (
+          notification.action ===
+          "summary"
+        ) {
+
+          navigate(
+            "/dashboard/summaries"
+          );
+
+        }
+        else {
+
+          navigate(
+            "/dashboard/documents"
+          );
+
+        }
+
+        setOpen(false);
+
+      } catch (err) {
+
+        console.error(err);
+
+      }
+
+    };
+  const markAllRead = async () => {
+    try {
+      await markAll();
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
     <div className="relative" ref={ref}>
       <motion.button
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.94 }}
-        onClick={() => setOpen(!open)}
+       onClick={() => {
+  if (!open) {
+    loadNotifications();
+  }
+
+  setOpen(prev => !prev);
+}}
         className="relative w-9 h-9 rounded-xl bg-white/[0.04] border border-[#1F2937] flex items-center justify-center text-gray-400 hover:text-white hover:border-white/10 hover:bg-white/[0.07] transition-all duration-200"
       >
         <motion.div
@@ -251,40 +408,92 @@ function NotificationBell() {
               <button onClick={markAllRead} className="text-blue-400 hover:text-blue-300 text-[11px] font-medium transition-colors">
                 Mark all read
               </button>
+              <button
+                onClick={clearAll}
+                className="
+ text-red-400
+ hover:text-red-300
+ text-[11px]
+ font-medium
+ ml-3
+ "
+              >
+                Clear all
+              </button>
             </div>
 
             <div className="max-h-72 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
-              {notifications_local.map((n, i) => (
-                <motion.div
-                  key={n.id}
-                  initial={{ opacity: 0, x: 8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  whileHover={{ backgroundColor: "rgba(255,255,255,0.02)" }}
-                  className={`flex items-start gap-3 px-4 py-3.5 cursor-pointer transition-colors duration-150 relative ${n.unread ? "bg-blue-500/[0.03]" : ""}`}
-                >
-                  {n.unread && <div className="absolute left-2 top-1/2 -translate-y-1/2 w-1 h-1 rounded-full bg-blue-400" />}
-                  <div className={`w-8 h-8 rounded-xl ${n.bg} border ${n.border} flex items-center justify-center ${n.color} text-sm shrink-0 mt-0.5`}>
-                    {n.icon}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-white text-xs font-semibold mb-0.5">{n.title}</p>
-                    <p className="text-gray-500 text-[11px] truncate">{n.desc}</p>
-                  </div>
-                  <span className="text-gray-700 text-[10px] shrink-0 mt-0.5">{n.time}</span>
-                </motion.div>
-              ))}
+              {loading ? (
+                <div className="p-6 text-center text-gray-500">
+                  Loading notifications...
+                </div>
+
+              ) : notifications.length === 0 ? (
+                <div className="p-6 text-center">
+                  <FiBell className="mx-auto mb-2 text-gray-600" />
+                  <p className="text-gray-500 text-sm">
+                    No notifications yet
+                  </p>
+                </div>
+              ) : (
+                notifications.map((n, i) => (
+                  <motion.div
+                    key={n._id}
+                    onClick={() =>
+                      handleNotificationClick(n)
+                    }
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    whileHover={{ backgroundColor: "rgba(255,255,255,0.02)" }}
+                    className={`flex items-start gap-3 px-4 py-3.5 cursor-pointer transition-colors duration-150 relative ${!n.isRead ? "bg-blue-500/[0.03]" : ""}`}
+                  >
+                    {!n.isRead && <div className="absolute left-2 top-1/2 -translate-y-1/2 w-1 h-1 rounded-full bg-blue-400" />}
+                    <div className={`w-8 h-8 rounded-xl bg-white/5 border border-white/[0.07] flex items-center justify-center text-blue-400 text-sm shrink-0 mt-0.5`}>
+                      {n.action === "uploaded" ? <FiFileText /> : n.action === "summary" ? <FiZap /> : n.action === "edited" ? <FiSettings /> : n.action === "deleted" ? <FiX /> : <FiBell />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white text-xs font-semibold mb-0.5">{n.action === "uploaded" ? "Document Uploaded" : n.action === "summary" ? "AI Summary Ready" : n.action === "edited" ? "Document Updated" : n.action === "deleted" ? "Document Deleted" : n.action}</p>
+                      <p className="text-gray-500 text-[11px] truncate">{n.documentName}</p>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+
+                        deleteNotification(
+                          n._id
+                        );
+                      }}
+                      className="
+ text-red-400
+ hover:text-red-300
+ mr-2
+ "
+                    >
+                      <FiX />
+                    </button>
+                    <span className="text-gray-700 text-[10px] shrink-0 mt-0.5">{timeAgo(n.createdAt)}</span>
+                  </motion.div>
+                ))
+
+              )}
             </div>
 
             <div className="px-4 py-3 border-t border-[#1F2937]">
-              <button className="w-full text-center text-blue-400 hover:text-blue-300 text-xs font-medium transition-colors">
+              <button
+                onClick={() => {
+                  navigate("/dashboard/notifications");
+                  setOpen(false);
+                }}
+                className="w-full text-center text-blue-400 hover:text-blue-300 text-xs font-medium transition-colors"
+              >
                 View all notifications
               </button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </div >
   );
 }
 
@@ -299,7 +508,7 @@ function ProfileMenu() {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
-  
+
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -323,7 +532,7 @@ function ProfileMenu() {
       <motion.button
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}
-        onClick={() => setOpen(!open)}
+        onClick={() => setOpen(prev => !prev)}
         className="flex items-center gap-2.5 pl-1 pr-3 py-1 rounded-xl border border-transparent hover:border-white/[0.07] hover:bg-white/[0.04] transition-all duration-200"
       >
         <div className="relative">
@@ -338,7 +547,7 @@ function ProfileMenu() {
         </div>
         <div className="hidden md:block text-left">
           <p className="text-white text-xs font-semibold leading-none truncate max-w-[100px]">{user?.name || "Active User"}</p>
-          <p className="text-gray-600 text-[10px] mt-0.5">Pro Plan</p>
+          <p className="text-gray-600 text-[10px] mt-0.5">{user?.plan || "Free Plan"}</p>
         </div>
         <motion.div
           animate={{ rotate: open ? 180 : 0 }}
@@ -348,7 +557,6 @@ function ProfileMenu() {
           <FiChevronDown className="text-gray-600 text-xs" />
         </motion.div>
       </motion.button>
-
       {/* Dropdown */}
       <AnimatePresence>
         {open && (
@@ -376,13 +584,17 @@ function ProfileMenu() {
                 <span className="text-emerald-300 text-[11px] font-medium">Pro Plan — Active</span>
               </div>
             </div>
-
             {/* Items */}
             <div className="p-2">
               {menuItems.map((item, i) => (
                 <motion.button
                   key={i}
                   whileHover={{ backgroundColor: item.highlight ? "rgba(59,130,246,0.08)" : "rgba(255,255,255,0.04)" }}
+                  onClick={() => {
+                    if (item.label === "Settings") {
+                      navigate("/dashboard/settings");
+                    }
+                  }}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors duration-150 ${item.highlight ? "border border-blue-500/20 bg-blue-500/[0.05]" : ""}`}
                 >
                   <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-sm ${item.highlight ? "bg-blue-500/15 text-blue-400" : "bg-white/5 text-gray-400"}`}>
@@ -417,12 +629,13 @@ function ProfileMenu() {
 
 /* ─── Main Topbar ─── */
 export default function Topbar({ onMobileSidebarToggle }) {
-  const [uploadOpen, setUploadOpen] = useState(false);
+  const { user } =
+    useContext(AuthContext);
+
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   return (
     <>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');`}</style>
 
       <motion.header
         initial={{ y: -64, opacity: 0 }}
@@ -436,7 +649,6 @@ export default function Topbar({ onMobileSidebarToggle }) {
         }}
       >
         <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-blue-500/20 to-transparent pointer-events-none" />
-
         {/* ── Left ── */}
         <div className="flex items-center gap-3">
           <motion.button
@@ -451,7 +663,11 @@ export default function Topbar({ onMobileSidebarToggle }) {
           <div className="hidden sm:flex items-center gap-2">
             <span className="text-gray-600 text-sm">DocuMind</span>
             <span className="text-gray-700 text-sm">/</span>
-            <span className="text-white text-sm font-medium">Workspace</span>
+            <span className="text-white text-sm font-medium">
+              {user?.name
+                ? `${user.name}'s Workspace`
+                : "Workspace"}
+            </span>
           </div>
 
           <motion.button
@@ -497,7 +713,7 @@ export default function Topbar({ onMobileSidebarToggle }) {
 
       {/* Since Topbar triggers Upload, we keep a simplified Upload Modal fallback here */}
       <AnimatePresence>
-         {/* If you need upload from topbar to function across all routes, consider lifting this modal to DashboardLayout */}
+        {/* If you need upload from topbar to function across all routes, consider lifting this modal to DashboardLayout */}
       </AnimatePresence>
     </>
   );

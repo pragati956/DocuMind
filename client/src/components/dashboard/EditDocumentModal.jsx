@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import { motion } from "framer-motion";
 import { HiOutlineX } from "react-icons/hi";
 
@@ -22,8 +23,14 @@ const EditDocumentModal = ({
   );
 
   const [loading, setLoading] = useState(false);
+  useEffect(() => {
+  setTitle(document?.name || "");
+  setTags(document?.tags?.join(", ") || "");
+  setSummary(document?.summary || "");
+}, [document]);
 
   const handleSave = async () => {
+    console.log("EDIT DOCUMENT:", document);
     try {
       setLoading(true);
 
@@ -40,6 +47,9 @@ const EditDocumentModal = ({
           summary,
         }
       );
+      toast.success(
+  "Document updated successfully"
+);
 
       if (onSuccess) {
         onSuccess();
@@ -52,6 +62,9 @@ const EditDocumentModal = ({
         "Update failed:",
         error
       );
+      toast.error(
+  "Failed to update document"
+);
     } finally {
       setLoading(false);
     }

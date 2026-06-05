@@ -1,7 +1,11 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import {
+ NotificationProvider
+}
+from "./context/NotificationContext";
 
 import { AuthProvider } from "./context/AuthContext";
-
+import Notifications from "./pages/dashboard/Notifications";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -24,6 +28,7 @@ import Analytics from "./pages/dashboard/Analytics";
 function App() {
   return (
     <AuthProvider>
+       <NotificationProvider>
       <BrowserRouter>
 
         <Routes>
@@ -39,6 +44,7 @@ function App() {
             path="/oauth-callback"
             element={<OAuthCallback />}
           />
+      
 
           {/* PROTECTED DASHBOARD ROUTES */}
           <Route
@@ -64,6 +70,10 @@ function App() {
 
             {/* SETTINGS */}
             <Route path="settings" element={<Settings />} />
+                <Route
+  path="notifications"
+  element={<Notifications />}
+/>
             <Route path="search" element={<SmartSearch />} />
 
 <Route path="summaries" element={<AiSummariesPage />} />
@@ -77,6 +87,7 @@ function App() {
         </Routes>
 
       </BrowserRouter>
+      </NotificationProvider>
     </AuthProvider>
   );
 }

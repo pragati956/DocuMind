@@ -1,4 +1,5 @@
 import Document from "../models/Document.js";
+import Activity from "../models/Activity.js";
 
 import {
   extractPdfText,
@@ -96,6 +97,11 @@ console.log(
         summary;
 
       await document.save();
+      await Activity.create({
+  userId: req.user.id,
+  action: "summary",
+  documentName: document.title,
+});
 
       res.status(200).json({
         success: true,

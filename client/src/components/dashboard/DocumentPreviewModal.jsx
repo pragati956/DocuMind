@@ -4,10 +4,9 @@ import { HiOutlineX, HiOutlineDownload } from "react-icons/hi";
 const DocumentPreviewModal = ({ document, onClose }) => {
   if (!document) return null;
 
-  const isImage =
-    document.type === "PNG" ||
-    document.type === "JPG" ||
-    document.type === "JPEG";
+ const isImage =
+  ["PNG", "JPG", "JPEG", "png", "jpg", "jpeg"]
+    .includes(document.type);
 
   return (
     <AnimatePresence>
