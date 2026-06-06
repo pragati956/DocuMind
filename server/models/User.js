@@ -6,19 +6,65 @@ const UserSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+
     email: {
       type: String,
       required: true,
       unique: true,
     },
+
     password: {
-      type: String, // Removed required: true so OAuth users can be created without a password
-    },
-    googleId: { // Added to track Google logins
       type: String,
     },
-    githubId: { // Added to track GitHub logins
+
+    googleId: {
       type: String,
+    },
+
+    githubId: {
+      type: String,
+    },
+
+    role: {
+      type: String,
+      default: "Student",
+    },
+
+    bio: {
+      type: String,
+      default: "",
+    },
+
+    notificationPreferences: {
+      upload: {
+        type: Boolean,
+        default: true,
+      },
+
+      summary: {
+        type: Boolean,
+        default: true,
+      },
+
+      weekly: {
+        type: Boolean,
+        default: false,
+      },
+
+      security: {
+        type: Boolean,
+        default: true,
+      },
+
+      email: {
+        type: Boolean,
+        default: true,
+      },
+
+      browser: {
+        type: Boolean,
+        default: true,
+      },
     },
   },
   {
@@ -26,4 +72,5 @@ const UserSchema = new mongoose.Schema(
   }
 );
 
-export const UserModel = mongoose.model("User", UserSchema);
+export const UserModel =
+  mongoose.model("User", UserSchema);

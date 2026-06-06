@@ -8,9 +8,15 @@ import {
   deleteDocument,
   updateDocument,     // Added Step 3
   searchDocuments,    // Added Step 5
+  toggleStarDocument, // Added Step 6
 } from "../controllers/uploadController.js";
 
 const router = express.Router();
+router.patch(
+ "/:id/star",
+ authMiddleware,
+ toggleStarDocument
+);
 
 // ─── UPLOAD & FETCH ALL ───
 router.post("/upload", authMiddleware, upload.single("document"), uploadDocument);

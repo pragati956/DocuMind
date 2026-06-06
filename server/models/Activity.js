@@ -7,6 +7,10 @@ const activitySchema = new mongoose.Schema(
     ref: "User",
     required: true,
   },
+  documentId:{
+ type:mongoose.Schema.Types.ObjectId,
+ ref:"Document"
+},
 
   action: {
     type: String,
