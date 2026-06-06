@@ -1,5 +1,6 @@
 import { UserModel } from "../models/User.js";
 import bcrypt from "bcryptjs";
+import Document from "../models/Document.js";
 
 export const getProfile = async (req, res) => {
   try {
@@ -184,6 +185,84 @@ async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message,
+    });
+
+  }
+
+};
+export const getStorageStats =
+async (req, res) => {
+
+  try {
+
+    const documents =
+      await Document.find({
+        uploadedBy:
+          req.user.id,
+      });
+ 
+
+    const totalDocuments =
+      documents.length;
+
+    const pdfCount =
+      documents.filter(
+        doc =>
+          doc.fileType?.includes(
+            "pdf"
+          )
+      ).length;
+
+    const docxCount =
+      documents.filter(
+        doc =>
+          doc.fileType?.includes(
+            "word"
+          )
+      ).length;
+
+    const txtCount =
+      documents.filter(
+        doc =>
+          doc.fileType?.includes(
+            "text"
+          )
+      ).length;
+
+    let totalStorageMB = 0;
+
+    documents.forEach(
+      (doc) => {
+
+        if (doc.fileSize) {
+
+          totalStorageMB +=
+            doc.fileSize /
+            (1024 * 1024);
+
+        }
+
+      }
+    );
+
+    res.status(200).json({
+      success: true,
+      totalDocuments,
+      pdfCount,
+      docxCount,
+      txtCount,
+      totalStorageMB:
+        Number(
+          totalStorageMB.toFixed(2)
+        ),
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      message:
+        error.message,
     });
 
   }
