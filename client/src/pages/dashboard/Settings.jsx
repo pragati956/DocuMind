@@ -5,26 +5,8 @@ import {
   useEffect
 }
 from "react";
-import {
-  changePassword,
-}
-from "../../services/userService";
 import { motion, AnimatePresence } from "framer-motion";
 import { AuthContext } from "../../context/AuthContext";
-import {
-  getProfile,
-  updateProfile,
-}
-from "../../services/userService";
-import {
-  getStorageStats,
-}
-from "../../services/userService";
-import {
-  getNotifications,
-  updateNotifications,
-}
-from "../../services/userService";
 import {
   HiOutlineUser,
   HiOutlineMail,
