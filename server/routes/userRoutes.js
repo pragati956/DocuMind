@@ -6,12 +6,7 @@ from "../middleware/authMiddleware.js";
 import {
   getProfile,
   updateProfile,
-  getNotificationPreferences,
-  updateNotificationPreferences,
-  changePassword,
-  getStorageStats,
-}
-from "../controllers/userController.js";
+} from "../controllers/userController.js";
 
 const router =
   express.Router();
@@ -27,27 +22,5 @@ router.put(
   authMiddleware,
   updateProfile
 );
-router.get(
-  "/notifications",
-  authMiddleware,
-  getNotificationPreferences
-);
-
-router.put(
-  "/notifications",
-  authMiddleware,
-  updateNotificationPreferences
-);
-router.put(
-  "/change-password",
-  authMiddleware,
-  changePassword
-);
-router.get(
-  "/storage",
-  authMiddleware,
-  getStorageStats
-);
-
 
 export default router;

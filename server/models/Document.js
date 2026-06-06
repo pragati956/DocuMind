@@ -15,13 +15,6 @@ starred: {
   type: Boolean,
   default: false,
 },
-views:{
- type:Number,
- default:0
-},
-lastOpened:{
- type:Date
-},
     publicId: {
       type: String,
       required: true,

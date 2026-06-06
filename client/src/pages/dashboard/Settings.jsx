@@ -5,24 +5,11 @@ import {
   useEffect
 }
 from "react";
-import {
-  changePassword,
-}
-from "../../services/userService";
 import { motion, AnimatePresence } from "framer-motion";
 import { AuthContext } from "../../context/AuthContext";
 import {
   getProfile,
   updateProfile,
-}
-from "../../services/userService";
-import {
-  getStorageStats,
-}
-from "../../services/userService";
-import {
-  getNotifications,
-  updateNotifications,
 }
 from "../../services/userService";
 import {
@@ -251,15 +238,12 @@ useEffect(() => {
       try {
 
         const token =
- localStorage.getItem("token");
+          localStorage.getItem("token");
 
-const data =
- await getProfile(token);
-
-setProfile(data.user);
-          setDocumentsCount(
- data.documentsCount || 0
-);
+        const data =
+          await getProfile(
+            token
+          );
 
         setName(
           data.user.name || ""
