@@ -77,3 +77,23 @@ async (
 
   return response.data;
 };
+export const changePassword =
+async (
+  passwordData,
+  token
+) => {
+
+  const response =
+    await axios.put(
+      `${API_URL}/change-password`,
+      passwordData,
+      {
+        headers: {
+          Authorization:
+            `Bearer ${token}`,
+        },
+      }
+    );
+
+  return response.data;
+};
