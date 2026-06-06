@@ -27,10 +27,11 @@ export const uploadDocument = async (req, res) => {
       fileSize: req.file.size || 0,
       uploadedBy: req.user.id, 
     });
-    await Activity.create({
-  userId: req.user.id,
-  action: "uploaded",
-  documentName: newDocument.title,
+   await Activity.create({
+ userId:req.user.id,
+ documentId:newDocument._id,
+ action:"uploaded",
+ documentName:newDocument.title,
 });
 
     console.log("✅ SUCCESS! Saved to MongoDB:", newDocument._id);
@@ -55,10 +56,19 @@ export const getDocuments = async (req, res) => {
 
     const totalDocuments = await Document.countDocuments({ uploadedBy: req.user.id });
     
-    const documents = await Document.find({ uploadedBy: req.user.id })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+   const documents =
+ await Document.find({
+  uploadedBy:req.user.id
+ })
+ .populate(
+   "uploadedBy",
+   "name email"
+ )
+ .sort({
+   createdAt:-1
+ })
+ .skip(skip)
+ .limit(limit);
 
     res.status(200).json({
       success: true,
@@ -82,10 +92,21 @@ export const searchDocuments = async (req, res) => {
     }
 
     // $regex provides a basic keyword search. $options: "i" makes it case-insensitive.
-    const documents = await Document.find({
-      uploadedBy: req.user.id,
-      title: { $regex: q, $options: "i" } 
-    }).sort({ createdAt: -1 });
+  const documents =
+ await Document.find({
+  uploadedBy:req.user.id,
+  title:{
+   $regex:q,
+   $options:"i"
+  }
+ })
+ .populate(
+   "uploadedBy",
+   "name email"
+ )
+ .sort({
+   createdAt:-1
+ });
 
     res.status(200).json({ success: true, documents });
   } catch (error) {
@@ -128,10 +149,11 @@ export const updateDocument = async (req, res) => {
     if (!document) {
       return res.status(404).json({ success: false, message: "Document not found or unauthorized" });
     }
-    await Activity.create({
-  userId: req.user.id,
-  action: "edited",
-  documentName: document.title,
+   await Activity.create({
+ userId:req.user.id,
+ documentId:document._id,
+ action:"edited",
+ documentName:document.title,
 });
 
     res.status(200).json({ success: true, message: "Document updated successfully", document });
@@ -155,10 +177,11 @@ export const deleteDocument = async (req, res) => {
     const resourceType = (document.fileType.includes("word") || document.fileType.includes("text")) ? "raw" : "image";
 
     await cloudinary.uploader.destroy(document.publicId, { resource_type: resourceType });
-    await Activity.create({
-  userId: req.user.id,
-  action: "deleted",
-  documentName: document.title,
+   await Activity.create({
+ userId:req.user.id,
+ documentId:document._id,
+ action:"deleted",
+ documentName:document.title,
 });
     await Document.findByIdAndDelete(document._id);
 
@@ -166,4 +189,50 @@ export const deleteDocument = async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
+};
+export const toggleStarDocument =
+async (req, res) => {
+
+ try {
+
+  const document =
+   await Document.findOne({
+    _id: req.params.id,
+    uploadedBy: req.user.id,
+   });
+
+  if (!document) {
+
+   return res.status(404).json({
+    success: false,
+    message: "Document not found",
+   });
+
+  }
+
+  document.starred =
+   !document.starred;
+
+  await document.save();
+ await Activity.create({
+ userId:req.user.id,
+ documentId:document._id,
+ action:"starred",
+ documentName:document.title,
+});
+
+  res.status(200).json({
+   success: true,
+   document,
+  });
+
+ } catch (error) {
+
+  res.status(500).json({
+   success: false,
+   message: error.message,
+  });
+
+ }
+
 };

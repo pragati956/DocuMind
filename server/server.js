@@ -12,6 +12,8 @@ import notificationRoutes
 from "./routes/notificationRoutes.js";
 import dashboardRoutes
 from "./routes/dashboardRoutes.js";
+import userRoutes
+from "./routes/userRoutes.js";
 // Import the initialization function
 
 import connectDB from "./config/db.js";
@@ -45,6 +47,10 @@ app.use(
 app.use(
  "/api/notifications",
  notificationRoutes
+);
+app.use(
+  "/api/user",
+  userRoutes
 );
 
 // TEST ROUTE

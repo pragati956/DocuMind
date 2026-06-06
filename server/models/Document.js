@@ -11,7 +11,10 @@ const documentSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-
+starred: {
+  type: Boolean,
+  default: false,
+},
     publicId: {
       type: String,
       required: true,
@@ -35,7 +38,10 @@ const documentSchema = new mongoose.Schema(
       default: "",
     },
 
-    tags: [String],
+    tags:{
+ type:[String],
+ default:[]
+},
   },
   { timestamps: true }
 );

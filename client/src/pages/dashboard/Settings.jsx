@@ -1,6 +1,17 @@
-import { useState, useRef, useContext } from "react";
+import {
+  useState,
+  useRef,
+  useContext,
+  useEffect
+}
+from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AuthContext } from "../../context/AuthContext";
+import {
+  getProfile,
+  updateProfile,
+}
+from "../../services/userService";
 import {
   HiOutlineUser,
   HiOutlineMail,
@@ -190,10 +201,73 @@ function ProfileSection() {
   const [bio, setBio] = useState("Building great products with AI-powered document intelligence.");
   const [saved, setSaved] = useState(false);
 
-  const save = () => {
+  const save = async () => {
+
+  try {
+
+    const token =
+      localStorage.getItem("token");
+
+    await updateProfile(
+      {
+        name,
+        role,
+        bio,
+      },
+      token
+    );
+
     setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  };
+
+    setTimeout(() => {
+      setSaved(false);
+    }, 2000);
+
+  } catch (error) {
+
+    console.error(error);
+
+  }
+
+};
+useEffect(() => {
+
+  const fetchProfile =
+    async () => {
+
+      try {
+
+        const token =
+          localStorage.getItem("token");
+
+        const data =
+          await getProfile(
+            token
+          );
+
+        setName(
+          data.user.name || ""
+        );
+
+        setRole(
+          data.user.role || "Student"
+        );
+
+        setBio(
+          data.user.bio || ""
+        );
+
+      } catch (error) {
+
+        console.error(error);
+
+      }
+
+    };
+
+  fetchProfile();
+
+}, []);
 
   return (
     <div className="space-y-4">

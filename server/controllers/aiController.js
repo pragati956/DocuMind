@@ -97,10 +97,11 @@ console.log(
         summary;
 
       await document.save();
-      await Activity.create({
-  userId: req.user.id,
-  action: "summary",
-  documentName: document.title,
+    await Activity.create({
+ userId:req.user.id,
+ documentId:document._id,
+ action:"summary",
+ documentName:document.title,
 });
 
       res.status(200).json({
@@ -129,16 +130,21 @@ console.log(
 
     try {
 
-      const documents =
-        await Document.find({
-          uploadedBy: req.user.id,
-          summary: {
-            $exists: true,
-            $ne: "",
-          },
-        }).sort({
-          updatedAt: -1,
-        });
+     const documents =
+  await Document.find({
+    uploadedBy: req.user.id,
+    summary: {
+      $exists: true,
+      $ne: "",
+    },
+  })
+    .populate(
+      "uploadedBy",
+      "name email"
+    )
+    .sort({
+      updatedAt: -1,
+    });
 
       res.status(200).json({
         success: true,
