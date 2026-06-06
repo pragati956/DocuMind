@@ -40,3 +40,40 @@ export const updateProfile =
 
     return response.data;
   };
+  export const getNotifications =
+async (token) => {
+
+  const response =
+    await axios.get(
+      `${API_URL}/notifications`,
+      {
+        headers: {
+          Authorization:
+            `Bearer ${token}`,
+        },
+      }
+    );
+
+  return response.data;
+};
+
+export const updateNotifications =
+async (
+  notifications,
+  token
+) => {
+
+  const response =
+    await axios.put(
+      `${API_URL}/notifications`,
+      notifications,
+      {
+        headers: {
+          Authorization:
+            `Bearer ${token}`,
+        },
+      }
+    );
+
+  return response.data;
+};

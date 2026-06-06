@@ -8,6 +8,16 @@ from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AuthContext } from "../../context/AuthContext";
 import {
+  getProfile,
+  updateProfile,
+}
+from "../../services/userService";
+import {
+  getNotifications,
+  updateNotifications,
+}
+from "../../services/userService";
+import {
   HiOutlineUser,
   HiOutlineMail,
   HiOutlineLockClosed,
