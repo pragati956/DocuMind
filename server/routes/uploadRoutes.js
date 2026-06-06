@@ -8,12 +8,7 @@ import {
   deleteDocument,
   updateDocument,     // Added Step 3
   searchDocuments,    // Added Step 5
-  toggleStarDocument, 
-   getSearchStats,
-    getCategories,
-    getDocumentsByType,getSuggestions,saveSearchHistory,
-getSearchHistory,
-clearSearchHistory,deleteSearchHistory,
+  toggleStarDocument, // Added Step 6
 } from "../controllers/uploadController.js";
 
 const router = express.Router();

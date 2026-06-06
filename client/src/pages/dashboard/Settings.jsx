@@ -5,24 +5,11 @@ import {
   useEffect
 }
 from "react";
-import {
-  changePassword,
-}
-from "../../services/userService";
 import { motion, AnimatePresence } from "framer-motion";
 import { AuthContext } from "../../context/AuthContext";
 import {
   getProfile,
   updateProfile,
-}
-from "../../services/userService";
-import {
-  getStorageStats,
-}
-from "../../services/userService";
-import {
-  getNotifications,
-  updateNotifications,
 }
 from "../../services/userService";
 import {
@@ -209,41 +196,72 @@ function ProfileSection() {
   const [saved, setSaved] = useState(false);
 
   const save = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      await updateProfile(
-        {
-          name,
-          role,
-          bio,
-        },
-        token
-      );
-      setSaved(true);
-      setTimeout(() => {
-        setSaved(false);
-      }, 2000);
-    } catch (error) {
-      console.error(error);
-    }
-  }; // FIXED: Removed the duplicate nested save function and closed the brackets properly
 
-  useEffect(() => {
-    const fetchProfile = async () => {
+  try {
+
+    const token =
+      localStorage.getItem("token");
+
+    await updateProfile(
+      {
+        name,
+        role,
+        bio,
+      },
+      token
+    );
+
+    setSaved(true);
+
+    setTimeout(() => {
+      setSaved(false);
+    }, 2000);
+
+  } catch (error) {
+
+    console.error(error);
+
+  }
+
+};
+useEffect(() => {
+
+  const fetchProfile =
+    async () => {
+
       try {
-        const token = localStorage.getItem("token");
-        const data = await getProfile(token);
-        setProfile(data.user);
-        setDocumentsCount(data.documentsCount || 0);
-        setName(data.user.name || "");
-        setRole(data.user.role || "Student");
-        setBio(data.user.bio || "");
+
+        const token =
+          localStorage.getItem("token");
+
+        const data =
+          await getProfile(
+            token
+          );
+
+        setName(
+          data.user.name || ""
+        );
+
+        setRole(
+          data.user.role || "Student"
+        );
+
+        setBio(
+          data.user.bio || ""
+        );
+
       } catch (error) {
+
         console.error(error);
+
       }
+
     };
-    fetchProfile();
-  }, []);
+
+  fetchProfile();
+
+}, []);
 
   return (
     <div className="space-y-4">
