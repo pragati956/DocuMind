@@ -95,36 +95,13 @@ export const searchDocuments = async (req, res) => {
 
     // $regex provides a basic keyword search. $options: "i" makes it case-insensitive.
   const documents =
-await Document.find({
-
- uploadedBy:req.user.id,
-
- $or:[
-
-  {
-   title:{
-    $regex:q,
-    $options:"i"
-   }
-  },
-
-  {
-   summary:{
-    $regex:q,
-    $options:"i"
-   }
-  },
-
-  {
-   tags:{
-    $regex:q,
-    $options:"i"
-   }
+ await Document.find({
+  uploadedBy:req.user.id,
+  title:{
+   $regex:q,
+   $options:"i"
   }
-
- ]
-
-})
+ })
  .populate(
    "uploadedBy",
    "name email"
@@ -256,136 +233,6 @@ async (req, res) => {
   res.status(500).json({
    success: false,
    message: error.message,
-  });
-
- }
-
-};
-export const getSearchStats =
-async (req, res) => {
-
- try {
-
-  const totalDocs =
-   await Document.countDocuments({
-    uploadedBy: req.user.id
-   });
-
-  const pdfs =
-   await Document.countDocuments({
-    uploadedBy: req.user.id,
-    fileType: {
-     $regex: "pdf",
-     $options: "i"
-    }
-   });
-   const summaries =
- await Document.countDocuments({
-  uploadedBy:req.user.id,
-  summary:{
-   $ne:""
-  }
- });
-
-  const docx =
-   await Document.countDocuments({
-    uploadedBy: req.user.id,
-    fileType: {
-     $regex: "word",
-     $options: "i"
-    }
-   });
-
-  const txt =
-   await Document.countDocuments({
-    uploadedBy: req.user.id,
-    fileType: {
-     $regex: "text",
-     $options: "i"
-    }
-   });
-
-  res.status(200).json({
-   success: true,
-   totalDocs,
-   pdfs,
-   docx,
-   txt,
-   summaries
-  });
-
- } catch (error) {
-
-  res.status(500).json({
-   success: false,
-   message: error.message,
-  });
-
- }
-
-};
-export const getCategories =
-async (req,res)=>{
-
- try{
-
-  const documents =
-   await Document.find({
-    uploadedBy:req.user.id
-   });
-
-  let pdf = 0;
-  let docx = 0;
-  let txt = 0;
-
-  documents.forEach(doc=>{
-
-   if(
-    doc.fileType?.includes(
-      "pdf"
-    )
-   ){
-    pdf++;
-   }
-
-   else if(
-    doc.fileType?.includes(
-      "word"
-    )
-   ){
-    docx++;
-   }
-
-   else{
-    txt++;
-   }
-
-  });
-
-  res.json({
-   success:true,
-   categories:[
-    {
-     label:"PDF",
-     count:pdf
-    },
-    {
-     label:"DOCX",
-     count:docx
-    },
-    {
-     label:"TXT",
-     count:txt
-    }
-   ]
-  });
-
- }
- catch(error){
-
-  res.status(500).json({
-   success:false,
-   message:error.message
   });
 
  }
