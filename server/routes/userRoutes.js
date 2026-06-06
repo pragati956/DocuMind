@@ -8,6 +8,7 @@ import {
   updateProfile,
   getNotificationPreferences,
   updateNotificationPreferences,
+  changePassword,
 }
 from "../controllers/userController.js";
 
@@ -35,6 +36,11 @@ router.put(
   "/notifications",
   authMiddleware,
   updateNotificationPreferences
+);
+router.put(
+  "/change-password",
+  authMiddleware,
+  changePassword
 );
 
 export default router;
