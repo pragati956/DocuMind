@@ -97,3 +97,19 @@ async (
 
   return response.data;
 };
+export const getStorageStats =
+async (token) => {
+
+  const response =
+    await axios.get(
+      `${API_URL}/storage`,
+      {
+        headers: {
+          Authorization:
+            `Bearer ${token}`,
+        },
+      }
+    );
+
+  return response.data;
+};

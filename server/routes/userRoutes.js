@@ -9,6 +9,7 @@ import {
   getNotificationPreferences,
   updateNotificationPreferences,
   changePassword,
+  getStorageStats,
 }
 from "../controllers/userController.js";
 
@@ -42,5 +43,11 @@ router.put(
   authMiddleware,
   changePassword
 );
+router.get(
+  "/storage",
+  authMiddleware,
+  getStorageStats
+);
+
 
 export default router;
