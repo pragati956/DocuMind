@@ -5,6 +5,10 @@ import {
   useEffect
 }
 from "react";
+import {
+  changePassword,
+}
+from "../../services/userService";
 import { motion, AnimatePresence } from "framer-motion";
 import { AuthContext } from "../../context/AuthContext";
 import {
@@ -402,6 +406,8 @@ function SecuritySection() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [curr, setCurr] = useState("");
   const [newP, setNewP] = useState("");
+  const [saving, setSaving] =
+useState(false);
   const [confirm, setConfirm] =
   useState("");
   const [twoFA, setTwoFA] = useState(true);
@@ -411,6 +417,62 @@ function SecuritySection() {
   const strength = newP.length === 0 ? 0 : newP.length < 6 ? 1 : newP.length < 10 ? 2 : 3;
   const strengthColors = ["transparent", "#ef4444", "#f59e0b", "#10b981"];
   const strengthLabels = ["", "Weak", "Fair", "Strong"];
+  const handlePasswordUpdate =
+async () => {
+
+  try {
+
+    if (
+      newP !== confirm
+    ) {
+
+      alert(
+        "Passwords do not match"
+      );
+
+      return;
+    }
+
+    setSaving(true);
+
+    const token =
+      localStorage.getItem(
+        "token"
+      );
+
+    const response =
+      await changePassword(
+        {
+          currentPassword:
+            curr,
+          newPassword:
+            newP,
+        },
+        token
+      );
+
+    alert(
+      response.message
+    );
+
+    setCurr("");
+    setNewP("");
+    setConfirm("");
+
+  } catch (error) {
+
+    alert(
+      error.response?.data?.message ||
+      "Failed to update password"
+    );
+
+  } finally {
+
+    setSaving(false);
+
+  }
+
+};
 
   return (
     <div className="space-y-4">
@@ -459,7 +521,19 @@ function SecuritySection() {
             }
           />
           <div className="flex justify-end">
-            <Btn variant="primary" icon={<HiOutlineKey />}>Update Password</Btn>
+           <Btn
+  variant="primary"
+  icon={<HiOutlineKey />}
+  onClick={
+    handlePasswordUpdate
+  }
+>
+  {
+    saving
+      ? "Updating..."
+      : "Update Password"
+  }
+</Btn>
           </div>
         </div>
       </Card>
