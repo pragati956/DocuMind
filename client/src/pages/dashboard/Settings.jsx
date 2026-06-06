@@ -17,6 +17,10 @@ import {
 }
 from "../../services/userService";
 import {
+  getStorageStats,
+}
+from "../../services/userService";
+import {
   getNotifications,
   updateNotifications,
 }
@@ -698,14 +702,79 @@ async (key) => {
 }
 
 function StorageSection() {
-  const used = 68;
-  const total = 100;
-  const breakdown = [
-    { label: "PDF Files", size: "32.4 GB", pct: 48, color: "#ff6b6b" },
-    { label: "DOCX Files", size: "14.8 GB", pct: 22, color: "#4fc3f7" },
-    { label: "Images", size: "12.1 GB", pct: 18, color: "#ffb74d" },
-    { label: "Text Files", size: "8.4 GB", pct: 12, color: "#81c784" },
-  ];
+    const [stats, setStats] =
+    useState({
+      totalDocuments: 0,
+      pdfCount: 0,
+      docxCount: 0,
+      txtCount: 0,
+      totalStorageMB: 0,
+    });
+    useEffect(() => {
+
+  const fetchStats =
+    async () => {
+
+      try {
+
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+        const data =
+          await getStorageStats(
+            token
+          );
+
+
+        setStats(data);
+
+      } catch (error) {
+
+        console.error(error);
+
+      }
+
+    };
+
+  fetchStats();
+
+}, []);
+  
+  const used =
+  stats.totalStorageMB;
+
+const total = 100;
+ const breakdown = [
+  {
+    label: "PDF Files",
+    size: `${stats.pdfCount} files`,
+    pct: stats.pdfCount * 10,
+    color: "#ff6b6b",
+  },
+
+  {
+    label: "DOCX Files",
+    size: `${stats.docxCount} files`,
+    pct: stats.docxCount * 10,
+    color: "#4fc3f7",
+  },
+
+  {
+    label: "TXT Files",
+    size: `${stats.txtCount} files`,
+    pct: stats.txtCount * 10,
+    color: "#81c784",
+  },
+
+  {
+    label: "Documents",
+    size: `${stats.totalDocuments} files`,
+    pct: stats.totalDocuments * 10,
+    color: "#ffb74d",
+  },
+];
 
   return (
     <div className="space-y-4">
@@ -727,8 +796,9 @@ function StorageSection() {
 
           {/* usage bar */}
           <div className="mb-3 flex items-center justify-between text-xs">
-            <span className="text-white/45 font-medium">{used} GB used</span>
-            <span className="text-white/25">{total} GB total</span>
+<span className="text-white/45 font-medium">
+  {used} MB used
+</span>            <span className="text-white/25">{total} GB total</span>
           </div>
           <div className="h-2 w-full rounded-full bg-white/[0.06] overflow-hidden mb-1">
             <motion.div
@@ -739,8 +809,9 @@ function StorageSection() {
               style={{ background: "linear-gradient(90deg, #7c3aed, #a78bfa)", boxShadow: "0 0 12px rgba(124,58,237,0.4)" }}
             />
           </div>
-          <p className="text-[11px] text-white/25">{total - used} GB remaining</p>
-
+<p className="text-[11px] text-white/25">
+  {stats.totalDocuments} documents uploaded
+</p>
           {/* breakdown */}
           <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
             {breakdown.map((b) => (
