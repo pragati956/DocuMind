@@ -61,3 +61,63 @@ export const updateProfile = async (req, res) => {
   }
 
 };
+export const getNotificationPreferences =
+async (req, res) => {
+
+  try {
+
+    const user =
+      await UserModel.findById(
+        req.user.id
+      );
+
+    res.status(200).json({
+      success: true,
+      notifications:
+        user.notificationPreferences,
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+
+};
+
+export const updateNotificationPreferences =
+async (req, res) => {
+
+  try {
+
+    const user =
+      await UserModel.findByIdAndUpdate(
+        req.user.id,
+        {
+          notificationPreferences:
+            req.body,
+        },
+        {
+          new: true,
+        }
+      );
+
+    res.status(200).json({
+      success: true,
+      notifications:
+        user.notificationPreferences,
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+
+};
