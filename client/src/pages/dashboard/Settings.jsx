@@ -17,6 +17,10 @@ import {
 }
 from "../../services/userService";
 import {
+  getStorageStats,
+}
+from "../../services/userService";
+import {
   getNotifications,
   updateNotifications,
 }
@@ -691,8 +695,6 @@ function StorageSection() {
       txtCount: 0,
       totalStorageMB: 0,
     });
-    const totalFiles =
- Math.max(stats.totalDocuments,1);
     useEffect(() => {
 
   const fetchStats =
@@ -725,48 +727,36 @@ function StorageSection() {
 
 }, []);
   
- const usedMB =
- stats.totalStorageMB;
-
-const totalMB =
- 102400;
-
-const usedPercentage =
- Math.min(
-  (usedMB / totalMB) * 100,
-  100
- );
+  const used =
+  stats.totalStorageMB;
 
 const total = 100;
  const breakdown = [
   {
     label: "PDF Files",
     size: `${stats.pdfCount} files`,
-    pct:
- (stats.pdfCount / totalFiles) * 100,
+    pct: stats.pdfCount * 10,
     color: "#ff6b6b",
   },
 
   {
     label: "DOCX Files",
     size: `${stats.docxCount} files`,
-   pct:
- (stats.docxCount / totalFiles) * 100,
+    pct: stats.docxCount * 10,
     color: "#4fc3f7",
   },
 
   {
     label: "TXT Files",
     size: `${stats.txtCount} files`,
-   pct:
- (stats.txtCount / totalFiles) * 100,
+    pct: stats.txtCount * 10,
     color: "#81c784",
   },
 
   {
     label: "Documents",
     size: `${stats.totalDocuments} files`,
-    pct: 100,
+    pct: stats.totalDocuments * 10,
     color: "#ffb74d",
   },
 ];
@@ -792,7 +782,7 @@ const total = 100;
           {/* usage bar */}
           <div className="mb-3 flex items-center justify-between text-xs">
 <span className="text-white/45 font-medium">
-  {usedMB.toFixed(2)} MB used
+  {used} MB used
 </span>            <span className="text-white/25">{total} GB total</span>
           </div>
           <div className="h-2 w-full rounded-full bg-white/[0.06] overflow-hidden mb-1">
