@@ -13,6 +13,11 @@ import {
 }
 from "../../services/userService";
 import {
+  getNotifications,
+  updateNotifications,
+}
+from "../../services/userService";
+import {
   HiOutlineUser,
   HiOutlineMail,
   HiOutlineLockClosed,
@@ -492,19 +497,46 @@ function SecuritySection() {
 }
 
 function NotificationsSection() {
-  const [notifs, setNotifs] = useState({
-    upload: true,
-    summary: true,
-    weekly: false,
-    mentions: true,
-    security: true,
-    product: false,
-    email: true,
-    slack: false,
-    browser: true,
-  });
+ const [notifs, setNotifs] =
+useState({
+  upload: true,
+  summary: true,
+  weekly: false,
+  security: true,
+  email: true,
+  browser: true,
+});
 
-  const toggle = (key) => setNotifs((n) => ({ ...n, [key]: !n[key] }));
+  const toggle =
+async (key) => {
+
+  const updated = {
+    ...notifs,
+    [key]:
+      !notifs[key],
+  };
+
+  setNotifs(updated);
+
+  try {
+
+    const token =
+      localStorage.getItem(
+        "token"
+      );
+
+    await updateNotifications(
+      updated,
+      token
+    );
+
+  } catch (error) {
+
+    console.error(error);
+
+  }
+
+};
 
   const groups = [
     {
@@ -537,6 +569,38 @@ function NotificationsSection() {
       ],
     },
   ];
+  useEffect(() => {
+
+  const fetchNotifications =
+    async () => {
+
+      try {
+
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+        const data =
+          await getNotifications(
+            token
+          );
+
+        setNotifs(
+          data.notifications
+        );
+
+      } catch (error) {
+
+        console.error(error);
+
+      }
+
+    };
+
+  fetchNotifications();
+
+}, []);
 
   return (
     <div className="space-y-4">
