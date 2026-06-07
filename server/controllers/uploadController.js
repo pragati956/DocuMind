@@ -11,6 +11,8 @@ export const uploadDocument = async (req, res) => {
       console.log("❌ ERROR: req.file is undefined. Multer or Cloudinary rejected the stream.");
       return res.status(400).json({ message: "No file uploaded" });
     }
+    console.log("REQ FILE DATA:");
+console.log(req.file);
 
     const fileUrl = req.file.path || req.file.secure_url;
     const publicId = req.file.filename || req.file.public_id;
@@ -93,13 +95,36 @@ export const searchDocuments = async (req, res) => {
 
     // $regex provides a basic keyword search. $options: "i" makes it case-insensitive.
   const documents =
- await Document.find({
-  uploadedBy:req.user.id,
-  title:{
-   $regex:q,
-   $options:"i"
+await Document.find({
+
+ uploadedBy:req.user.id,
+
+ $or:[
+
+  {
+   title:{
+    $regex:q,
+    $options:"i"
+   }
+  },
+
+  {
+   summary:{
+    $regex:q,
+    $options:"i"
+   }
+  },
+
+  {
+   tags:{
+    $regex:q,
+    $options:"i"
+   }
   }
- })
+
+ ]
+
+})
  .populate(
    "uploadedBy",
    "name email"

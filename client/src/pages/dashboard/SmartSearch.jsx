@@ -1,4 +1,16 @@
 import React, { useState, useRef, useEffect } from "react";
+import { toast } from "react-hot-toast";
+import {
+  searchDocuments,
+  toggleStarDocument,
+} from "../../services/documentService";
+import { useNavigate }
+from "react-router-dom";
+import DocumentPreviewModal
+from "../../components/dashboard/DocumentPreviewModal";
+import {
+  summarizeDocument,
+} from "../../services/aiService";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiSearch, FiZap, FiFileText, FiClock, FiX,
@@ -8,12 +20,7 @@ import {
 } from "react-icons/fi";
 
 /* ─── Mock Data ─── */
-const recentSearches = [
-  { id: 1, query: "quarterly revenue 2025", time: "2m ago", results: 8 },
-  { id: 2, query: "NDA contract terms", time: "1h ago", results: 3 },
-  { id: 3, query: "product roadmap milestones", time: "3h ago", results: 12 },
-  { id: 4, query: "team meeting action items", time: "Yesterday", results: 5 },
-];
+
 
 const suggestions = [
   { label: "Revenue & Finance", icon: <FiTrendingUp />, color: "from-blue-500 to-indigo-600", accent: "#3b82f6", dim: "rgba(59,130,246,0.1)", border: "rgba(59,130,246,0.22)", text: "text-blue-300", count: 24 },
@@ -22,12 +29,7 @@ const suggestions = [
   { label: "Meeting Notes", icon: <FiFileText />, color: "from-amber-500 to-orange-600", accent: "#f59e0b", dim: "rgba(245,158,11,0.1)", border: "rgba(245,158,11,0.22)", text: "text-amber-300", count: 31 },
 ];
 
-const mockResults = [
-  { id: 1, title: "Q4 Financial Report 2024", file: "Q4_Financial_Report.pdf", type: "PDF", excerpt: "Total revenue for Q4 reached $4.2M, representing a 34% year-over-year increase. Operating margins improved to 22% driven by optimized customer acquisition costs across all segments.", tags: ["Finance", "Q4"], starred: true, time: "2d ago", pages: 34, relevance: 98, gradient: "from-blue-500 to-indigo-600", accent: "#3b82f6", dim: "rgba(59,130,246,0.08)", border: "rgba(59,130,246,0.2)", accentText: "text-blue-300" },
-  { id: 2, title: "Annual Revenue Projections", file: "Revenue_Projections_2025.docx", type: "DOCX", excerpt: "Based on current quarterly performance, annual revenue is projected to reach $18.4M for FY2025. Key growth drivers include enterprise expansion and the new AI product line.", tags: ["Finance", "2025"], starred: false, time: "5d ago", pages: 12, relevance: 91, gradient: "from-purple-500 to-indigo-600", accent: "#8b5cf6", dim: "rgba(139,92,246,0.08)", border: "rgba(139,92,246,0.2)", accentText: "text-purple-300" },
-  { id: 3, title: "Investor Deck — Series B", file: "Series_B_Deck.pdf", type: "PDF", excerpt: "Financial highlights: ARR growing 3x YoY, net revenue retention at 128%, and a clear path to profitability by Q3 2025. Market opportunity valued at $12B TAM.", tags: ["Finance", "Investors"], starred: true, time: "1w ago", pages: 28, relevance: 87, gradient: "from-cyan-500 to-blue-600", accent: "#06b6d4", dim: "rgba(6,182,212,0.08)", border: "rgba(6,182,212,0.2)", accentText: "text-cyan-300" },
-  { id: 4, title: "Board Meeting Notes — Q3", file: "Board_Meeting_Q3.txt", type: "TXT", excerpt: "Revenue growth discussed as top priority. CFO presented 3 scenarios for Q4. Board approved budget increase for sales team expansion. Next meeting scheduled for January 15.", tags: ["Meetings", "Board"], starred: false, time: "2w ago", pages: 4, relevance: 82, gradient: "from-emerald-500 to-teal-600", accent: "#10b981", dim: "rgba(16,185,129,0.08)", border: "rgba(16,185,129,0.2)", accentText: "text-emerald-300" },
-];
+
 
 const filters = ["All", "PDF", "DOCX", "TXT", "Starred", "Recent"];
 const aiTips = [
@@ -64,7 +66,14 @@ function Highlight({ text, query }) {
 }
 
 /* ─── Search Bar ─── */
-function SearchBar({ query, setQuery, onSearch, focused, setFocused }) {
+function SearchBar({
+ query,
+ setQuery,
+ onSearch,
+ focused,
+ setFocused,
+ loading
+}){
   const ref = useRef(null);
   const placeholders = [
     "Ask anything about your documents…",
@@ -145,15 +154,25 @@ function SearchBar({ query, setQuery, onSearch, focused, setFocused }) {
           }`}
         >
           <FiZap className="text-sm" />
-          <span className="hidden sm:inline">Search</span>
-        </motion.button>
+<span className="hidden sm:inline">
+
+ {loading
+   ? "Searching..."
+   : "Search"}
+
+</span>        </motion.button>
       </div>
     </motion.div>
   );
 }
 
 /* ─── Recent Searches ─── */
-function RecentSearches({ searches, onSearch, onRemove }) {
+function RecentSearches({
+ searches,
+ onSearch,
+ onRemove,
+ onClear
+}) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -164,8 +183,12 @@ function RecentSearches({ searches, onSearch, onRemove }) {
         <p className="text-[10px] text-gray-600 font-semibold uppercase tracking-widest flex items-center gap-1.5">
           <FiClock className="text-[9px]" /> Recent Searches
         </p>
-        <button className="text-gray-700 hover:text-gray-400 text-[10px] transition-colors">Clear all</button>
-      </div>
+<button
+ onClick={onClear}
+ className="text-gray-700 hover:text-gray-400 text-[10px]"
+>
+ Clear all
+</button>      </div>
       <div className="flex flex-wrap gap-2">
         {searches.map((s, i) => (
           <motion.div
@@ -264,7 +287,14 @@ function AiTips() {
 }
 
 /* ─── Result Card ─── */
-function ResultCard({ result, index, query }) {
+function ResultCard({
+  result,
+  index,
+  query,
+  onStarToggle,
+  onView,
+  onSummarize,
+}){
   const [hovered, setHovered] = useState(false);
   const [starred, setStarred] = useState(result.starred);
 
@@ -313,8 +343,27 @@ function ResultCard({ result, index, query }) {
               <span className="text-gray-700 text-[9px]">match</span>
             </div>
             <motion.button whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }}
-              onClick={(e) => { e.stopPropagation(); setStarred(!starred); }}
-              className="w-7 h-7 rounded-lg bg-white/5 border border-white/[0.07] flex items-center justify-center transition-all hover:bg-white/10">
+onClick={async (e) => {
+
+  e.stopPropagation();
+
+  try {
+
+    await onStarToggle(
+      result.id
+    );
+
+    setStarred(
+      !starred
+    );
+
+  } catch (error) {
+
+    console.log(error);
+
+  }
+
+}}              className="w-7 h-7 rounded-lg bg-white/5 border border-white/[0.07] flex items-center justify-center transition-all hover:bg-white/10">
               <FiStar className={`text-xs ${starred ? "text-amber-400" : "text-gray-600"}`} style={{ fill: starred ? "#f59e0b" : "none" }} />
             </motion.button>
           </div>
@@ -349,14 +398,34 @@ function ResultCard({ result, index, query }) {
           <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/[0.05]">
             <div className="flex items-center gap-2">
               <motion.button whileHover={{ scale: 1.05 }}
+              onClick={() =>
+  onView(result.id)
+}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold border ${result.accentText} transition-all`}
                 style={{ background: result.dim, borderColor: result.border }}>
                 <FiEye className="text-[10px]" /> View
               </motion.button>
-              <motion.button whileHover={{ scale: 1.05 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold border border-white/[0.07] bg-white/5 text-gray-300 transition-all hover:bg-white/10">
-                <FiZap className="text-[10px]" /> Summarize
-              </motion.button>
+       <motion.button
+ whileHover={{ scale: 1.05 }}
+ onClick={() =>
+   onSummarize(result.id)
+ }
+ className="
+ flex items-center gap-1.5
+ px-3 py-1.5
+ rounded-lg
+ text-[11px]
+ font-semibold
+ border border-white/[0.07]
+ bg-white/5
+ text-gray-300
+ hover:bg-white/10
+ transition-all
+ "
+>
+ <FiZap className="text-[10px]" />
+ Summarize
+</motion.button>
             </div>
             <motion.span animate={{ x: hovered ? [0, 3, 0] : 0 }} transition={{ duration: 1, repeat: Infinity }}
               className={`flex items-center gap-1 text-[11px] font-medium ${result.accentText}`}>
@@ -429,29 +498,260 @@ function EmptyState({ query }) {
 
 /* ─── Main Page ─── */
 export default function SmartSearch() {
+  const navigate =
+  useNavigate();
   const [query, setQuery] = useState("");
   const [searchedQuery, setSearchedQuery] = useState("");
+  const [results, setResults] =
+  useState([]);
+  const [loading,
+setLoading]
+=
+useState(false);
+  const [selectedDoc,
+ setSelectedDoc] =
+ useState(null);
   const [focused, setFocused] = useState(false);
-  const [recents, setRecents] = useState(recentSearches);
+const [recents, setRecents] =
+useState([]);
   const [activeFilter, setActiveFilter] = useState("All");
   const [hasSearched, setHasSearched] = useState(false);
+useEffect(() => {
 
-  const handleSearch = (q) => {
-    if (!q.trim()) return;
+ const saved =
+  localStorage.getItem(
+   "recentSearches"
+  );
+
+ if (saved) {
+
+  setRecents(
+   JSON.parse(saved)
+  );
+
+ }
+
+}, []);
+ const handleSearch =
+async (q) => {
+
+  if (!q.trim()) return;
+
+  try {
+    setLoading(true);
+
+    const data =
+      await searchDocuments(q);
+
+    console.log(
+      "SEARCH RESULTS:",
+      data
+    );
+
+    setResults(
+      data.documents || []
+    );
+
     setQuery(q);
-    setSearchedQuery(q);
-    setHasSearched(true);
-    setFocused(false);
-    if (!recents.find((r) => r.query === q)) {
-      setRecents((prev) => [{ id: Date.now(), query: q, time: "Just now", results: mockResults.length }, ...prev.slice(0, 3)]);
-    }
-  };
 
-  const filteredResults = mockResults.filter((r) => {
-    if (activeFilter === "All") return true;
-    if (activeFilter === "Starred") return r.starred;
-    return r.type === activeFilter || r.type.toLowerCase() === activeFilter.toLowerCase();
-  });
+    setSearchedQuery(q);
+
+    setHasSearched(true);
+    setRecents(prev => {
+
+ const filtered =
+  prev.filter(
+   item =>
+    item.query.toLowerCase() !==
+    q.toLowerCase()
+  );
+
+ const updated = [
+  {
+   id: Date.now(),
+   query: q,
+   results:
+    data.documents.length,
+  },
+  ...filtered,
+ ].slice(0, 5);
+
+ localStorage.setItem(
+  "recentSearches",
+  JSON.stringify(updated)
+ );
+
+ return updated;
+
+});
+
+    setFocused(false);
+
+  } catch (error) {
+
+    console.error(error);
+
+  }
+  finally {
+
+ setLoading(false);
+
+}
+
+};
+const handleStarToggle =
+async (id) => {
+
+  try {
+
+    await toggleStarDocument(
+      id
+    );
+
+    setResults(
+      prev =>
+        prev.map(doc =>
+          doc._id === id
+            ? {
+                ...doc,
+                starred:
+                  !doc.starred,
+              }
+            : doc
+        )
+    );
+
+  } catch (error) {
+
+    console.log(error);
+
+  }
+
+};
+const handleView =
+(id) => {
+
+ const doc =
+  formattedResults.find(
+   d => d.id === id
+  );
+
+ if (doc) {
+  setSelectedDoc(doc);
+ }
+
+};
+const handleSummarize =
+async (id) => {
+
+  try {
+
+    const token =
+      localStorage.getItem(
+        "token"
+      );
+
+  await summarizeDocument(
+ id,
+ token
+);
+
+await handleSearch(
+ searchedQuery
+);
+
+toast.success(
+ "Summary generated"
+);
+
+  } catch (error) {
+
+    console.log(error);
+
+  }
+
+};
+const formattedResults =
+results.map(doc => ({
+
+  id: doc._id,
+
+  title: doc.title,
+
+  name: doc.title,
+
+  file: doc.title,
+
+  fileUrl: doc.fileUrl,
+
+  type:
+    doc.fileType?.includes("pdf")
+      ? "PDF"
+      : doc.fileType?.includes("word")
+      ? "DOCX"
+      : "TXT",
+
+  excerpt:
+    doc.summary ||
+    "No summary available",
+
+  tags:
+    doc.tags || [],
+
+  starred:
+    doc.starred || false,
+
+  time:
+    new Date(
+      doc.createdAt
+    ).toLocaleDateString(),
+
+  relevance: 100,
+
+  pages: 0,
+
+  gradient:
+    "from-blue-500 to-indigo-600",
+
+  dim:
+    "rgba(59,130,246,0.08)",
+
+  border:
+    "rgba(59,130,246,0.2)",
+
+  accentText:
+    "text-blue-300",
+
+}));
+
+ const filteredResults =
+formattedResults.filter(
+  (r) => {
+
+ if (
+ activeFilter === "All"
+)
+ return true;
+
+if (
+ activeFilter ===
+ "Starred"
+)
+ return r.starred;
+
+if (
+ activeFilter ===
+ "Recent"
+)
+ return true;
+
+return (
+ r.type ===
+ activeFilter
+);
+
+  }
+);
 
   return (
     <div className="min-h-screen bg-[#0B0F19]" style={{ fontFamily: "'Poppins', sans-serif" }}>
@@ -488,14 +788,20 @@ export default function SmartSearch() {
           </div>
           <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/[0.06] bg-white/[0.03]">
             <FiFileText className="text-gray-600 text-xs" />
-            <span className="text-gray-500 text-xs">{mockResults.length} documents indexed</span>
+            <span className="text-gray-500 text-xs">{results.length}documents indexed</span>
           </div>
         </motion.div>
 
         {/* Search Bar */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.05 }} className="mb-6">
-          <SearchBar query={query} setQuery={setQuery} onSearch={handleSearch} focused={focused} setFocused={setFocused} />
-        </motion.div>
+<SearchBar
+ query={query}
+ setQuery={setQuery}
+ onSearch={handleSearch}
+ focused={focused}
+ setFocused={setFocused}
+ loading={loading}
+/>        </motion.div>
 
         {/* AI Tips */}
         <div className="mb-8">
@@ -506,8 +812,36 @@ export default function SmartSearch() {
         <AnimatePresence mode="wait">
           {!hasSearched ? (
             <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-8">
-              <RecentSearches searches={recents} onSearch={handleSearch} onRemove={(id) => setRecents((r) => r.filter((s) => s.id !== id))} />
-              <SuggestionCards onSearch={handleSearch} />
+              {recents.length > 0 && (
+<RecentSearches
+ searches={recents}
+ onSearch={handleSearch}
+ onRemove={(id) => {
+
+  const updated =
+   recents.filter(
+    s => s.id !== id
+   );
+
+  setRecents(updated);
+
+  localStorage.setItem(
+   "recentSearches",
+   JSON.stringify(updated)
+  );
+
+ }}
+ onClear={() => {
+
+  setRecents([]);
+
+  localStorage.removeItem(
+   "recentSearches"
+  );
+
+ }}
+/> 
+)}             <SuggestionCards onSearch={handleSearch} />
             </motion.div>
           ) : (
             <motion.div key="results" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }}>
@@ -515,8 +849,17 @@ export default function SmartSearch() {
               {filteredResults.length > 0 ? (
                 <div className="space-y-4">
                   {filteredResults.map((r, i) => (
-                    <ResultCard key={r.id} result={r} index={i} query={searchedQuery} />
-                  ))}
+<ResultCard
+  key={r.id}
+  result={r}
+  index={i}
+  query={searchedQuery}
+  onStarToggle={handleStarToggle}
+  onView={handleView}
+  onSummarize={
+    handleSummarize
+  }
+/>))}
                 </div>
               ) : (
                 <EmptyState query={searchedQuery} />
@@ -534,7 +877,16 @@ export default function SmartSearch() {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+            </div>
+{selectedDoc && (
+  <DocumentPreviewModal
+    document={selectedDoc}
+    onClose={() =>
+      setSelectedDoc(null)
+    }
+  />
+)}
+
     </div>
   );
 }

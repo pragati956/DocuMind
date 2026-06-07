@@ -77,19 +77,9 @@ export const deleteDocument = async (
 export const toggleStarDocument =
  async (id) => {
 
- const token =
-  localStorage.getItem("token");
-
  const response =
-  await axios.patch(
-   `${API_URL}/${id}/star`,
-   {},
-   {
-    headers: {
-     Authorization:
-      `Bearer ${token}`,
-    },
-   }
+  await API.patch(
+   `/documents/${id}/star`
   );
 
  return response.data;
