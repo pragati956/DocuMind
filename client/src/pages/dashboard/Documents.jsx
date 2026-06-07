@@ -8,6 +8,7 @@ import {
 import { summarizeDocument } from "../../services/aiService";
 import { toast } from "react-hot-toast";
 import EditDocumentModal from "../../components/dashboard/EditDocumentModal";
+import UploadModal from "../../components/dashboard/UploadModal"; // <-- Imported Global Modal
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import DocumentPreviewModal from "../../components/dashboard/DocumentPreviewModal";
@@ -27,7 +28,6 @@ import {
   HiOutlineLightningBolt,
   HiOutlineViewGrid,
   HiOutlineViewList,
-  HiOutlineFilter,
 } from "react-icons/hi";
 import { HiOutlineDocumentDuplicate, HiMiniSparkles } from "react-icons/hi2";
 import { BsFilePdf, BsFileWord, BsFileText, BsStars } from "react-icons/bs";
@@ -248,8 +248,7 @@ function DocCard({ doc, view, onDelete, onView, onEdit, onSummarize, onToggleSta
 }
 
 // ── EmptyState ─────────────────────────────────────────────────────────────────
-function EmptyState() {
-  const navigate = useNavigate();
+function EmptyState({ onUpload }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -272,7 +271,7 @@ function EmptyState() {
       <p className="mt-1.5 text-sm text-white/25 max-w-xs">
         Try adjusting your filters or upload a new document to get started.
       </p>
-      <button onClick={() => navigate('/dashboard/upload')} className="mt-6 flex items-center gap-2 rounded-xl bg-white/[0.06] border border-white/10 px-5 py-2.5 text-sm text-white/70 hover:bg-white/10 transition-colors">
+      <button onClick={onUpload} className="mt-6 flex items-center gap-2 rounded-xl bg-white/[0.06] border border-white/10 px-5 py-2.5 text-sm text-white/70 hover:bg-white/10 transition-colors">
         <HiOutlineUpload /> Upload a document
       </button>
     </motion.div>
@@ -281,12 +280,16 @@ function EmptyState() {
 
 // ── Main Page ──────────────────────────────────────────────────────────────────
 export default function DocumentsPage() {
-  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
   const [view, setView] = useState("grid");
   const [selectedDoc, setSelectedDoc] = useState(null);
   const [editDoc, setEditDoc] = useState(null);
+  
+  // UNCOMMENTED: Local state to control the modal overlay
+  const [uploadOpen, setUploadOpen] = useState(false);
+  
+  // Real documents from backend
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -361,7 +364,7 @@ export default function DocumentsPage() {
   }, [page]);
 
   const docs = documents.map((doc) => ({
-    id: doc._id, // BUG FIX: Use _id instead of id
+    id: doc._id, 
     name: doc.title,
     type: doc.fileType?.includes("pdf") ? "PDF" : doc.fileType?.includes("word") ? "DOCX" : "TXT",
     size: `${(doc.fileSize / 1024 / 1024).toFixed(2)} MB`,
@@ -429,7 +432,7 @@ export default function DocumentsPage() {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.97 }}
-            onClick={() => navigate("/dashboard/upload")}
+            onClick={() => setUploadOpen(true)} // <-- FIX: OPENS MODAL INSTEAD OF NAVIGATING
             className="flex items-center gap-2 self-start sm:self-auto rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-all"
             style={{ background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)", boxShadow: "0 4px 24px rgba(109,40,217,0.4)" }}
           >
@@ -497,7 +500,7 @@ export default function DocumentsPage() {
           >
             <AnimatePresence>
               {filtered.length === 0 ? (
-                <EmptyState />
+                <EmptyState onUpload={() => setUploadOpen(true)} />
               ) : (
                 filtered.map((doc, i) => (
                   <motion.div key={doc.id} style={{ transitionDelay: `${i * 30}ms` }}>
@@ -553,6 +556,18 @@ export default function DocumentsPage() {
           }}
         />
       )}
+
+      {/* ── Upload Modal ── */}
+      <AnimatePresence>
+        {uploadOpen && (
+          <UploadModal 
+            onClose={() => {
+              setUploadOpen(false);
+              loadDocuments(); 
+            }} 
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
