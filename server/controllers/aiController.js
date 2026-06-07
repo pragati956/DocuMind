@@ -2,7 +2,7 @@ import Document from "../models/Document.js";
 import Activity from "../models/Activity.js";
 
 import {
-  extractPdfText,
+  extractDocumentText, // Updated import name
 } from "../services/pdfService.js";
 
 import {
@@ -20,20 +20,11 @@ export const summarizeDocument =
           uploadedBy:
             req.user.id,
         });
-       console.log(
-  "PARAM ID:",
-  req.params.id
-);
-
-console.log(
-  "USER ID:",
-  req.user.id
-);
-
-console.log(
-  "DOCUMENT:",
-  document
-);
+        
+      console.log("PARAM ID:", req.params.id);
+      console.log("USER ID:", req.user.id);
+      console.log("DOCUMENT:", document);
+      
       if (!document) {
         return res.status(404).json({
           success: false,
@@ -41,37 +32,30 @@ console.log(
             "Document not found",
         });
       }
-      console.log(
-  "DOCUMENT:",
-  document.title
-);
-
-console.log(
-  "PDF URL:",
-  document.fileUrl
-);
       
+      console.log("DOCUMENT:", document.title);
+      console.log("FILE URL:", document.fileUrl); // Updated log message
 
-      if (
-        !document.fileType.includes(
-          "pdf"
-        )
-      ) {
+      // Updated allowed types check
+      const allowedTypes = ["pdf", "word", "docx", "text", "plain"];
+      const isAllowed = allowedTypes.some(type => document.fileType.toLowerCase().includes(type));
+
+      if (!isAllowed) {
         return res.status(400).json({
           success: false,
           message:
-            "Only PDF summarization supported currently",
+            "Only PDF, DOCX, and TXT summarization is supported currently",
         });
       }
 
+      // Passed fileType to the extraction service
       const extractedText =
-        await extractPdfText(
-          document.fileUrl
+        await extractDocumentText(
+          document.fileUrl,
+          document.fileType 
         );
-        console.log(
-  "TEXT LENGTH:",
-  extractedText.length
-);
+        
+      console.log("TEXT LENGTH:", extractedText.length);
 
       if (
         !extractedText ||
@@ -89,20 +73,20 @@ console.log(
         await generateSummary(
           extractedText
         );
-        console.log(
-  "SUMMARY GENERATED"
-);
+        
+      console.log("SUMMARY GENERATED");
 
       document.summary =
         summary;
 
       await document.save();
-    await Activity.create({
- userId:req.user.id,
- documentId:document._id,
- action:"summary",
- documentName:document.title,
-});
+      
+      await Activity.create({
+        userId: req.user.id,
+        documentId: document._id,
+        action: "summary",
+        documentName: document.title,
+      });
 
       res.status(200).json({
         success: true,
@@ -125,26 +109,27 @@ console.log(
 
     }
   };
-  export const getSummaries =
+  
+export const getSummaries =
   async (req, res) => {
 
     try {
 
-     const documents =
-  await Document.find({
-    uploadedBy: req.user.id,
-    summary: {
-      $exists: true,
-      $ne: "",
-    },
-  })
-    .populate(
-      "uploadedBy",
-      "name email"
-    )
-    .sort({
-      updatedAt: -1,
-    });
+      const documents =
+        await Document.find({
+          uploadedBy: req.user.id,
+          summary: {
+            $exists: true,
+            $ne: "",
+          },
+        })
+        .populate(
+          "uploadedBy",
+          "name email"
+        )
+        .sort({
+          updatedAt: -1,
+        });
 
       res.status(200).json({
         success: true,
@@ -160,4 +145,3 @@ console.log(
 
     }
   };
-  
