@@ -1,12 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { toast } from "react-hot-toast";
-import SearchSkeleton
-from "../../components/dashboard/SearchSkeleton";
 import {
   searchDocuments,
-  toggleStarDocument, getSearchStats,getCategories,getDocumentsByType,getSuggestions, saveSearchHistory,
- getSearchHistory,
- clearSearchHistory,deleteSearchHistory,
+  toggleStarDocument,
 } from "../../services/documentService";
 import { useNavigate }
 from "react-router-dom";
@@ -79,8 +75,7 @@ function SearchBar({
  onSearch,
  focused,
  setFocused,
- loading,
- suggestions
+ loading
 }){
   const ref = useRef(null);
   const placeholders = [
@@ -768,16 +763,6 @@ export default function SmartSearch() {
   const [searchedQuery, setSearchedQuery] = useState("");
   const [results, setResults] =
   useState([]);
-  const [
- suggestions,
- setSuggestions
-] = useState([]);
-  const [stats,
- setStats]
- =
- useState(null);
- const [categories,setCategories] =
-useState([]);
   const [loading,
 setLoading]
 =
@@ -788,155 +773,26 @@ useState(false);
   const [focused, setFocused] = useState(false);
 const [recents, setRecents] =
 useState([]);
-const [trending, setTrending] =
-useState([]);
   const [activeFilter, setActiveFilter] = useState("All");
   const [sortBy, setSortBy] =
 useState("Newest");
   const [hasSearched, setHasSearched] = useState(false);
-useEffect(()=>{
-
- const loadHistory =
- async()=>{
-
-  try{
-
-   const data =
-    await getSearchHistory();
-
-   setRecents(
-    data.history
-   );
-
-  }
-  catch(error){
-
-   console.log(error);
-
-  }
-
- };
-
- loadHistory();
-
-},[]);
 useEffect(() => {
 
- const countMap = {};
+ const saved =
+  localStorage.getItem(
+   "recentSearches"
+  );
 
- recents.forEach(item => {
+ if (saved) {
 
-  countMap[item.query] =
-   (countMap[item.query] || 0) + 1;
+  setRecents(
+   JSON.parse(saved)
+  );
 
- });
-
- const topSearches =
-  Object.entries(countMap)
-   .sort((a,b)=>b[1]-a[1])
-   .slice(0,5);
-
- setTrending(topSearches);
-
-}, [recents]);
-useEffect(() => {
-
- const loadSuggestions =
- async () => {
-
-  try {
-
-   const data =
-    await getSuggestions();
-
-   setSuggestions(
-    data.suggestions
-   );
-
-  } catch (error) {
-
-   console.log(error);
-
-  }
-
- };
-
- loadSuggestions();
+ }
 
 }, []);
- const loadStats = async () => {
-
-  try {
-
-   const data =
-    await getSearchStats();
-
-   setStats(data);
-
-  } catch (error) {
-
-   console.log(error);
-
-  }
-
- };
-useEffect(() => {
-
-
-
- loadStats();
-
-}, []);
-useEffect(()=>{
-
- const loadCategories =
- async()=>{
-
-  try{
-
-   const data =
-    await getCategories();
-
-   setCategories(
-
- data.categories.map(
-  cat => ({
-
-   ...cat,
-
-   icon:
- cat.label === "PDF"
-  ? <FiFileText />
-  : cat.label === "DOCX"
-  ? <FiBookmark />
-  : <FiFolder />,
-
-   color:
-    "from-blue-500 to-indigo-600",
-
-   dim:
-    "rgba(59,130,246,0.1)",
-
-   border:
-    "rgba(59,130,246,0.22)",
-
-  })
- )
-
-);
-
-  }
-  catch(error){
-
-   console.log(error);
-
-  }
-
- };
-
- loadCategories();
-
-},[]);
  const handleSearch =
 async (q) => {
 
@@ -962,22 +818,33 @@ async (q) => {
     setSearchedQuery(q);
 
     setHasSearched(true);
-   await saveSearchHistory({
+    setRecents(prev => {
 
- query:q,
+ const filtered =
+  prev.filter(
+   item =>
+    item.query.toLowerCase() !==
+    q.toLowerCase()
+  );
 
- resultsCount:
-  data.documents.length
+ const updated = [
+  {
+   id: Date.now(),
+   query: q,
+   results:
+    data.documents.length,
+  },
+  ...filtered,
+ ].slice(0, 5);
+
+ localStorage.setItem(
+  "recentSearches",
+  JSON.stringify(updated)
+ );
+
+ return updated;
 
 });
-
-const historyData =
- await getSearchHistory();
-
-setRecents(
- historyData.history
-);
-
 
     setFocused(false);
 
@@ -1057,7 +924,6 @@ await handleSearch(
 toast.success(
  "Summary generated"
 );
-await loadStats();
 
   } catch (error) {
 
@@ -1078,17 +944,13 @@ results.map(doc => ({
   file: doc.title,
 
   fileUrl: doc.fileUrl,
-  hasSummary:
- !!doc.summary,
 
- type:
- doc.fileType?.includes("pdf")
- ? "PDF"
- : doc.fileType?.includes("word")
- ? "DOCX"
- : doc.fileType?.includes("image")
- ? "IMAGE"
- : "TXT",
+  type:
+    doc.fileType?.includes("pdf")
+      ? "PDF"
+      : doc.fileType?.includes("word")
+      ? "DOCX"
+      : "TXT",
 
   excerpt:
     doc.summary ||
@@ -1104,11 +966,8 @@ results.map(doc => ({
     new Date(
       doc.createdAt
     ).toLocaleDateString(),
-    createdAt:
- doc.createdAt,
 
- relevance:
- doc.relevance || 0,
+  relevance: 100,
 
   pages: 0,
 
@@ -1125,100 +984,35 @@ results.map(doc => ({
     "text-blue-300",
 
 }));
-const filteredResults =
- formattedResults.filter(
+
+ const filteredResults =
+formattedResults.filter(
   (r) => {
 
-   if (
-    activeFilter === "All"
-   )
-    return true;
+ if (
+ activeFilter === "All"
+)
+ return true;
 
-   if (
-    activeFilter === "Starred"
-   )
-    return r.starred;
+if (
+ activeFilter ===
+ "Starred"
+)
+ return r.starred;
 
-   if (
-    activeFilter === "Recent"
-   ) {
+if (
+ activeFilter ===
+ "Recent"
+)
+ return true;
 
-    const sevenDaysAgo =
-     new Date();
-
-    sevenDaysAgo.setDate(
-     sevenDaysAgo.getDate() - 7
-    );
-
-    return (
-     new Date(
-      r.createdAt
-     ) > sevenDaysAgo
-    );
-
-   }
-
-   if (
-    activeFilter ===
-    "Summarized"
-   ) {
-
-    return r.hasSummary;
-
-   }
-
-   return (
-    r.type ===
-    activeFilter
-   );
+return (
+ r.type ===
+ activeFilter
+);
 
   }
- );
- const totalSearches =
- recents.length;
-
-const mostUsedSearch =
-
- trending.length > 0
- ? trending[0][0]
- : "-";
-
-const lastSearch =
-
- recents.length > 0
- ? recents[0].query
- : "-";
-let sortedResults =
- [...filteredResults];
- if(sortBy==="Newest"){
-
- sortedResults.sort(
-  (a,b)=>
-   new Date(b.createdAt)
-   -
-   new Date(a.createdAt)
- );
-
-}
-if(sortBy==="Oldest"){
-
- sortedResults.sort(
-  (a,b)=>
-   new Date(a.createdAt)
-   -
-   new Date(b.createdAt)
- );
-
-}
-if(sortBy==="A-Z"){
-
- sortedResults.sort(
-  (a,b)=>
-   a.title.localeCompare(
-    b.title
-   )
- );
-}
+);
 
   return (
     <div className="min-h-screen bg-[#0B0F19]" style={{ fontFamily: "'Poppins', sans-serif" }}>
@@ -1255,10 +1049,8 @@ if(sortBy==="A-Z"){
           </div>
           <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/[0.06] bg-white/[0.03]">
             <FiFileText className="text-gray-600 text-xs" />
-<span className="text-gray-500 text-xs">
- {stats?.totalDocs || 0}
- documents indexed
-</span>          </div>
+            <span className="text-gray-500 text-xs">{results.length}documents indexed</span>
+          </div>
         </motion.div>
 
         {/* Search Bar */}
@@ -1270,8 +1062,7 @@ if(sortBy==="A-Z"){
  focused={focused}
  setFocused={setFocused}
  loading={loading}
- suggestions={suggestions}
-/>      </motion.div>
+/>        </motion.div>
 
         {/* AI Tips */}
        <div className="mb-8">
@@ -1328,107 +1119,32 @@ if(sortBy==="A-Z"){
 <RecentSearches
  searches={recents}
  onSearch={handleSearch}
-onRemove={async(id)=>{
+ onRemove={(id) => {
 
- try{
+  const updated =
+   recents.filter(
+    s => s.id !== id
+   );
 
-  await deleteSearchHistory(id);
+  setRecents(updated);
 
-  const historyData =
-   await getSearchHistory();
-
-  setRecents(
-   historyData.history
+  localStorage.setItem(
+   "recentSearches",
+   JSON.stringify(updated)
   );
 
-  toast.success(
-   "Search removed"
-  );
-
- }
- catch(error){
-
-  console.log(error);
-
- }
-
-}}
- onClear={async () => {
-
- try {
-
-  await clearSearchHistory();
+ }}
+ onClear={() => {
 
   setRecents([]);
 
-  setTrending([]);
-
-  toast.success(
-   "History cleared"
+  localStorage.removeItem(
+   "recentSearches"
   );
 
- }
- catch(error){
-
-  console.log(error);
-
-  toast.error(
-   "Failed to clear history"
-  );
-
- }
-
-}}
-/>
- 
-
-)}
-<div className="space-y-4">
-
- <TrendingSearches
-  trending={trending}
-  onSearch={handleSearch}
- />
-
- <SearchAnalytics
-  totalSearches={totalSearches}
-  mostUsedSearch={mostUsedSearch}
-  lastSearch={lastSearch}
- />
-
-</div>
-           <SuggestionCards
- onSearch={
- async(type)=>{
-
-  try{
-
-   const data =
-    await getDocumentsByType(type);
-
-   setResults(
-    data.documents
-   );
-
-   setHasSearched(
-    true
-   );
-
-   setSearchedQuery(
-    type
-   );
-
-  }
-  catch(error){
-
-   console.log(error);
-
-  }
-
- }
-}
- categories={categories}
-/>
+ }}
+/> 
+)}             <SuggestionCards onSearch={handleSearch} />
             </motion.div>
           ) : (
             <motion.div key="results" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }}>
@@ -1444,7 +1160,7 @@ onRemove={async(id)=>{
  <SearchSkeleton />
 ) : sortedResults.length > 0 ? (
                 <div className="space-y-4">
-                  {sortedResults.map((r, i) => (
+                  {filteredResults.map((r, i) => (
 <ResultCard
   key={r.id}
   result={r}
