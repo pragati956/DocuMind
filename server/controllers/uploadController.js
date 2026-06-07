@@ -95,13 +95,36 @@ export const searchDocuments = async (req, res) => {
 
     // $regex provides a basic keyword search. $options: "i" makes it case-insensitive.
   const documents =
- await Document.find({
-  uploadedBy:req.user.id,
-  title:{
-   $regex:q,
-   $options:"i"
+await Document.find({
+
+ uploadedBy:req.user.id,
+
+ $or:[
+
+  {
+   title:{
+    $regex:q,
+    $options:"i"
+   }
+  },
+
+  {
+   summary:{
+    $regex:q,
+    $options:"i"
+   }
+  },
+
+  {
+   tags:{
+    $regex:q,
+    $options:"i"
+   }
   }
- })
+
+ ]
+
+})
  .populate(
    "uploadedBy",
    "name email"
