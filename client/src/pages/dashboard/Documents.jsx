@@ -32,6 +32,8 @@ import {
 import { HiOutlineDocumentDuplicate, HiMiniSparkles } from "react-icons/hi2";
 import { BsFilePdf, BsFileWord, BsFileText, BsStars } from "react-icons/bs";
 import { FiStar } from "react-icons/fi";
+import AddToCollectionModal from "../../components/dashboard/AddToCollectionModal";
+import { FiFolderPlus } from "react-icons/fi";
 
 const FILTERS = ["All", "PDF", "DOCX", "TXT", "AI Summarized"];
 
@@ -73,11 +75,13 @@ function ActionsMenu({
   onView,
   onEdit,
   onSummarize,
+  onAddToCollection,
   documentData,
 }) {
   const actions = [
     { icon: <HiOutlineDocumentText />, label: "View" },
     { icon: <HiMiniSparkles />, label: "Summarize with AI", accent: true },
+    { icon: <FiFolderPlus />, label: "Add to Collection" }, // <--- ADD THIS LINE
     { icon: <HiOutlineDownload />, label: "Download" },
     { icon: <HiOutlineShare />, label: "Share" },
     { icon: <HiOutlinePencil />, label: "Edit" },
@@ -100,6 +104,7 @@ function ActionsMenu({
             if (a.label === "View") onView(documentData);
             if (a.label === "Edit") onEdit(documentData);
             if (a.label === "Summarize with AI") onSummarize(documentData.id);
+            if (a.label === "Add to Collection") onAddToCollection(documentData); // <--- ADD THIS LINE
             onClose();
           }}
           className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-sm transition-colors
@@ -114,7 +119,7 @@ function ActionsMenu({
 }
 
 // ── DocRow (List View) ─────────────────────────────────────────────────────────
-function DocRow({ doc, index, onSummarize, onDelete, onToggleStar, onView, onEdit }) {
+function DocRow({ doc, index, onSummarize, onDelete, onToggleStar, onView, onEdit, onAddToCollection }) {
   const [hovered, setHovered] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const sb = summaryBadge[doc.summaryStatus];
@@ -162,6 +167,7 @@ function DocRow({ doc, index, onSummarize, onDelete, onToggleStar, onView, onEdi
               onView={onView}
               onEdit={onEdit}
               onSummarize={onSummarize}
+              onAddToCollection={onAddToCollection} // pass it
               documentData={doc}
             />
           )}
@@ -172,7 +178,7 @@ function DocRow({ doc, index, onSummarize, onDelete, onToggleStar, onView, onEdi
 }
 
 // ── DocCard (Grid View) ────────────────────────────────────────────────────────
-function DocCard({ doc, view, onDelete, onView, onEdit, onSummarize, onToggleStar }) {
+function DocCard({ doc, view, onDelete, onView, onEdit, onSummarize, onToggleStar, onAddToCollection }) {
   const [hovered, setHovered] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const sb = summaryBadge[doc.summaryStatus];
@@ -214,6 +220,7 @@ function DocCard({ doc, view, onDelete, onView, onEdit, onSummarize, onToggleSta
                 onView={onView}
                 onEdit={onEdit}
                 onSummarize={onSummarize}
+                onAddToCollection={onAddToCollection} // pass it
                 documentData={doc}
               />
             )}
@@ -296,6 +303,8 @@ export default function DocumentsPage() {
   // Pagination
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+
+  const [collectionModalDoc, setCollectionModalDoc] = useState(null); // <--- ADD THIS LINE
 
   const handleDelete = async (id) => {
     try {
@@ -513,6 +522,7 @@ export default function DocumentsPage() {
                         onEdit={setEditDoc}
                         onSummarize={handleSummarize}
                         onToggleStar={handleToggleStar}
+                        onAddToCollection={setCollectionModalDoc} // <--- ADD THIS LINE
                       />
                     ) : (
                       <DocRow
@@ -523,6 +533,7 @@ export default function DocumentsPage() {
                         onEdit={setEditDoc}
                         onSummarize={handleSummarize}
                         onToggleStar={handleToggleStar}
+                        onAddToCollection={setCollectionModalDoc} // <--- ADD THIS LINE
                       />
                     )}
                   </motion.div>
@@ -557,6 +568,16 @@ export default function DocumentsPage() {
         />
       )}
 
+      {/* ── Add To Collection Modal ── */}
+      <AnimatePresence>
+        {collectionModalDoc && (
+          <AddToCollectionModal 
+            documentId={collectionModalDoc.id} 
+            onClose={() => setCollectionModalDoc(null)} 
+          />
+        )}
+      </AnimatePresence>
+
       {/* ── Upload Modal ── */}
       <AnimatePresence>
         {uploadOpen && (
@@ -568,6 +589,7 @@ export default function DocumentsPage() {
           />
         )}
       </AnimatePresence>
+
     </div>
   );
 }
