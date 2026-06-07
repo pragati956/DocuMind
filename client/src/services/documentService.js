@@ -85,25 +85,3 @@ export const toggleStarDocument =
  return response.data;
 
 };
-export const getSearchStats =
- async () => {
-
-  const response =
-   await API.get(
-    "/documents/stats"
-   );
-
-  return response.data;
-
- };
- export const getCategories =
-async ()=>{
-
- const response =
-  await API.get(
-   "/documents/categories"
-  );
-
- return response.data;
-
-};

@@ -1,10 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { toast } from "react-hot-toast";
-import SearchSkeleton
-from "../../components/dashboard/SearchSkeleton";
 import {
   searchDocuments,
-  toggleStarDocument, getSearchStats,getCategories,
+  toggleStarDocument,
 } from "../../services/documentService";
 import { useNavigate }
 from "react-router-dom";
@@ -556,12 +554,6 @@ export default function SmartSearch() {
   const [searchedQuery, setSearchedQuery] = useState("");
   const [results, setResults] =
   useState([]);
-  const [stats,
- setStats]
- =
- useState(null);
- const [categories,setCategories] =
-useState([]);
   const [loading,
 setLoading]
 =
@@ -592,75 +584,6 @@ useEffect(() => {
  }
 
 }, []);
-useEffect(() => {
-
- const loadStats =
- async () => {
-
-  try {
-
-   const data =
-    await getSearchStats();
-
-   setStats(data);
-
-  } catch (error) {
-
-   console.log(error);
-
-  }
-
- };
-
- loadStats();
-
-}, []);
-useEffect(()=>{
-
- const loadCategories =
- async()=>{
-
-  try{
-
-   const data =
-    await getCategories();
-
-   setCategories(
-
- data.categories.map(
-  cat => ({
-
-   ...cat,
-
-   icon:
-    <FiTag />,
-
-   color:
-    "from-blue-500 to-indigo-600",
-
-   dim:
-    "rgba(59,130,246,0.1)",
-
-   border:
-    "rgba(59,130,246,0.22)",
-
-  })
- )
-
-);
-
-  }
-  catch(error){
-
-   console.log(error);
-
-  }
-
- };
-
- loadCategories();
-
-},[]);
  const handleSearch =
 async (q) => {
 
@@ -812,17 +735,13 @@ results.map(doc => ({
   file: doc.title,
 
   fileUrl: doc.fileUrl,
-  hasSummary:
- !!doc.summary,
 
- type:
- doc.fileType?.includes("pdf")
- ? "PDF"
- : doc.fileType?.includes("word")
- ? "DOCX"
- : doc.fileType?.includes("image")
- ? "IMAGE"
- : "TXT",
+  type:
+    doc.fileType?.includes("pdf")
+      ? "PDF"
+      : doc.fileType?.includes("word")
+      ? "DOCX"
+      : "TXT",
 
   excerpt:
     doc.summary ||
@@ -838,8 +757,6 @@ results.map(doc => ({
     new Date(
       doc.createdAt
     ).toLocaleDateString(),
-    createdAt:
- doc.createdAt,
 
   relevance: 100,
 
@@ -874,23 +791,11 @@ if (
 )
  return r.starred;
 
-if(
- activeFilter==="Recent"
-){
-
- const sevenDaysAgo =
-  new Date();
-
- sevenDaysAgo.setDate(
-  sevenDaysAgo.getDate()-7
- );
-
- return (
-  new Date(r.createdAt)
-  > sevenDaysAgo
- );
-
-}
+if (
+ activeFilter ===
+ "Recent"
+)
+ return true;
 
 return (
  r.type ===
@@ -899,37 +804,6 @@ return (
 
   }
 );
-let sortedResults =
- [...filteredResults];
- if(sortBy==="Newest"){
-
- sortedResults.sort(
-  (a,b)=>
-   new Date(b.createdAt)
-   -
-   new Date(a.createdAt)
- );
-
-}
-if(sortBy==="Oldest"){
-
- sortedResults.sort(
-  (a,b)=>
-   new Date(a.createdAt)
-   -
-   new Date(b.createdAt)
- );
-
-}
-if(sortBy==="A-Z"){
-
- sortedResults.sort(
-  (a,b)=>
-   a.title.localeCompare(
-    b.title
-   )
- );
-}
 
   return (
     <div className="min-h-screen bg-[#0B0F19]" style={{ fontFamily: "'Poppins', sans-serif" }}>
@@ -966,10 +840,8 @@ if(sortBy==="A-Z"){
           </div>
           <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/[0.06] bg-white/[0.03]">
             <FiFileText className="text-gray-600 text-xs" />
-<span className="text-gray-500 text-xs">
- {stats?.totalDocs || 0}
- documents indexed
-</span>          </div>
+            <span className="text-gray-500 text-xs">{results.length}documents indexed</span>
+          </div>
         </motion.div>
 
         {/* Search Bar */}
@@ -1021,10 +893,7 @@ if(sortBy==="A-Z"){
 
  }}
 /> 
-)}            <SuggestionCards
- onSearch={handleSearch}
- categories={categories}
-/>
+)}             <SuggestionCards onSearch={handleSearch} />
             </motion.div>
           ) : (
             <motion.div key="results" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }}>
@@ -1040,7 +909,7 @@ if(sortBy==="A-Z"){
  <SearchSkeleton />
 ) : sortedResults.length > 0 ? (
                 <div className="space-y-4">
-                  {sortedResults.map((r, i) => (
+                  {filteredResults.map((r, i) => (
 <ResultCard
   key={r.id}
   result={r}
