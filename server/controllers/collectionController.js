@@ -83,3 +83,26 @@ export const deleteCollection = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// ADD DOCUMENT TO COLLECTION
+export const addDocumentToCollection = async (req, res) => {
+  try {
+    const { documentId } = req.body;
+    const collectionId = req.params.id;
+
+    // $addToSet prevents the same document from being added twice
+    const collection = await Collection.findOneAndUpdate(
+      { _id: collectionId, createdBy: req.user.id },
+      { $addToSet: { documents: documentId } }, 
+      { new: true }
+    ).populate("documents");
+
+    if (!collection) {
+      return res.status(404).json({ success: false, message: "Collection not found" });
+    }
+
+    res.status(200).json({ success: true, collection });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

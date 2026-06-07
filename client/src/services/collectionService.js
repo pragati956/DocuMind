@@ -23,3 +23,9 @@ export const deleteCollection = async (id) => {
   const response = await API.delete(`/collections/${id}`);
   return response.data;
 };
+
+// ADD DOCUMENT TO COLLECTION
+export const addDocumentToCollection = async (collectionId, documentId) => {
+  const response = await API.post(`/collections/${collectionId}/documents`, { documentId });
+  return response.data;
+};
