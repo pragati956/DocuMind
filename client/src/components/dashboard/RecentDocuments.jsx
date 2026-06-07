@@ -409,6 +409,7 @@ else{
             id: d._id,
             name: d.title,
             fileUrl:d.fileUrl,
+            createdAt: d.createdAt,
             ext: ext,
             size: (d.fileSize / 1024 / 1024).toFixed(2) + " MB",
             time: new Date(d.createdAt).toLocaleDateString(),
@@ -527,6 +528,12 @@ else{
     return matchFilter && matchSearch;
   });
 
+  // show only 2 latest documents by creation date
+  const latest = filtered
+    .slice()
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, 2);
+
   return (
     <>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');`}</style>
@@ -608,10 +615,10 @@ else{
 
               <AnimatePresence>
                 {filtered.length > 0
-                  ? filtered.map((doc, i) => (
+                  ? latest.map((doc, i) => (
                     <React.Fragment key={doc.id}>
                       <DocRow doc={doc} index={i} onDelete={handleDelete} onSummarize={handleSummarize} onToggleStar={handleToggleStar} />
-                      {i < filtered.length - 1 && <div className="mx-5 h-px bg-[#1F2937]" />}
+                      {i < latest.length - 1 && <div className="mx-5 h-px bg-[#1F2937]" />}
                     </React.Fragment>
                   ))
                   : <EmptyState onUpload={onUpload} />

@@ -4,7 +4,6 @@ import { useState } from "react";
 // import Topbar from "../../components/dashboard/Topbar";
 import WelcomeBanner from "../../components/dashboard/WelcomeBanner";
 import StatsSection from "../../components/dashboard/StatsSection";
-import QuickActions from "../../components/dashboard/QuickActions";
 import RecentDocuments from "../../components/dashboard/RecentDocuments";
 import AiSummaries from "../../components/dashboard/AiSummaries";
 import ActivityFeed from "../../components/dashboard/ActivityFeed";
@@ -35,10 +34,6 @@ const Dashboard = () => {
                     />
 
                     <StatsSection />
-
-                    <QuickActions
-                        onUpload={() => setUploadOpen(true)}
-                    />
 
                     <div className="grid xl:grid-cols-[1fr_380px] gap-6 mt-6">
 

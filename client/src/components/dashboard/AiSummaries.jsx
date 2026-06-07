@@ -157,6 +157,9 @@ function SummaryCard({ summary, index }) {
   const [expanded, setExpanded] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
 
+  const truncLength = 350;
+  const insightText = summary.insight || "";
+  const isLong = insightText.length > truncLength;
   return (
     <motion.div
       initial={{ opacity: 0, y: 24, scale: 0.97 }}
@@ -192,7 +195,6 @@ function SummaryCard({ summary, index }) {
         {/* Header */}
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex items-center gap-3 min-w-0">
-            {/* File icon */}
             <motion.div
               animate={{ scale: hovered ? 1.08 : 1 }}
               transition={{ duration: 0.25 }}
@@ -288,14 +290,14 @@ function SummaryCard({ summary, index }) {
   "
               >
                 <ReactMarkdown>
-                  {summary.insight}
+                  {expanded || !isLong ? insightText : insightText.slice(0, truncLength) + "..."}
                 </ReactMarkdown>
               </div>
 
             </motion.div>
           </AnimatePresence>
 
-          {summary.insight.length > 110 && (
+          {isLong && (
             <motion.button
               whileHover={{ x: 2 }}
               onClick={() => setExpanded(!expanded)}
@@ -445,6 +447,8 @@ export default function AiSummaries() {
 
           keyPoints: 4,
 
+          createdAt: doc.createdAt || new Date().toISOString(),
+
           time: "Just now",
 
           starred: false,
@@ -488,6 +492,12 @@ export default function AiSummaries() {
 
     return matchSearch;
   });
+
+  // only display 2 latest summaries
+  const latestSummaries = filtered
+    .slice()
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, 2);
 
   return (
     <div style={{ fontFamily: "'Poppins', sans-serif" }}>
@@ -567,9 +577,9 @@ export default function AiSummaries() {
 
       {/* Cards */}
       <AnimatePresence mode="popLayout">
-        {filtered.length > 0 ? (
+        {latestSummaries.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filtered.map((summary, index) => (
+            {latestSummaries.map((summary, index) => (
 
               <SummaryCard
                 key={summary._id}
