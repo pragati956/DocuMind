@@ -8,7 +8,8 @@ import {
   deleteDocument,
   updateDocument,     // Added Step 3
   searchDocuments,    // Added Step 5
-  toggleStarDocument, // Added Step 6
+  toggleStarDocument, 
+   getSearchStats,// Added Step 6
 } from "../controllers/uploadController.js";
 
 const router = express.Router();
@@ -27,6 +28,11 @@ router.get("/all", authMiddleware, getDocuments);
 // ─── SEARCH ───
 // STEP 5: Search documents (MUST be above /:id)
 router.get("/search", authMiddleware, searchDocuments);
+router.get(
+ "/stats",
+ authMiddleware,
+ getSearchStats
+);
 
 // ─── ID-BASED ROUTES ───
 // STEP 2: Get single document
