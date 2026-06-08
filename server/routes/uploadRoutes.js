@@ -34,7 +34,6 @@ router.get(
  getCategories
 );
 
-
 // ─── SEARCH ───
 // STEP 5: Search documents (MUST be above /:id)
 router.get("/search", authMiddleware, searchDocuments);
