@@ -1,5 +1,6 @@
 import Collection from "../models/Collection.js";
 import Activity from "../models/Activity.js";
+import Document from "../models/Document.js"; // <-- ADDED MISSING MODEL IMPORT
 
 // CREATE COLLECTION
 export const createCollection = async (req, res) => {
