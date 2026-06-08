@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import {
   searchDocuments,
-  toggleStarDocument,
+  toggleStarDocument, getSearchStats,
 } from "../../services/documentService";
 import { useNavigate }
 from "react-router-dom";
@@ -504,6 +504,10 @@ export default function SmartSearch() {
   const [searchedQuery, setSearchedQuery] = useState("");
   const [results, setResults] =
   useState([]);
+  const [stats,
+ setStats]
+ =
+ useState(null);
   const [loading,
 setLoading]
 =
@@ -530,6 +534,29 @@ useEffect(() => {
   );
 
  }
+
+}, []);
+useEffect(() => {
+
+ const loadStats =
+ async () => {
+
+  try {
+
+   const data =
+    await getSearchStats();
+
+   setStats(data);
+
+  } catch (error) {
+
+   console.log(error);
+
+  }
+
+ };
+
+ loadStats();
 
 }, []);
  const handleSearch =
@@ -788,8 +815,10 @@ return (
           </div>
           <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/[0.06] bg-white/[0.03]">
             <FiFileText className="text-gray-600 text-xs" />
-            <span className="text-gray-500 text-xs">{results.length}documents indexed</span>
-          </div>
+<span className="text-gray-500 text-xs">
+ {stats?.totalDocs || 0}
+ documents indexed
+</span>          </div>
         </motion.div>
 
         {/* Search Bar */}
