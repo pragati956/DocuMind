@@ -261,3 +261,58 @@ async (req, res) => {
  }
 
 };
+export const getSearchStats =
+async (req, res) => {
+
+ try {
+
+  const totalDocs =
+   await Document.countDocuments({
+    uploadedBy: req.user.id
+   });
+
+  const pdfs =
+   await Document.countDocuments({
+    uploadedBy: req.user.id,
+    fileType: {
+     $regex: "pdf",
+     $options: "i"
+    }
+   });
+
+  const docx =
+   await Document.countDocuments({
+    uploadedBy: req.user.id,
+    fileType: {
+     $regex: "word",
+     $options: "i"
+    }
+   });
+
+  const txt =
+   await Document.countDocuments({
+    uploadedBy: req.user.id,
+    fileType: {
+     $regex: "text",
+     $options: "i"
+    }
+   });
+
+  res.status(200).json({
+   success: true,
+   totalDocs,
+   pdfs,
+   docx,
+   txt,
+  });
+
+ } catch (error) {
+
+  res.status(500).json({
+   success: false,
+   message: error.message,
+  });
+
+ }
+
+};
