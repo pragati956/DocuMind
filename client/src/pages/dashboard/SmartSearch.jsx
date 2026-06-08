@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
 import { toast } from "react-hot-toast";
+import SearchSkeleton
+from "../../components/dashboard/SearchSkeleton";
 import {
   searchDocuments,
-  toggleStarDocument, getSearchStats,
+  toggleStarDocument, getSearchStats,getCategories,
 } from "../../services/documentService";
 import { useNavigate }
 from "react-router-dom";
@@ -31,8 +33,15 @@ const suggestions = [
 
 
 
-const filters = ["All", "PDF", "DOCX", "TXT", "Starred", "Recent"];
-const aiTips = [
+const filters = [
+ "All",
+ "PDF",
+ "DOCX",
+ "TXT",
+ "IMAGE",
+ "Starred",
+ "Recent"
+];const aiTips = [
   `Try asking in natural language: "summarize Q4 results"`,
   `Use quotes for exact phrases: "net revenue retention"`,
   `Filter by type: "legal contracts signed in 2024"`,
@@ -217,7 +226,10 @@ function RecentSearches({
 }
 
 /* ─── Suggestion Cards ─── */
-function SuggestionCards({ onSearch }) {
+function SuggestionCards({
+ onSearch,
+ categories
+}){
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -228,7 +240,7 @@ function SuggestionCards({ onSearch }) {
         <FiTag className="text-[9px]" /> Browse by Category
       </p>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {suggestions.map((s, i) => (
+        {categories.map((s, i) => (
           <motion.button
             key={i}
             initial={{ opacity: 0, y: 12, scale: 0.95 }}
@@ -252,6 +264,7 @@ function SuggestionCards({ onSearch }) {
     </motion.div>
   );
 }
+
 
 /* ─── AI Tips ─── */
 function AiTips() {
@@ -330,6 +343,21 @@ function ResultCard({
                 {result.title}
               </p>
               <div className="flex items-center gap-2 mt-0.5">
+                {
+ result.hasSummary && (
+  <span
+   className="
+   px-2 py-0.5
+   rounded-full
+   text-[9px]
+   bg-purple-500/15
+   text-purple-300
+  "
+  >
+   AI Summary
+  </span>
+ )
+}
                 <span className="text-gray-600 text-[10px] uppercase font-bold">{result.type}</span>
                 <span className="text-gray-700 text-[10px]">·</span>
                 <span className="text-gray-600 text-[10px]">{result.file}</span>
@@ -439,8 +467,14 @@ onClick={async (e) => {
 }
 
 /* ─── Results Header ─── */
-function ResultsHeader({ query, count, activeFilter, setActiveFilter }) {
-  return (
+function ResultsHeader({
+ query,
+ count,
+ activeFilter,
+ setActiveFilter,
+ sortBy,
+ setSortBy
+}){ return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
       <div>
         <h3 className="text-white font-semibold text-sm">
@@ -460,6 +494,24 @@ function ResultsHeader({ query, count, activeFilter, setActiveFilter }) {
             {f}
           </motion.button>
         ))}
+        <select
+ value={sortBy}
+ onChange={(e)=>
+  setSortBy(e.target.value)
+ }
+ className="
+ bg-[#111827]
+ border border-[#1F2937]
+ text-gray-300
+ text-xs
+ rounded-lg
+ px-2 py-1
+ "
+>
+ <option>Newest</option>
+ <option>Oldest</option>
+ <option>A-Z</option>
+</select>
         <button className="w-7 h-7 rounded-lg border border-[#1F2937] bg-white/[0.03] flex items-center justify-center text-gray-600 hover:text-gray-300 transition-colors shrink-0">
           <FiFilter className="text-xs" />
         </button>
@@ -508,6 +560,8 @@ export default function SmartSearch() {
  setStats]
  =
  useState(null);
+ const [categories,setCategories] =
+useState([]);
   const [loading,
 setLoading]
 =
@@ -519,6 +573,8 @@ useState(false);
 const [recents, setRecents] =
 useState([]);
   const [activeFilter, setActiveFilter] = useState("All");
+  const [sortBy, setSortBy] =
+useState("Newest");
   const [hasSearched, setHasSearched] = useState(false);
 useEffect(() => {
 
@@ -559,6 +615,52 @@ useEffect(() => {
  loadStats();
 
 }, []);
+useEffect(()=>{
+
+ const loadCategories =
+ async()=>{
+
+  try{
+
+   const data =
+    await getCategories();
+
+   setCategories(
+
+ data.categories.map(
+  cat => ({
+
+   ...cat,
+
+   icon:
+    <FiTag />,
+
+   color:
+    "from-blue-500 to-indigo-600",
+
+   dim:
+    "rgba(59,130,246,0.1)",
+
+   border:
+    "rgba(59,130,246,0.22)",
+
+  })
+ )
+
+);
+
+  }
+  catch(error){
+
+   console.log(error);
+
+  }
+
+ };
+
+ loadCategories();
+
+},[]);
  const handleSearch =
 async (q) => {
 
@@ -710,13 +812,17 @@ results.map(doc => ({
   file: doc.title,
 
   fileUrl: doc.fileUrl,
+  hasSummary:
+ !!doc.summary,
 
-  type:
-    doc.fileType?.includes("pdf")
-      ? "PDF"
-      : doc.fileType?.includes("word")
-      ? "DOCX"
-      : "TXT",
+ type:
+ doc.fileType?.includes("pdf")
+ ? "PDF"
+ : doc.fileType?.includes("word")
+ ? "DOCX"
+ : doc.fileType?.includes("image")
+ ? "IMAGE"
+ : "TXT",
 
   excerpt:
     doc.summary ||
@@ -732,6 +838,8 @@ results.map(doc => ({
     new Date(
       doc.createdAt
     ).toLocaleDateString(),
+    createdAt:
+ doc.createdAt,
 
   relevance: 100,
 
@@ -766,11 +874,23 @@ if (
 )
  return r.starred;
 
-if (
- activeFilter ===
- "Recent"
-)
- return true;
+if(
+ activeFilter==="Recent"
+){
+
+ const sevenDaysAgo =
+  new Date();
+
+ sevenDaysAgo.setDate(
+  sevenDaysAgo.getDate()-7
+ );
+
+ return (
+  new Date(r.createdAt)
+  > sevenDaysAgo
+ );
+
+}
 
 return (
  r.type ===
@@ -779,6 +899,37 @@ return (
 
   }
 );
+let sortedResults =
+ [...filteredResults];
+ if(sortBy==="Newest"){
+
+ sortedResults.sort(
+  (a,b)=>
+   new Date(b.createdAt)
+   -
+   new Date(a.createdAt)
+ );
+
+}
+if(sortBy==="Oldest"){
+
+ sortedResults.sort(
+  (a,b)=>
+   new Date(a.createdAt)
+   -
+   new Date(b.createdAt)
+ );
+
+}
+if(sortBy==="A-Z"){
+
+ sortedResults.sort(
+  (a,b)=>
+   a.title.localeCompare(
+    b.title
+   )
+ );
+}
 
   return (
     <div className="min-h-screen bg-[#0B0F19]" style={{ fontFamily: "'Poppins', sans-serif" }}>
@@ -870,14 +1021,26 @@ return (
 
  }}
 /> 
-)}             <SuggestionCards onSearch={handleSearch} />
+)}            <SuggestionCards
+ onSearch={handleSearch}
+ categories={categories}
+/>
             </motion.div>
           ) : (
             <motion.div key="results" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }}>
-              <ResultsHeader query={searchedQuery} count={filteredResults.length} activeFilter={activeFilter} setActiveFilter={setActiveFilter} />
-              {filteredResults.length > 0 ? (
+<ResultsHeader
+ query={searchedQuery}
+ count={sortedResults.length}
+ activeFilter={activeFilter}
+ setActiveFilter={setActiveFilter}
+ sortBy={sortBy}
+ setSortBy={setSortBy}
+/>              {
+              loading ? (
+ <SearchSkeleton />
+) : sortedResults.length > 0 ? (
                 <div className="space-y-4">
-                  {filteredResults.map((r, i) => (
+                  {sortedResults.map((r, i) => (
 <ResultCard
   key={r.id}
   result={r}

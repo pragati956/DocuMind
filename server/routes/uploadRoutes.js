@@ -9,7 +9,8 @@ import {
   updateDocument,     // Added Step 3
   searchDocuments,    // Added Step 5
   toggleStarDocument, 
-   getSearchStats,// Added Step 6
+   getSearchStats,
+    getCategories,
 } from "../controllers/uploadController.js";
 
 const router = express.Router();
@@ -24,6 +25,11 @@ router.post("/upload", authMiddleware, upload.single("document"), uploadDocument
 
 // STEP 6: Get all (now supports ?page=1&limit=10)
 router.get("/all", authMiddleware, getDocuments);
+router.get(
+ "/categories",
+ authMiddleware,
+ getCategories
+);
 
 // ─── SEARCH ───
 // STEP 5: Search documents (MUST be above /:id)
@@ -31,7 +37,7 @@ router.get("/search", authMiddleware, searchDocuments);
 router.get(
  "/stats",
  authMiddleware,
- getSearchStats
+ getSearchStats,getCategories,
 );
 
 // ─── ID-BASED ROUTES ───
