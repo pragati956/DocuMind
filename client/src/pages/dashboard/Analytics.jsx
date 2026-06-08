@@ -1,4 +1,5 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react"; // Add useEffect here
+import axios from "axios"; // Add this line
 import { motion, useInView } from "framer-motion";
 import {
   FiTrendingUp, FiFileText, FiZap, FiCloud,
@@ -32,12 +33,6 @@ const monthlyData = [
   { month: "Jan", docs: 520, storage: 34, ai: 450 },
 ];
 
-const storageBreakdown = [
-  { name: "PDFs", value: 45, color: "#3b82f6" },
-  { name: "DOCX", value: 28, color: "#8b5cf6" },
-  { name: "Images", value: 16, color: "#10b981" },
-  { name: "TXT", value: 11, color: "#f59e0b" },
-];
 
 const activityData = [
   { hour: "00", activity: 2 },
@@ -48,73 +43,6 @@ const activityData = [
   { hour: "15", activity: 31 },
   { hour: "18", activity: 22 },
   { hour: "21", activity: 9 },
-];
-
-const topDocuments = [
-  { name: "Q4 Financial Report.pdf", views: 142, summaries: 8, color: "#3b82f6" },
-  { name: "Product Roadmap 2025.docx", views: 97, summaries: 5, color: "#8b5cf6" },
-  { name: "Legal Contract NDA.pdf", views: 76, summaries: 3, color: "#10b981" },
-  { name: "Brand Guidelines v3.pdf", views: 54, summaries: 4, color: "#f59e0b" },
-  { name: "Market Research 2025.pdf", views: 43, summaries: 6, color: "#06b6d4" },
-];
-
-const statCards = [
-  {
-    label: "Documents Processed",
-    value: "1,284",
-    change: "+12%",
-    trend: "up",
-    icon: <FiFileText />,
-    color: "text-blue-400",
-    bg: "bg-blue-500/10",
-    border: "border-blue-500/20",
-    glow: "rgba(59,130,246,0.2)",
-    accent: "#3b82f6",
-    gradient: "from-blue-500 to-indigo-500",
-    sub: "48 today",
-  },
-  {
-    label: "AI Summaries",
-    value: "847",
-    change: "+28%",
-    trend: "up",
-    icon: <FiZap />,
-    color: "text-purple-400",
-    bg: "bg-purple-500/10",
-    border: "border-purple-500/20",
-    glow: "rgba(139,92,246,0.2)",
-    accent: "#8b5cf6",
-    gradient: "from-purple-500 to-pink-500",
-    sub: "3 pending",
-  },
-  {
-    label: "Storage Used",
-    value: "24.6 GB",
-    change: "+5%",
-    trend: "up",
-    icon: <FiCloud />,
-    color: "text-cyan-400",
-    bg: "bg-cyan-500/10",
-    border: "border-cyan-500/20",
-    glow: "rgba(6,182,212,0.2)",
-    accent: "#06b6d4",
-    gradient: "from-cyan-500 to-teal-500",
-    sub: "of 50 GB",
-  },
-  {
-    label: "Active Users",
-    value: "38",
-    change: "+3",
-    trend: "up",
-    icon: <FiUsers />,
-    color: "text-emerald-400",
-    bg: "bg-emerald-500/10",
-    border: "border-emerald-500/20",
-    glow: "rgba(16,185,129,0.2)",
-    accent: "#10b981",
-    gradient: "from-emerald-500 to-teal-500",
-    sub: "12 online now",
-  },
 ];
 
 /* ─── Custom Tooltip ─── */
@@ -293,6 +221,119 @@ export default function AnalyticsPage() {
   const [range, setRange] = useState("7d");
   const [chartView, setChartView] = useState("uploads");
 
+  // 1. ADD REAL DATA STATE
+  const [analyticsData, setAnalyticsData] = useState({
+    totalDocs: 0,
+    aiSummaries: 0,
+    storageGB: "0.00",
+    storageBreakdown: [{ name: "Empty", value: 1, color: "#4b5563" }],
+    topDocs: []
+  });
+
+  // 2. FETCH REAL DATA FROM DB
+  useEffect(() => {
+    const fetchRealData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get("http://localhost:5000/api/documents/all", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (res.data.success) {
+          const docs = res.data.documents;
+          
+          const totalDocs = docs.length;
+          const aiSummaries = docs.filter(d => d.summary).length;
+          const totalBytes = docs.reduce((acc, d) => acc + (d.fileSize || 0), 0);
+          const storageGB = (totalBytes / (1024 * 1024 * 1024)).toFixed(4);
+
+          let pdf = 0, docx = 0, txt = 0, img = 0;
+          docs.forEach(d => {
+            const ext = (d.fileType || d.title).toLowerCase();
+            if (ext.includes("pdf")) pdf++;
+            else if (ext.includes("word") || ext.includes("docx")) docx++;
+            else if (ext.includes("text") || ext.includes("txt")) txt++;
+            else img++;
+          });
+
+          const breakdown = [
+            { name: "PDFs", value: pdf, color: "#3b82f6" },
+            { name: "DOCX", value: docx, color: "#8b5cf6" },
+            { name: "Images", value: img, color: "#10b981" },
+            { name: "TXT", value: txt, color: "#f59e0b" },
+          ].filter(item => item.value > 0);
+
+          // Sort by size as a replacement for "views"
+          const topDocs = [...docs]
+            .sort((a, b) => (b.fileSize || 0) - (a.fileSize || 0))
+            .slice(0, 5)
+            .map(d => ({
+              name: d.title,
+              views: Math.max(1, Math.round((d.fileSize || 0) / 1024)), // using KB size
+              color: "#3b82f6"
+            }));
+
+          setAnalyticsData({
+            totalDocs,
+            aiSummaries,
+            storageGB,
+            storageBreakdown: breakdown.length > 0 ? breakdown : [{ name: "Empty", value: 1, color: "#4b5563" }],
+            topDocs
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch analytics:", error);
+      }
+    };
+    fetchRealData();
+  }, []);
+
+  // 3. DYNAMIC CARDS (Active Users Removed)
+  const dynamicStatCards = [
+    {
+      label: "Documents Processed",
+      value: analyticsData.totalDocs,
+      change: "Real-time",
+      trend: "up",
+      icon: <FiFileText />,
+      color: "text-blue-400",
+      bg: "bg-blue-500/10",
+      border: "border-blue-500/20",
+      glow: "rgba(59,130,246,0.2)",
+      accent: "#3b82f6",
+      gradient: "from-blue-500 to-indigo-500",
+      sub: "Total uploaded",
+    },
+    {
+      label: "AI Summaries",
+      value: analyticsData.aiSummaries,
+      change: "Real-time",
+      trend: "up",
+      icon: <FiZap />,
+      color: "text-purple-400",
+      bg: "bg-purple-500/10",
+      border: "border-purple-500/20",
+      glow: "rgba(139,92,246,0.2)",
+      accent: "#8b5cf6",
+      gradient: "from-purple-500 to-pink-500",
+      sub: "Total generated",
+    },
+    {
+      label: "Storage Used",
+      value: `${analyticsData.storageGB} GB`,
+      change: "Real-time",
+      trend: "up",
+      icon: <FiCloud />,
+      color: "text-cyan-400",
+      bg: "bg-cyan-500/10",
+      border: "border-cyan-500/20",
+      glow: "rgba(6,182,212,0.2)",
+      accent: "#06b6d4",
+      gradient: "from-cyan-500 to-teal-500",
+      sub: "of 50 GB",
+    }
+  ];
+
   const chartLines = {
     uploads: [
       { key: "uploads", color: "#3b82f6", label: "Uploads" },
@@ -345,8 +386,9 @@ export default function AnalyticsPage() {
         </motion.div>
 
         {/* Stat Cards */}
-        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-          {statCards.map((stat, i) => <StatCard key={i} stat={stat} index={i} />)}
+        {/* Note the change from xl:grid-cols-4 to xl:grid-cols-3 because we removed a card */}
+        <div className="grid grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
+          {dynamicStatCards.map((stat, i) => <StatCard key={i} stat={stat} index={i} />)}
         </div>
 
         {/* Main Charts Row */}
@@ -398,22 +440,22 @@ export default function AnalyticsPage() {
           <ChartCard title="Storage Breakdown" subtitle="By file type" delay={0.2}>
             <ResponsiveContainer width="100%" height={160}>
               <PieChart>
-                <Pie data={storageBreakdown} cx="50%" cy="50%" innerRadius={46} outerRadius={68}
+                <Pie data={analyticsData.storageBreakdown} cx="50%" cy="50%" innerRadius={46} outerRadius={68}
                   paddingAngle={3} dataKey="value" strokeWidth={0}>
-                  {storageBreakdown.map((entry, i) => (
+                  {analyticsData.storageBreakdown.map((entry, i) => (
                     <Cell key={i} fill={entry.color} opacity={0.9} />
                   ))}
                 </Pie>
                 <Tooltip content={({ active, payload }) =>
                   active && payload?.length ? (
                     <div className="px-2.5 py-2 rounded-xl border border-white/10 bg-[#111827] text-xs text-white">
-                      {payload[0].name}: <strong>{payload[0].value}%</strong>
+                      {payload[0].name}: <strong>{payload[0].value} {payload[0].name === "Empty" ? "" : "files"}</strong>
                     </div>
                   ) : null}
                 />
               </PieChart>
             </ResponsiveContainer>
-            <PieLegend data={storageBreakdown} />
+            <PieLegend data={analyticsData.storageBreakdown} />
           </ChartCard>
         </div>
 
@@ -463,8 +505,8 @@ export default function AnalyticsPage() {
         <div className="grid xl:grid-cols-2 gap-5">
 
           {/* Top Documents */}
-          <ChartCard title="Top Documents" subtitle="By views this period" delay={0.35}>
-            <TopDocsTable docs={topDocuments} />
+          <ChartCard title="Top Documents" subtitle="Largest documents in workspace (KB)" delay={0.35}>
+            <TopDocsTable docs={analyticsData.topDocs} />
           </ChartCard>
 
           {/* AI Usage Metrics */}
