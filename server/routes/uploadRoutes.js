@@ -8,7 +8,8 @@ import {
   deleteDocument,
   updateDocument,     // Added Step 3
   searchDocuments,    // Added Step 5
-  toggleStarDocument, // Added Step 6
+  toggleStarDocument, 
+   getSearchStats,// Added Step 6
 } from "../controllers/uploadController.js";
 
 const router = express.Router();
@@ -33,10 +34,10 @@ router.get(
 // ─── SEARCH ───
 // STEP 5: Search documents (MUST be above /:id)
 router.get("/search", authMiddleware, searchDocuments);
-router.post(
- "/search-history",
+router.get(
+ "/stats",
  authMiddleware,
- saveSearchHistory
+ getSearchStats
 );
 
 router.get(

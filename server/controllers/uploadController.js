@@ -335,83 +335,59 @@ export const getDocumentsByType = async (req, res) => {
     const { type } = req.params;
     let regex = "";
 
-    if (type === "PDF") regex = "pdf";
-    else if (type === "DOCX") regex = "word";
-    else if (type === "TXT") regex = "text";
-    else if (type === "IMAGE") regex = "image";
-
-    const documents = await Document.find({
-      uploadedBy: req.user.id,
-      fileType: { $regex: regex, $options: "i" },
-    });
-
-    res.json({ success: true, documents });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
 };
+export const getSearchStats =
+async (req, res) => {
 
-// ─── GET SUGGESTIONS ───
-export const getSuggestions = async (req, res) => {
-  try {
-    const documents = await Document.find({ uploadedBy: req.user.id }).limit(10);
-    const suggestions = documents.map(doc => doc.title);
+ try {
 
-    res.json({ success: true, suggestions });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
+  const totalDocs =
+   await Document.countDocuments({
+    uploadedBy: req.user.id
+   });
 
-// ─── SAVE SEARCH HISTORY ───
-export const saveSearchHistory = async (req, res) => {
-  try {
-    const { query, resultsCount } = req.body;
-    const history = await SearchHistory.create({
-      userId: req.user.id,
-      query,
-      resultsCount
-    });
+  const pdfs =
+   await Document.countDocuments({
+    uploadedBy: req.user.id,
+    fileType: {
+     $regex: "pdf",
+     $options: "i"
+    }
+   });
 
-    res.status(201).json({ success: true, history });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
+  const docx =
+   await Document.countDocuments({
+    uploadedBy: req.user.id,
+    fileType: {
+     $regex: "word",
+     $options: "i"
+    }
+   });
 
-// ─── GET SEARCH HISTORY ───
-export const getSearchHistory = async (req, res) => {
-  try {
-    const history = await SearchHistory.find({ userId: req.user.id })
-      .sort({ createdAt: -1 })
-      .limit(10);
+  const txt =
+   await Document.countDocuments({
+    uploadedBy: req.user.id,
+    fileType: {
+     $regex: "text",
+     $options: "i"
+    }
+   });
 
-    res.json({ success: true, history });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
+  res.status(200).json({
+   success: true,
+   totalDocs,
+   pdfs,
+   docx,
+   txt,
+  });
 
-// ─── CLEAR SEARCH HISTORY ───
-export const clearSearchHistory = async (req, res) => {
-  try {
-    await SearchHistory.deleteMany({ userId: req.user.id });
-    res.json({ success: true });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
+ } catch (error) {
 
-// ─── DELETE SEARCH HISTORY ITEM ───
-export const deleteSearchHistory = async (req, res) => {
-  try {
-    await SearchHistory.findOneAndDelete({
-      _id: req.params.id,
-      userId: req.user.id
-    });
+  res.status(500).json({
+   success: false,
+   message: error.message,
+  });
 
-    res.json({ success: true });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
+ }
+
 };
