@@ -96,3 +96,14 @@ export const getSearchStats =
   return response.data;
 
  };
+ export const getCategories =
+async ()=>{
+
+ const response =
+  await API.get(
+   "/documents/categories"
+  );
+
+ return response.data;
+
+};

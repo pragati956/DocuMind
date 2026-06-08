@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
 import { toast } from "react-hot-toast";
+import SearchSkeleton
+from "../../components/dashboard/SearchSkeleton";
 import {
   searchDocuments,
-  toggleStarDocument, getSearchStats,
+  toggleStarDocument, getSearchStats,getCategories,
 } from "../../services/documentService";
 import { useNavigate }
 from "react-router-dom";
@@ -558,6 +560,8 @@ export default function SmartSearch() {
  setStats]
  =
  useState(null);
+ const [categories,setCategories] =
+useState([]);
   const [loading,
 setLoading]
 =
@@ -611,6 +615,52 @@ useEffect(() => {
  loadStats();
 
 }, []);
+useEffect(()=>{
+
+ const loadCategories =
+ async()=>{
+
+  try{
+
+   const data =
+    await getCategories();
+
+   setCategories(
+
+ data.categories.map(
+  cat => ({
+
+   ...cat,
+
+   icon:
+    <FiTag />,
+
+   color:
+    "from-blue-500 to-indigo-600",
+
+   dim:
+    "rgba(59,130,246,0.1)",
+
+   border:
+    "rgba(59,130,246,0.22)",
+
+  })
+ )
+
+);
+
+  }
+  catch(error){
+
+   console.log(error);
+
+  }
+
+ };
+
+ loadCategories();
+
+},[]);
  const handleSearch =
 async (q) => {
 
@@ -762,13 +812,17 @@ results.map(doc => ({
   file: doc.title,
 
   fileUrl: doc.fileUrl,
+  hasSummary:
+ !!doc.summary,
 
-  type:
-    doc.fileType?.includes("pdf")
-      ? "PDF"
-      : doc.fileType?.includes("word")
-      ? "DOCX"
-      : "TXT",
+ type:
+ doc.fileType?.includes("pdf")
+ ? "PDF"
+ : doc.fileType?.includes("word")
+ ? "DOCX"
+ : doc.fileType?.includes("image")
+ ? "IMAGE"
+ : "TXT",
 
   excerpt:
     doc.summary ||
@@ -784,6 +838,8 @@ results.map(doc => ({
     new Date(
       doc.createdAt
     ).toLocaleDateString(),
+    createdAt:
+ doc.createdAt,
 
   relevance: 100,
 
@@ -818,11 +874,23 @@ if (
 )
  return r.starred;
 
-if (
- activeFilter ===
- "Recent"
-)
- return true;
+if(
+ activeFilter==="Recent"
+){
+
+ const sevenDaysAgo =
+  new Date();
+
+ sevenDaysAgo.setDate(
+  sevenDaysAgo.getDate()-7
+ );
+
+ return (
+  new Date(r.createdAt)
+  > sevenDaysAgo
+ );
+
+}
 
 return (
  r.type ===
@@ -831,6 +899,37 @@ return (
 
   }
 );
+let sortedResults =
+ [...filteredResults];
+ if(sortBy==="Newest"){
+
+ sortedResults.sort(
+  (a,b)=>
+   new Date(b.createdAt)
+   -
+   new Date(a.createdAt)
+ );
+
+}
+if(sortBy==="Oldest"){
+
+ sortedResults.sort(
+  (a,b)=>
+   new Date(a.createdAt)
+   -
+   new Date(b.createdAt)
+ );
+
+}
+if(sortBy==="A-Z"){
+
+ sortedResults.sort(
+  (a,b)=>
+   a.title.localeCompare(
+    b.title
+   )
+ );
+}
 
   return (
     <div className="min-h-screen bg-[#0B0F19]" style={{ fontFamily: "'Poppins', sans-serif" }}>
@@ -922,7 +1021,10 @@ return (
 
  }}
 /> 
-)}             <SuggestionCards onSearch={handleSearch} />
+)}            <SuggestionCards
+ onSearch={handleSearch}
+ categories={categories}
+/>
             </motion.div>
           ) : (
             <motion.div key="results" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }}>
@@ -938,7 +1040,7 @@ return (
  <SearchSkeleton />
 ) : sortedResults.length > 0 ? (
                 <div className="space-y-4">
-                  {filteredResults.map((r, i) => (
+                  {sortedResults.map((r, i) => (
 <ResultCard
   key={r.id}
   result={r}
