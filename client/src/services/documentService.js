@@ -85,3 +85,14 @@ export const toggleStarDocument =
  return response.data;
 
 };
+export const getSearchStats =
+ async () => {
+
+  const response =
+   await API.get(
+    "/documents/stats"
+   );
+
+  return response.data;
+
+ };
