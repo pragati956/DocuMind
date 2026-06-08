@@ -354,6 +354,13 @@ async (req, res) => {
      $options: "i"
     }
    });
+   const summaries =
+ await Document.countDocuments({
+  uploadedBy:req.user.id,
+  summary:{
+   $ne:""
+  }
+ });
 
   const docx =
    await Document.countDocuments({
@@ -379,6 +386,7 @@ async (req, res) => {
    pdfs,
    docx,
    txt,
+   summaries
   });
 
  } catch (error) {
@@ -386,6 +394,73 @@ async (req, res) => {
   res.status(500).json({
    success: false,
    message: error.message,
+  });
+
+ }
+
+};
+export const getCategories =
+async (req,res)=>{
+
+ try{
+
+  const documents =
+   await Document.find({
+    uploadedBy:req.user.id
+   });
+
+  let pdf = 0;
+  let docx = 0;
+  let txt = 0;
+
+  documents.forEach(doc=>{
+
+   if(
+    doc.fileType?.includes(
+      "pdf"
+    )
+   ){
+    pdf++;
+   }
+
+   else if(
+    doc.fileType?.includes(
+      "word"
+    )
+   ){
+    docx++;
+   }
+
+   else{
+    txt++;
+   }
+
+  });
+
+  res.json({
+   success:true,
+   categories:[
+    {
+     label:"PDF",
+     count:pdf
+    },
+    {
+     label:"DOCX",
+     count:docx
+    },
+    {
+     label:"TXT",
+     count:txt
+    }
+   ]
+  });
+
+ }
+ catch(error){
+
+  res.status(500).json({
+   success:false,
+   message:error.message
   });
 
  }
