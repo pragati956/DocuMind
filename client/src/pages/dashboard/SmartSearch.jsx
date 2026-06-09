@@ -4,7 +4,7 @@ import SearchSkeleton
 from "../../components/dashboard/SearchSkeleton";
 import {
   searchDocuments,
-  toggleStarDocument, getSearchStats,getCategories,
+  toggleStarDocument, getSearchStats,getCategories,getDocumentsByType,getSuggestions,
 } from "../../services/documentService";
 import { useNavigate }
 from "react-router-dom";
@@ -40,8 +40,10 @@ const filters = [
  "TXT",
  "IMAGE",
  "Starred",
- "Recent"
-];const aiTips = [
+ "Recent",
+ "Summarized"
+];
+const aiTips = [
   `Try asking in natural language: "summarize Q4 results"`,
   `Use quotes for exact phrases: "net revenue retention"`,
   `Filter by type: "legal contracts signed in 2024"`,
@@ -81,7 +83,8 @@ function SearchBar({
  onSearch,
  focused,
  setFocused,
- loading
+ loading,
+ suggestions
 }){
   const ref = useRef(null);
   const placeholders = [
@@ -111,7 +114,7 @@ function SearchBar({
         backgroundColor: focused ? "rgba(59,130,246,0.03)" : "rgba(17,24,39,0.8)",
       }}
       transition={{ duration: 0.25 }}
-      className="flex items-center gap-4 px-5 py-4 rounded-2xl border backdrop-blur-xl"
+      className=" relative flex items-center gap-4 px-5 py-4 rounded-2xl border backdrop-blur-xl"
     >
       <motion.div animate={{ color: focused ? "#60a5fa" : "#4b5563", scale: focused ? 1.1 : 1 }} transition={{ duration: 0.2 }}>
         <FiSearch className="text-xl shrink-0" />
@@ -128,6 +131,58 @@ function SearchBar({
         placeholder={placeholder}
         className="flex-1 bg-transparent text-white text-base placeholder-gray-600 outline-none"
       />
+
+{query &&
+ suggestions.length > 0 && (
+
+  <div
+   className="
+   absolute
+   top-full
+   left-0
+   right-0
+   bg-[#111827]
+   border
+   border-[#1F2937]
+   rounded-xl
+   mt-2
+   z-50
+   "
+  >
+
+   {suggestions
+    .filter(item =>
+      item
+       .toLowerCase()
+       .includes(
+        query.toLowerCase()
+       )
+    )
+    .slice(0,5)
+    .map(item => (
+
+     <button
+      key={item}
+      onClick={() =>
+       onSearch(item)
+      }
+      className="
+      block
+      w-full
+      text-left
+      px-4
+      py-2
+      hover:bg-white/5
+      "
+     >
+      {item}
+     </button>
+
+    ))}
+
+  </div>
+
+)}
 
       <div className="flex items-center gap-2 shrink-0">
         <AnimatePresence>
@@ -212,6 +267,19 @@ function RecentSearches({
             <span className="text-gray-300 text-xs">{s.query}</span>
             <span className="text-gray-700 text-[10px]">·</span>
             <span className="text-gray-600 text-[10px]">{s.results} results</span>
+            <span
+ className="
+ text-gray-700
+ text-[10px]
+ "
+>
+{s.searchedAt
+ ? new Date(
+     s.searchedAt
+   ).toLocaleDateString()
+ : ""
+}
+</span>
             <button
               onClick={(e) => { e.stopPropagation(); onRemove(s.id); }}
               className="opacity-0 group-hover:opacity-100 text-gray-600 hover:text-gray-300 transition-all ml-1"
@@ -297,6 +365,116 @@ function AiTips() {
       </AnimatePresence>
     </motion.div>
   );
+}
+function StatCard({
+ title,
+ value
+}){
+
+ return(
+
+  <div
+   className="
+   bg-[#111827]
+   border border-[#1F2937]
+   rounded-xl
+   p-4
+   "
+  >
+
+   <p
+    className="
+    text-gray-500
+    text-xs
+    "
+   >
+    {title}
+   </p>
+
+   <h3
+    className="
+    text-white
+    text-xl
+    font-bold
+    mt-1
+    "
+   >
+    {value}
+   </h3>
+
+  </div>
+
+ );
+
+}
+function TrendingSearches({
+ trending,
+ onSearch
+}){
+
+ if(
+  trending.length===0
+ )
+  return null;
+
+ return(
+
+  <div
+   className="
+   bg-[#111827]
+   border border-[#1F2937]
+   rounded-xl
+   p-4
+   "
+  >
+
+   <h3
+    className="
+    text-white
+    text-sm
+    font-semibold
+    mb-3
+    "
+   >
+    Trending Searches
+   </h3>
+
+   <div
+    className="
+    flex flex-wrap gap-2
+    "
+   >
+
+    {trending.map(
+     ([query,count]) => (
+
+      <button
+       key={query}
+       onClick={() =>
+        onSearch(query)
+       }
+       className="
+       px-3 py-1
+       rounded-full
+       bg-blue-500/10
+       text-blue-300
+       text-xs
+       "
+      >
+       {query}
+       {" "}
+       ({count})
+      </button>
+
+     )
+    )}
+
+   </div>
+
+  </div>
+
+ );
+
 }
 
 /* ─── Result Card ─── */
@@ -553,9 +731,14 @@ export default function SmartSearch() {
   const navigate =
   useNavigate();
   const [query, setQuery] = useState("");
+  
   const [searchedQuery, setSearchedQuery] = useState("");
   const [results, setResults] =
   useState([]);
+  const [
+ suggestions,
+ setSuggestions
+] = useState([]);
   const [stats,
  setStats]
  =
@@ -571,6 +754,8 @@ useState(false);
  useState(null);
   const [focused, setFocused] = useState(false);
 const [recents, setRecents] =
+useState([]);
+const [trending, setTrending] =
 useState([]);
   const [activeFilter, setActiveFilter] = useState("All");
   const [sortBy, setSortBy] =
@@ -594,8 +779,61 @@ useEffect(() => {
 }, []);
 useEffect(() => {
 
- const loadStats =
+ const searches =
+  JSON.parse(
+   localStorage.getItem(
+    "recentSearches"
+   ) || "[]"
+  );
+
+ const countMap = {};
+
+ searches.forEach(item => {
+
+  countMap[item.query] =
+   (countMap[item.query] || 0)
+   + 1;
+
+ });
+
+ const topSearches =
+  Object.entries(countMap)
+   .sort(
+    (a,b) => b[1] - a[1]
+   )
+   .slice(0,5);
+
+ setTrending(
+  topSearches
+ );
+
+}, [recents]);
+useEffect(() => {
+
+ const loadSuggestions =
  async () => {
+
+  try {
+
+   const data =
+    await getSuggestions();
+
+   setSuggestions(
+    data.suggestions
+   );
+
+  } catch (error) {
+
+   console.log(error);
+
+  }
+
+ };
+
+ loadSuggestions();
+
+}, []);
+ const loadStats = async () => {
 
   try {
 
@@ -611,6 +849,9 @@ useEffect(() => {
   }
 
  };
+useEffect(() => {
+
+
 
  loadStats();
 
@@ -633,7 +874,11 @@ useEffect(()=>{
    ...cat,
 
    icon:
-    <FiTag />,
+ cat.label === "PDF"
+  ? <FiFileText />
+  : cat.label === "DOCX"
+  ? <FiBookmark />
+  : <FiFolder />,
 
    color:
     "from-blue-500 to-indigo-600",
@@ -697,11 +942,14 @@ async (q) => {
 
  const updated = [
   {
-   id: Date.now(),
-   query: q,
-   results:
-    data.documents.length,
-  },
+ id: Date.now(),
+ query: q,
+ results:
+  data.documents.length,
+
+ searchedAt:
+  new Date()
+},
   ...filtered,
  ].slice(0, 5);
 
@@ -792,6 +1040,7 @@ await handleSearch(
 toast.success(
  "Summary generated"
 );
+await loadStats();
 
   } catch (error) {
 
@@ -841,7 +1090,8 @@ results.map(doc => ({
     createdAt:
  doc.createdAt,
 
-  relevance: 100,
+ relevance:
+ doc.relevance || 0,
 
   pages: 0,
 
@@ -858,47 +1108,55 @@ results.map(doc => ({
     "text-blue-300",
 
 }));
-
- const filteredResults =
-formattedResults.filter(
+const filteredResults =
+ formattedResults.filter(
   (r) => {
 
- if (
- activeFilter === "All"
-)
- return true;
+   if (
+    activeFilter === "All"
+   )
+    return true;
 
-if (
- activeFilter ===
- "Starred"
-)
- return r.starred;
+   if (
+    activeFilter === "Starred"
+   )
+    return r.starred;
 
-if(
- activeFilter==="Recent"
-){
+   if (
+    activeFilter === "Recent"
+   ) {
 
- const sevenDaysAgo =
-  new Date();
+    const sevenDaysAgo =
+     new Date();
 
- sevenDaysAgo.setDate(
-  sevenDaysAgo.getDate()-7
- );
+    sevenDaysAgo.setDate(
+     sevenDaysAgo.getDate() - 7
+    );
 
- return (
-  new Date(r.createdAt)
-  > sevenDaysAgo
- );
+    return (
+     new Date(
+      r.createdAt
+     ) > sevenDaysAgo
+    );
 
-}
+   }
 
-return (
- r.type ===
- activeFilter
-);
+   if (
+    activeFilter ===
+    "Summarized"
+   ) {
+
+    return r.hasSummary;
+
+   }
+
+   return (
+    r.type ===
+    activeFilter
+   );
 
   }
-);
+ );
 let sortedResults =
  [...filteredResults];
  if(sortBy==="Newest"){
@@ -981,13 +1239,56 @@ if(sortBy==="A-Z"){
  focused={focused}
  setFocused={setFocused}
  loading={loading}
-/>        </motion.div>
+ suggestions={suggestions}
+/>      </motion.div>
 
         {/* AI Tips */}
-        <div className="mb-8">
-          <AiTips />
-        </div>
+       <div className="mb-8">
+  <AiTips />
+</div>
 
+{
+ stats && (
+
+  <div
+   className="
+   grid
+   grid-cols-2
+   md:grid-cols-5
+   gap-3
+   mb-8
+   "
+  >
+
+   <StatCard
+    title="Documents"
+    value={stats.totalDocs}
+   />
+
+   <StatCard
+    title="PDF"
+    value={stats.pdfs}
+   />
+
+   <StatCard
+    title="DOCX"
+    value={stats.docx}
+   />
+
+   <StatCard
+    title="TXT"
+    value={stats.txt}
+   />
+
+   <StatCard
+    title="Summaries"
+    value={stats.summaries}
+   />
+
+  </div>
+
+ )
+}
         {/* Content */}
         <AnimatePresence mode="wait">
           {!hasSearched ? (
@@ -1020,9 +1321,44 @@ if(sortBy==="A-Z"){
   );
 
  }}
-/> 
-)}            <SuggestionCards
+/>
+ 
+
+)}
+<TrendingSearches
+ trending={trending}
  onSearch={handleSearch}
+/> 
+           <SuggestionCards
+ onSearch={
+ async(type)=>{
+
+  try{
+
+   const data =
+    await getDocumentsByType(type);
+
+   setResults(
+    data.documents
+   );
+
+   setHasSearched(
+    true
+   );
+
+   setSearchedQuery(
+    type
+   );
+
+  }
+  catch(error){
+
+   console.log(error);
+
+  }
+
+ }
+}
  categories={categories}
 />
             </motion.div>
