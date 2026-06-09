@@ -4,7 +4,9 @@ import SearchSkeleton
 from "../../components/dashboard/SearchSkeleton";
 import {
   searchDocuments,
-  toggleStarDocument, getSearchStats,getCategories,getDocumentsByType,getSuggestions,
+  toggleStarDocument, getSearchStats,getCategories,getDocumentsByType,getSuggestions, saveSearchHistory,
+ getSearchHistory,
+ clearSearchHistory,deleteSearchHistory,
 } from "../../services/documentService";
 import { useNavigate }
 from "react-router-dom";
@@ -256,7 +258,7 @@ function RecentSearches({
       <div className="flex flex-wrap gap-2">
         {searches.map((s, i) => (
           <motion.div
-            key={s.id}
+            key={s._id}
             initial={{ opacity: 0, scale: 0.88 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: i * 0.05 }}
@@ -266,22 +268,22 @@ function RecentSearches({
             <FiClock className="text-gray-600 text-[10px] shrink-0" />
             <span className="text-gray-300 text-xs">{s.query}</span>
             <span className="text-gray-700 text-[10px]">·</span>
-            <span className="text-gray-600 text-[10px]">{s.results} results</span>
+            <span className="text-gray-600 text-[10px]">{s.resultsCount} results</span>
             <span
  className="
  text-gray-700
  text-[10px]
  "
 >
-{s.searchedAt
+{s.createdAt
  ? new Date(
-     s.searchedAt
-   ).toLocaleDateString()
+     s.createdAt
+   ).toLocaleString()
  : ""
 }
 </span>
             <button
-              onClick={(e) => { e.stopPropagation(); onRemove(s.id); }}
+              onClick={(e) => { e.stopPropagation(); onRemove(s._id); }}
               className="opacity-0 group-hover:opacity-100 text-gray-600 hover:text-gray-300 transition-all ml-1"
             >
               <FiX className="text-[9px]" />
@@ -470,6 +472,43 @@ function TrendingSearches({
     )}
 
    </div>
+
+  </div>
+
+ );
+
+}
+function SearchAnalytics({
+ totalSearches,
+ mostUsedSearch,
+ lastSearch
+}){
+
+ return(
+
+  <div
+   className="
+   grid
+   grid-cols-1
+   md:grid-cols-3
+   gap-3
+   "
+  >
+
+   <StatCard
+    title="Total Searches"
+    value={totalSearches}
+   />
+
+   <StatCard
+    title="Most Used"
+    value={mostUsedSearch}
+   />
+
+   <StatCard
+    title="Last Search"
+    value={lastSearch}
+   />
 
   </div>
 
@@ -761,51 +800,49 @@ useState([]);
   const [sortBy, setSortBy] =
 useState("Newest");
   const [hasSearched, setHasSearched] = useState(false);
+useEffect(()=>{
+
+ const loadHistory =
+ async()=>{
+
+  try{
+
+   const data =
+    await getSearchHistory();
+
+   setRecents(
+    data.history
+   );
+
+  }
+  catch(error){
+
+   console.log(error);
+
+  }
+
+ };
+
+ loadHistory();
+
+},[]);
 useEffect(() => {
-
- const saved =
-  localStorage.getItem(
-   "recentSearches"
-  );
-
- if (saved) {
-
-  setRecents(
-   JSON.parse(saved)
-  );
-
- }
-
-}, []);
-useEffect(() => {
-
- const searches =
-  JSON.parse(
-   localStorage.getItem(
-    "recentSearches"
-   ) || "[]"
-  );
 
  const countMap = {};
 
- searches.forEach(item => {
+ recents.forEach(item => {
 
   countMap[item.query] =
-   (countMap[item.query] || 0)
-   + 1;
+   (countMap[item.query] || 0) + 1;
 
  });
 
  const topSearches =
   Object.entries(countMap)
-   .sort(
-    (a,b) => b[1] - a[1]
-   )
+   .sort((a,b)=>b[1]-a[1])
    .slice(0,5);
 
- setTrending(
-  topSearches
- );
+ setTrending(topSearches);
 
 }, [recents]);
 useEffect(() => {
@@ -931,36 +968,22 @@ async (q) => {
     setSearchedQuery(q);
 
     setHasSearched(true);
-    setRecents(prev => {
+   await saveSearchHistory({
 
- const filtered =
-  prev.filter(
-   item =>
-    item.query.toLowerCase() !==
-    q.toLowerCase()
-  );
+ query:q,
 
- const updated = [
-  {
- id: Date.now(),
- query: q,
- results:
-  data.documents.length,
-
- searchedAt:
-  new Date()
-},
-  ...filtered,
- ].slice(0, 5);
-
- localStorage.setItem(
-  "recentSearches",
-  JSON.stringify(updated)
- );
-
- return updated;
+ resultsCount:
+  data.documents.length
 
 });
+
+const historyData =
+ await getSearchHistory();
+
+setRecents(
+ historyData.history
+);
+
 
     setFocused(false);
 
@@ -1157,6 +1180,20 @@ const filteredResults =
 
   }
  );
+ const totalSearches =
+ recents.length;
+
+const mostUsedSearch =
+
+ trending.length > 0
+ ? trending[0][0]
+ : "-";
+
+const lastSearch =
+
+ recents.length > 0
+ ? recents[0].query
+ : "-";
 let sortedResults =
  [...filteredResults];
  if(sortBy==="Newest"){
@@ -1297,38 +1334,75 @@ if(sortBy==="A-Z"){
 <RecentSearches
  searches={recents}
  onSearch={handleSearch}
- onRemove={(id) => {
+onRemove={async(id)=>{
 
-  const updated =
-   recents.filter(
-    s => s.id !== id
-   );
+ try{
 
-  setRecents(updated);
+  await deleteSearchHistory(id);
 
-  localStorage.setItem(
-   "recentSearches",
-   JSON.stringify(updated)
+  const historyData =
+   await getSearchHistory();
+
+  setRecents(
+   historyData.history
   );
 
- }}
- onClear={() => {
+  toast.success(
+   "Search removed"
+  );
+
+ }
+ catch(error){
+
+  console.log(error);
+
+ }
+
+}}
+ onClear={async () => {
+
+ try {
+
+  await clearSearchHistory();
 
   setRecents([]);
 
-  localStorage.removeItem(
-   "recentSearches"
+  setTrending([]);
+
+  toast.success(
+   "History cleared"
   );
 
- }}
+ }
+ catch(error){
+
+  console.log(error);
+
+  toast.error(
+   "Failed to clear history"
+  );
+
+ }
+
+}}
 />
  
 
 )}
-<TrendingSearches
- trending={trending}
- onSearch={handleSearch}
-/> 
+<div className="space-y-4">
+
+ <TrendingSearches
+  trending={trending}
+  onSearch={handleSearch}
+ />
+
+ <SearchAnalytics
+  totalSearches={totalSearches}
+  mostUsedSearch={mostUsedSearch}
+  lastSearch={lastSearch}
+ />
+
+</div>
            <SuggestionCards
  onSearch={
  async(type)=>{
