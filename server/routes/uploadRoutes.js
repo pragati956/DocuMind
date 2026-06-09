@@ -11,6 +11,7 @@ import {
   toggleStarDocument, 
    getSearchStats,
     getCategories,
+    getDocumentsByType,getSuggestions,
 } from "../controllers/uploadController.js";
 
 const router = express.Router();
@@ -31,6 +32,7 @@ router.get(
  getCategories
 );
 
+
 // ─── SEARCH ───
 // STEP 5: Search documents (MUST be above /:id)
 router.get("/search", authMiddleware, searchDocuments);
@@ -39,7 +41,17 @@ router.get(
  authMiddleware,
  getSearchStats,getCategories,
 );
+router.get(
+ "/type/:type",
+ authMiddleware,
+ getDocumentsByType
+);
 
+router.get(
+ "/suggestions",
+ authMiddleware,
+ getSuggestions
+);
 // ─── ID-BASED ROUTES ───
 // STEP 2: Get single document
 router.get("/:id", authMiddleware, getDocumentById);
