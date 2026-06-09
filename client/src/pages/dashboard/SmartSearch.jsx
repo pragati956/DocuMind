@@ -869,6 +869,28 @@ useEffect(() => {
   try {
 
    const data =
+    await getSuggestions();
+
+   setSuggestions(
+    data.suggestions
+   );
+
+  } catch (error) {
+
+   console.log(error);
+
+  }
+
+ };
+
+ loadSuggestions();
+
+}, []);
+ const loadStats = async () => {
+
+  try {
+
+   const data =
     await getSearchStats();
 
    setStats(data);
