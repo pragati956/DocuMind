@@ -107,3 +107,25 @@ async ()=>{
  return response.data;
 
 };
+export const getDocumentsByType =
+async(type)=>{
+
+ const response =
+ await API.get(
+  `/documents/type/${type}`
+ );
+
+ return response.data;
+
+};
+export const getSuggestions =
+async ()=>{
+
+ const response =
+  await API.get(
+   "/documents/suggestions"
+  );
+
+ return response.data;
+
+};

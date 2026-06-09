@@ -4,7 +4,7 @@ import SearchSkeleton
 from "../../components/dashboard/SearchSkeleton";
 import {
   searchDocuments,
-  toggleStarDocument, getSearchStats,getCategories,
+  toggleStarDocument, getSearchStats,getCategories,getDocumentsByType,getSuggestions,
 } from "../../services/documentService";
 import { useNavigate }
 from "react-router-dom";
@@ -47,8 +47,10 @@ const filters = [
  "TXT",
  "IMAGE",
  "Starred",
- "Recent"
-];const aiTips = [
+ "Recent",
+ "Summarized"
+];
+const aiTips = [
   `Try asking in natural language: "summarize Q4 results"`,
   `Use quotes for exact phrases: "net revenue retention"`,
   `Filter by type: "legal contracts signed in 2024"`,
@@ -88,7 +90,8 @@ function SearchBar({
  onSearch,
  focused,
  setFocused,
- loading
+ loading,
+ suggestions
 }){
   const ref = useRef(null);
   const placeholders = [
@@ -270,17 +273,17 @@ function RecentSearches({
             <FiClock className="text-gray-600 text-[10px] shrink-0" />
             <span className="text-gray-300 text-xs">{s.query}</span>
             <span className="text-gray-700 text-[10px]">·</span>
-            <span className="text-gray-600 text-[10px]">{s.resultsCount} results</span>
+            <span className="text-gray-600 text-[10px]">{s.results} results</span>
             <span
  className="
  text-gray-700
  text-[10px]
  "
 >
-{s.createdAt
+{s.searchedAt
  ? new Date(
-     s.createdAt
-   ).toLocaleString()
+     s.searchedAt
+   ).toLocaleDateString()
  : ""
 }
 </span>
@@ -474,43 +477,6 @@ function TrendingSearches({
     )}
 
    </div>
-
-  </div>
-
- );
-
-}
-function SearchAnalytics({
- totalSearches,
- mostUsedSearch,
- lastSearch
-}){
-
- return(
-
-  <div
-   className="
-   grid
-   grid-cols-1
-   md:grid-cols-3
-   gap-3
-   "
-  >
-
-   <StatCard
-    title="Total Searches"
-    value={totalSearches}
-   />
-
-   <StatCard
-    title="Most Used"
-    value={mostUsedSearch}
-   />
-
-   <StatCard
-    title="Last Search"
-    value={lastSearch}
-   />
 
   </div>
 
@@ -776,6 +742,10 @@ export default function SmartSearch() {
   const [searchedQuery, setSearchedQuery] = useState("");
   const [results, setResults] =
   useState([]);
+  const [
+ suggestions,
+ setSuggestions
+] = useState([]);
   const [stats,
  setStats]
  =
@@ -791,6 +761,8 @@ useState(false);
  useState(null);
   const [focused, setFocused] = useState(false);
 const [recents, setRecents] =
+useState([]);
+const [trending, setTrending] =
 useState([]);
   const [activeFilter, setActiveFilter] = useState("All");
   const [sortBy, setSortBy] =
@@ -814,8 +786,61 @@ useEffect(() => {
 }, []);
 useEffect(() => {
 
- const loadStats =
+ const searches =
+  JSON.parse(
+   localStorage.getItem(
+    "recentSearches"
+   ) || "[]"
+  );
+
+ const countMap = {};
+
+ searches.forEach(item => {
+
+  countMap[item.query] =
+   (countMap[item.query] || 0)
+   + 1;
+
+ });
+
+ const topSearches =
+  Object.entries(countMap)
+   .sort(
+    (a,b) => b[1] - a[1]
+   )
+   .slice(0,5);
+
+ setTrending(
+  topSearches
+ );
+
+}, [recents]);
+useEffect(() => {
+
+ const loadSuggestions =
  async () => {
+
+  try {
+
+   const data =
+    await getSuggestions();
+
+   setSuggestions(
+    data.suggestions
+   );
+
+  } catch (error) {
+
+   console.log(error);
+
+  }
+
+ };
+
+ loadSuggestions();
+
+}, []);
+ const loadStats = async () => {
 
   try {
 
@@ -831,6 +856,9 @@ useEffect(() => {
   }
 
  };
+useEffect(() => {
+
+
 
  loadStats();
 
@@ -853,7 +881,11 @@ useEffect(()=>{
    ...cat,
 
    icon:
-    <FiTag />,
+ cat.label === "PDF"
+  ? <FiFileText />
+  : cat.label === "DOCX"
+  ? <FiBookmark />
+  : <FiFolder />,
 
    color:
     "from-blue-500 to-indigo-600",
@@ -917,11 +949,14 @@ async (q) => {
 
  const updated = [
   {
-   id: Date.now(),
-   query: q,
-   results:
-    data.documents.length,
-  },
+ id: Date.now(),
+ query: q,
+ results:
+  data.documents.length,
+
+ searchedAt:
+  new Date()
+},
   ...filtered,
  ].slice(0, 5);
 
@@ -1012,6 +1047,7 @@ await handleSearch(
 toast.success(
  "Summary generated"
 );
+await loadStats();
 
   } catch (error) {
 
@@ -1061,7 +1097,8 @@ results.map(doc => ({
     createdAt:
  doc.createdAt,
 
-  relevance: 100,
+ relevance:
+ doc.relevance || 0,
 
   pages: 0,
 
@@ -1078,47 +1115,55 @@ results.map(doc => ({
     "text-blue-300",
 
 }));
-
- const filteredResults =
-formattedResults.filter(
+const filteredResults =
+ formattedResults.filter(
   (r) => {
 
- if (
- activeFilter === "All"
-)
- return true;
+   if (
+    activeFilter === "All"
+   )
+    return true;
 
-if (
- activeFilter ===
- "Starred"
-)
- return r.starred;
+   if (
+    activeFilter === "Starred"
+   )
+    return r.starred;
 
-if(
- activeFilter==="Recent"
-){
+   if (
+    activeFilter === "Recent"
+   ) {
 
- const sevenDaysAgo =
-  new Date();
+    const sevenDaysAgo =
+     new Date();
 
- sevenDaysAgo.setDate(
-  sevenDaysAgo.getDate()-7
- );
+    sevenDaysAgo.setDate(
+     sevenDaysAgo.getDate() - 7
+    );
 
- return (
-  new Date(r.createdAt)
-  > sevenDaysAgo
- );
+    return (
+     new Date(
+      r.createdAt
+     ) > sevenDaysAgo
+    );
 
-}
+   }
 
-return (
- r.type ===
- activeFilter
-);
+   if (
+    activeFilter ===
+    "Summarized"
+   ) {
+
+    return r.hasSummary;
+
+   }
+
+   return (
+    r.type ===
+    activeFilter
+   );
 
   }
-);
+ );
 let sortedResults =
  [...filteredResults];
  if(sortBy==="Newest"){
@@ -1201,7 +1246,8 @@ if(sortBy==="A-Z"){
  focused={focused}
  setFocused={setFocused}
  loading={loading}
-/>        </motion.div>
+ suggestions={suggestions}
+/>      </motion.div>
 
         {/* AI Tips */}
        <div className="mb-8">
@@ -1282,9 +1328,44 @@ if(sortBy==="A-Z"){
   );
 
  }}
-/> 
-)}            <SuggestionCards
+/>
+ 
+
+)}
+<TrendingSearches
+ trending={trending}
  onSearch={handleSearch}
+/> 
+           <SuggestionCards
+ onSearch={
+ async(type)=>{
+
+  try{
+
+   const data =
+    await getDocumentsByType(type);
+
+   setResults(
+    data.documents
+   );
+
+   setHasSearched(
+    true
+   );
+
+   setSearchedQuery(
+    type
+   );
+
+  }
+  catch(error){
+
+   console.log(error);
+
+  }
+
+ }
+}
  categories={categories}
 />
             </motion.div>
