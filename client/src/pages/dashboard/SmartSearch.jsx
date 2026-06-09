@@ -39,19 +39,6 @@ const filters = [
  "Recent",
  "Summarized"
 ];
-
-
-
-const filters = [
- "All",
- "PDF",
- "DOCX",
- "TXT",
- "IMAGE",
- "Starred",
- "Recent",
- "Summarized"
-];
 const aiTips = [
   `Try asking in natural language: "summarize Q4 results"`,
   `Use quotes for exact phrases: "net revenue retention"`,
