@@ -26,12 +26,6 @@ import {
 /* ─── Mock Data ─── */
 
 
-const suggestions = [
-  { label: "Revenue & Finance", icon: <FiTrendingUp />, color: "from-blue-500 to-indigo-600", accent: "#3b82f6", dim: "rgba(59,130,246,0.1)", border: "rgba(59,130,246,0.22)", text: "text-blue-300", count: 24 },
-  { label: "Legal Documents", icon: <FiBookmark />, color: "from-purple-500 to-pink-600", accent: "#8b5cf6", dim: "rgba(139,92,246,0.1)", border: "rgba(139,92,246,0.22)", text: "text-purple-300", count: 7 },
-  { label: "Product Strategy", icon: <FiFolder />, color: "from-emerald-500 to-teal-600", accent: "#10b981", dim: "rgba(16,185,129,0.1)", border: "rgba(16,185,129,0.22)", text: "text-emerald-300", count: 18 },
-  { label: "Meeting Notes", icon: <FiFileText />, color: "from-amber-500 to-orange-600", accent: "#f59e0b", dim: "rgba(245,158,11,0.1)", border: "rgba(245,158,11,0.22)", text: "text-amber-300", count: 31 },
-];
 
 
 
