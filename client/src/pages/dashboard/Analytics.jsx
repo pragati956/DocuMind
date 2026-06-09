@@ -1,20 +1,21 @@
-import React, { useState, useRef, useEffect } from "react"; // Add useEffect here
-import axios from "axios"; // Add this line
+import React, { useState, useRef, useEffect } from "react";
+import axios from "axios";
+import { toast } from "react-hot-toast";
 import { motion, useInView } from "framer-motion";
 import {
   FiTrendingUp, FiFileText, FiZap, FiCloud,
-  FiUsers, FiActivity, FiArrowUp, FiArrowDown,
-  FiClock, FiDownload, FiFilter, FiCalendar,
+  FiActivity, FiArrowUp, FiArrowDown,
+  FiClock, FiDownload, FiFilter, FiShare2,
 } from "react-icons/fi";
 import {
-  ResponsiveContainer, LineChart, Line, BarChart, Bar,
+  ResponsiveContainer, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, Area, AreaChart,
-  PieChart, Pie, Cell, Legend,
+  PieChart, Pie, Cell,
 } from "recharts";
 
 /* ─── Mock Data ─── */
 const uploadData = [
-  { day: "Mon", uploads: 12, summaries: 8, searches: 24 },
+  { day: "Mon", uploads: 12, summaries: 8,  searches: 24 },
   { day: "Tue", uploads: 19, summaries: 14, searches: 38 },
   { day: "Wed", uploads: 8,  summaries: 6,  searches: 19 },
   { day: "Thu", uploads: 27, summaries: 22, searches: 51 },
@@ -33,57 +34,42 @@ const monthlyData = [
   { month: "Jan", docs: 520, storage: 34, ai: 450 },
 ];
 
-
 const activityData = [
-  { hour: "00", activity: 2 },
-  { hour: "03", activity: 1 },
-  { hour: "06", activity: 4 },
+  { hour: "00", activity: 2  },
+  { hour: "03", activity: 1  },
+  { hour: "06", activity: 4  },
   { hour: "09", activity: 18 },
   { hour: "12", activity: 24 },
   { hour: "15", activity: 31 },
   { hour: "18", activity: 22 },
-  { hour: "21", activity: 9 },
+  { hour: "21", activity: 9  },
+];
+
+const AI_USAGE = [
+  { label: "Document Summarization", value: 68, color: "#8b5cf6" },
+  { label: "Smart Search",           value: 51, color: "#3b82f6" },
+  { label: "OCR Extraction",         value: 34, color: "#10b981" },
+  { label: "Workflow Automation",    value: 22, color: "#f59e0b" },
+  { label: "File Classification",    value: 15, color: "#06b6d4" },
 ];
 
 /* ─── Custom Tooltip ─── */
-const CustomTooltip = ({ active, payload, label, color = "#3b82f6" }) => {
+const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="px-3 py-2.5 rounded-xl border border-white/10 shadow-2xl"
-      style={{ background: "rgba(17,24,39,0.97)", backdropFilter: "blur(16px)" }}
-    >
+    <div className="px-3 py-2.5 rounded-xl border border-white/10 shadow-2xl"
+      style={{ background: "rgba(17,24,39,0.97)", backdropFilter: "blur(16px)" }}>
       <p className="text-gray-400 text-[10px] font-semibold mb-1.5">{label}</p>
       {payload.map((entry, i) => (
         <div key={i} className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full" style={{ background: entry.color || color }} />
+          <span className="w-2 h-2 rounded-full" style={{ background: entry.color }} />
           <span className="text-white text-xs font-semibold">{entry.value}</span>
           <span className="text-gray-500 text-[10px] capitalize">{entry.name}</span>
         </div>
       ))}
-    </motion.div>
+    </div>
   );
 };
-
-/* ─── Count-up ─── */
-function useCountUp(target, duration = 1400, start = false) {
-  const [val, setVal] = React.useState(0);
-  React.useEffect(() => {
-    if (!start) return;
-    let startTime = null;
-    const step = (ts) => {
-      if (!startTime) startTime = ts;
-      const progress = Math.min((ts - startTime) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setVal(Math.floor(eased * target));
-      if (progress < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-  }, [target, duration, start]);
-  return val;
-}
 
 /* ─── Stat Card ─── */
 function StatCard({ stat, index }) {
@@ -107,7 +93,6 @@ function StatCard({ stat, index }) {
         style={{ background: `radial-gradient(ellipse at top left, ${stat.glow} 0%, transparent 65%)` }} />
       <motion.div animate={{ scaleX: hovered ? 1 : 0, opacity: hovered ? 1 : 0 }} transition={{ duration: 0.3 }}
         className={`absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r ${stat.gradient} origin-left`} />
-
       <div className="relative z-10 p-5">
         <div className="flex items-start justify-between mb-4">
           <motion.div animate={{ scale: hovered ? 1.1 : 1, rotate: hovered ? 6 : 0 }} transition={{ duration: 0.25 }}
@@ -135,15 +120,12 @@ function StatCard({ stat, index }) {
 function ChartCard({ title, subtitle, children, delay = 0, action }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-60px" });
-
   return (
-    <motion.div
-      ref={ref}
+    <motion.div ref={ref}
       initial={{ opacity: 0, y: 24 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] }}
-      className="rounded-2xl border border-[#1F2937] bg-[#111827] overflow-hidden"
-    >
+      className="rounded-2xl border border-[#1F2937] bg-[#111827] overflow-hidden">
       <div className="flex items-center justify-between px-5 py-4 border-b border-[#1F2937]">
         <div>
           <h3 className="text-white font-semibold text-sm">{title}</h3>
@@ -179,36 +161,34 @@ const PieLegend = ({ data }) => (
           <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: item.color }} />
           <span className="text-gray-400 text-xs">{item.name}</span>
         </div>
-        <span className="text-white text-xs font-semibold">{item.value}%</span>
+        <span className="text-white text-xs font-semibold">{item.value}</span>
       </div>
     ))}
   </div>
 );
 
-/* ─── Top Documents Table ─── */
+/* ─── Top Docs Table ─── */
 function TopDocsTable({ docs }) {
+  if (!docs.length) return <p className="text-gray-600 text-xs">No documents yet.</p>;
   const max = Math.max(...docs.map((d) => d.views));
   return (
     <div className="space-y-3">
       {docs.map((doc, i) => (
-        <motion.div key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.07 }}
+        <motion.div key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: i * 0.07 }}
           className="group flex items-center gap-3 hover:bg-white/[0.02] rounded-xl px-2 py-1.5 transition-colors cursor-pointer">
           <span className="text-gray-700 text-[11px] font-mono w-4 shrink-0">{i + 1}</span>
           <div className="flex-1 min-w-0">
             <p className="text-gray-300 text-xs font-medium truncate group-hover:text-white transition-colors">{doc.name}</p>
             <div className="mt-1 h-1.5 rounded-full bg-white/[0.05] overflow-hidden">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${(doc.views / max) * 100}%` }}
+              <motion.div initial={{ width: 0 }} animate={{ width: `${(doc.views / max) * 100}%` }}
                 transition={{ duration: 1, delay: 0.3 + i * 0.1, ease: "easeOut" }}
-                className="h-full rounded-full"
-                style={{ background: doc.color }}
-              />
+                className="h-full rounded-full" style={{ background: doc.color }} />
             </div>
           </div>
           <div className="text-right shrink-0">
             <p className="text-white text-xs font-semibold">{doc.views}</p>
-            <p className="text-gray-600 text-[10px]">views</p>
+            <p className="text-gray-600 text-[10px]">KB</p>
           </div>
         </motion.div>
       ))}
@@ -216,127 +196,113 @@ function TopDocsTable({ docs }) {
   );
 }
 
-/* ─── Main Page ─── */
+/* ═══════════════════════════════════════════════════════════════
+   MAIN PAGE
+═══════════════════════════════════════════════════════════════ */
 export default function AnalyticsPage() {
-  const [range, setRange] = useState("7d");
+  const [range, setRange]         = useState("7d");
   const [chartView, setChartView] = useState("uploads");
 
-  // 1. ADD REAL DATA STATE
   const [analyticsData, setAnalyticsData] = useState({
-    totalDocs: 0,
-    aiSummaries: 0,
-    storageGB: "0.00",
+    totalDocs:        0,
+    aiSummaries:      0,
+    storageGB:        "0.0000",
     storageBreakdown: [{ name: "Empty", value: 1, color: "#4b5563" }],
-    topDocs: []
+    topDocs:          [],
   });
 
-  // 2. FETCH REAL DATA FROM DB
+  /* Fetch real data */
   useEffect(() => {
     const fetchRealData = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get("http://localhost:5000/api/documents/all", {
-          headers: { Authorization: `Bearer ${token}` }
+        const res   = await axios.get("http://localhost:5000/api/documents/all", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.data.success) return;
+
+        const docs        = res.data.documents;
+        const totalDocs   = docs.length;
+        const aiSummaries = docs.filter((d) => d.summary).length;
+        const totalBytes  = docs.reduce((acc, d) => acc + (d.fileSize || 0), 0);
+        const storageGB   = (totalBytes / (1024 * 1024 * 1024)).toFixed(4);
+
+        let pdf = 0, docx = 0, txt = 0, img = 0;
+        docs.forEach((d) => {
+          const ext = (d.fileType || d.title || "").toLowerCase();
+          if      (ext.includes("pdf"))                           pdf++;
+          else if (ext.includes("word") || ext.includes("docx")) docx++;
+          else if (ext.includes("text") || ext.includes("txt"))  txt++;
+          else                                                    img++;
         });
 
-        if (res.data.success) {
-          const docs = res.data.documents;
-          
-          const totalDocs = docs.length;
-          const aiSummaries = docs.filter(d => d.summary).length;
-          const totalBytes = docs.reduce((acc, d) => acc + (d.fileSize || 0), 0);
-          const storageGB = (totalBytes / (1024 * 1024 * 1024)).toFixed(4);
+        const storageBreakdown = [
+          { name: "PDFs",   value: pdf,  color: "#3b82f6" },
+          { name: "DOCX",   value: docx, color: "#8b5cf6" },
+          { name: "Images", value: img,  color: "#10b981" },
+          { name: "TXT",    value: txt,  color: "#f59e0b" },
+        ].filter((item) => item.value > 0);
 
-          let pdf = 0, docx = 0, txt = 0, img = 0;
-          docs.forEach(d => {
-            const ext = (d.fileType || d.title).toLowerCase();
-            if (ext.includes("pdf")) pdf++;
-            else if (ext.includes("word") || ext.includes("docx")) docx++;
-            else if (ext.includes("text") || ext.includes("txt")) txt++;
-            else img++;
-          });
+        const topDocs = [...docs]
+          .sort((a, b) => (b.fileSize || 0) - (a.fileSize || 0))
+          .slice(0, 5)
+          .map((d) => ({
+            name:  d.title,
+            views: Math.max(1, Math.round((d.fileSize || 0) / 1024)),
+            color: "#3b82f6",
+          }));
 
-          const breakdown = [
-            { name: "PDFs", value: pdf, color: "#3b82f6" },
-            { name: "DOCX", value: docx, color: "#8b5cf6" },
-            { name: "Images", value: img, color: "#10b981" },
-            { name: "TXT", value: txt, color: "#f59e0b" },
-          ].filter(item => item.value > 0);
-
-          // Sort by size as a replacement for "views"
-          const topDocs = [...docs]
-            .sort((a, b) => (b.fileSize || 0) - (a.fileSize || 0))
-            .slice(0, 5)
-            .map(d => ({
-              name: d.title,
-              views: Math.max(1, Math.round((d.fileSize || 0) / 1024)), // using KB size
-              color: "#3b82f6"
-            }));
-
-          setAnalyticsData({
-            totalDocs,
-            aiSummaries,
-            storageGB,
-            storageBreakdown: breakdown.length > 0 ? breakdown : [{ name: "Empty", value: 1, color: "#4b5563" }],
-            topDocs
-          });
-        }
-      } catch (error) {
-        console.error("Failed to fetch analytics:", error);
+        setAnalyticsData({
+          totalDocs,
+          aiSummaries,
+          storageGB,
+          storageBreakdown: storageBreakdown.length > 0
+            ? storageBreakdown
+            : [{ name: "Empty", value: 1, color: "#4b5563" }],
+          topDocs,
+        });
+      } catch (err) {
+        console.error("Failed to fetch analytics:", err);
       }
     };
     fetchRealData();
   }, []);
 
-  // 3. DYNAMIC CARDS (Active Users Removed)
+
+  /* Share link */
+  const handleShareLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast.success("Dashboard link copied to clipboard!");
+    } catch {
+      toast.error("Failed to copy link");
+    }
+  };
+
   const dynamicStatCards = [
     {
-      label: "Documents Processed",
-      value: analyticsData.totalDocs,
-      change: "Real-time",
-      trend: "up",
-      icon: <FiFileText />,
-      color: "text-blue-400",
-      bg: "bg-blue-500/10",
-      border: "border-blue-500/20",
-      glow: "rgba(59,130,246,0.2)",
-      accent: "#3b82f6",
-      gradient: "from-blue-500 to-indigo-500",
-      sub: "Total uploaded",
+      label: "Documents Processed", value: analyticsData.totalDocs,
+      change: "Real-time", trend: "up", icon: <FiFileText />,
+      color: "text-blue-400",   bg: "bg-blue-500/10",   border: "border-blue-500/20",
+      glow: "rgba(59,130,246,0.2)",  gradient: "from-blue-500 to-indigo-500", sub: "Total uploaded",
     },
     {
-      label: "AI Summaries",
-      value: analyticsData.aiSummaries,
-      change: "Real-time",
-      trend: "up",
-      icon: <FiZap />,
-      color: "text-purple-400",
-      bg: "bg-purple-500/10",
-      border: "border-purple-500/20",
-      glow: "rgba(139,92,246,0.2)",
-      accent: "#8b5cf6",
-      gradient: "from-purple-500 to-pink-500",
-      sub: "Total generated",
+      label: "AI Summaries", value: analyticsData.aiSummaries,
+      change: "Real-time", trend: "up", icon: <FiZap />,
+      color: "text-purple-400", bg: "bg-purple-500/10", border: "border-purple-500/20",
+      glow: "rgba(139,92,246,0.2)",  gradient: "from-purple-500 to-pink-500",  sub: "Total generated",
     },
     {
-      label: "Storage Used",
-      value: `${analyticsData.storageGB} GB`,
-      change: "Real-time",
-      trend: "up",
-      icon: <FiCloud />,
-      color: "text-cyan-400",
-      bg: "bg-cyan-500/10",
-      border: "border-cyan-500/20",
-      glow: "rgba(6,182,212,0.2)",
-      accent: "#06b6d4",
-      gradient: "from-cyan-500 to-teal-500",
-      sub: "of 50 GB",
-    }
+      label: "Storage Used", value: `${analyticsData.storageGB} GB`,
+      change: "Real-time", trend: "up", icon: <FiCloud />,
+      color: "text-cyan-400",   bg: "bg-cyan-500/10",   border: "border-cyan-500/20",
+      glow: "rgba(6,182,212,0.2)",   gradient: "from-cyan-500 to-teal-500",   sub: "of 50 GB",
+    },
   ];
 
   const chartLines = {
     uploads: [
-      { key: "uploads", color: "#3b82f6", label: "Uploads" },
+      { key: "uploads",   color: "#3b82f6", label: "Uploads"   },
       { key: "summaries", color: "#8b5cf6", label: "Summaries" },
     ],
     searches: [
@@ -348,11 +314,13 @@ export default function AnalyticsPage() {
     <div className="min-h-screen bg-[#0B0F19]" style={{ fontFamily: "'Poppins', sans-serif" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');`}</style>
 
-      {/* Ambient */}
+      {/* Ambient blobs */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <motion.div animate={{ scale: [1, 1.15, 1], opacity: [0.06, 0.11, 0.06] }} transition={{ duration: 10, repeat: Infinity }}
+        <motion.div animate={{ scale: [1, 1.15, 1], opacity: [0.06, 0.11, 0.06] }}
+          transition={{ duration: 10, repeat: Infinity }}
           className="absolute top-0 left-1/4 w-[700px] h-[400px] bg-blue-600 blur-[140px] rounded-full" />
-        <motion.div animate={{ scale: [1, 1.1, 1], opacity: [0.04, 0.08, 0.04] }} transition={{ duration: 13, repeat: Infinity, delay: 3 }}
+        <motion.div animate={{ scale: [1, 1.1, 1], opacity: [0.04, 0.08, 0.04] }}
+          transition={{ duration: 13, repeat: Infinity, delay: 3 }}
           className="absolute bottom-0 right-1/4 w-[500px] h-[400px] bg-purple-600 blur-[140px] rounded-full" />
         <div className="absolute inset-0 opacity-[0.025]"
           style={{ backgroundImage: "linear-gradient(rgba(100,200,255,1) 1px,transparent 1px),linear-gradient(90deg,rgba(100,200,255,1) 1px,transparent 1px)", backgroundSize: "50px 50px" }} />
@@ -378,23 +346,20 @@ export default function AnalyticsPage() {
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <RangeSelector active={range} setActive={setRange} />
-            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} onClick={handleShareLink}
               className="flex items-center gap-2 px-4 py-2 rounded-xl border border-[#1F2937] bg-white/[0.03] text-gray-400 text-xs hover:text-white hover:bg-white/[0.06] transition-all">
-              <FiDownload className="text-xs" /> Export
+              <FiShare2 className="text-xs" /> Share
             </motion.button>
-          </div>
+          </div>    
         </motion.div>
 
         {/* Stat Cards */}
-        {/* Note the change from xl:grid-cols-4 to xl:grid-cols-3 because we removed a card */}
         <div className="grid grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
           {dynamicStatCards.map((stat, i) => <StatCard key={i} stat={stat} index={i} />)}
         </div>
 
-        {/* Main Charts Row */}
+        {/* Row 1: Activity + Storage */}
         <div className="grid xl:grid-cols-3 gap-5 mb-5">
-
-          {/* Activity Line Chart — spans 2 cols */}
           <div className="xl:col-span-2">
             <ChartCard
               title="Document Activity"
@@ -416,14 +381,14 @@ export default function AnalyticsPage() {
                   <defs>
                     {chartLines[chartView].map((line) => (
                       <linearGradient key={line.key} id={`grad-${line.key}`} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor={line.color} stopOpacity={0.25} />
-                        <stop offset="100%" stopColor={line.color} stopOpacity={0} />
+                        <stop offset="0%"   stopColor={line.color} stopOpacity={0.25} />
+                        <stop offset="100%" stopColor={line.color} stopOpacity={0}    />
                       </linearGradient>
                     ))}
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                   <XAxis dataKey="day" tick={{ fill: "#4b5563", fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: "#4b5563", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis              tick={{ fill: "#4b5563", fontSize: 11 }} axisLine={false} tickLine={false} />
                   <Tooltip content={<CustomTooltip />} cursor={{ stroke: "rgba(255,255,255,0.06)", strokeWidth: 1 }} />
                   {chartLines[chartView].map((line) => (
                     <Area key={line.key} type="monotone" dataKey={line.key} name={line.label}
@@ -436,12 +401,11 @@ export default function AnalyticsPage() {
             </ChartCard>
           </div>
 
-          {/* Storage Pie */}
           <ChartCard title="Storage Breakdown" subtitle="By file type" delay={0.2}>
             <ResponsiveContainer width="100%" height={160}>
               <PieChart>
-                <Pie data={analyticsData.storageBreakdown} cx="50%" cy="50%" innerRadius={46} outerRadius={68}
-                  paddingAngle={3} dataKey="value" strokeWidth={0}>
+                <Pie data={analyticsData.storageBreakdown} cx="50%" cy="50%"
+                  innerRadius={46} outerRadius={68} paddingAngle={3} dataKey="value" strokeWidth={0}>
                   {analyticsData.storageBreakdown.map((entry, i) => (
                     <Cell key={i} fill={entry.color} opacity={0.9} />
                   ))}
@@ -451,28 +415,25 @@ export default function AnalyticsPage() {
                     <div className="px-2.5 py-2 rounded-xl border border-white/10 bg-[#111827] text-xs text-white">
                       {payload[0].name}: <strong>{payload[0].value} {payload[0].name === "Empty" ? "" : "files"}</strong>
                     </div>
-                  ) : null}
-                />
+                  ) : null} />
               </PieChart>
             </ResponsiveContainer>
             <PieLegend data={analyticsData.storageBreakdown} />
           </ChartCard>
         </div>
 
-        {/* Second Row */}
+        {/* Row 2: Monthly + Hourly */}
         <div className="grid xl:grid-cols-3 gap-5 mb-5">
-
-          {/* Monthly Bar Chart */}
           <div className="xl:col-span-2">
             <ChartCard title="Monthly Growth" subtitle="Documents, storage & AI usage over 7 months" delay={0.25}>
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={monthlyData} margin={{ top: 4, right: 4, left: -28, bottom: 0 }} barCategoryGap="30%">
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
                   <XAxis dataKey="month" tick={{ fill: "#4b5563", fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: "#4b5563", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis               tick={{ fill: "#4b5563", fontSize: 11 }} axisLine={false} tickLine={false} />
                   <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
-                  <Bar dataKey="docs" name="Docs" fill="#3b82f6" radius={[4, 4, 0, 0]} opacity={0.85} />
-                  <Bar dataKey="ai" name="AI" fill="#8b5cf6" radius={[4, 4, 0, 0]} opacity={0.85} />
+                  <Bar dataKey="docs" name="Docs" fill="#3b82f6" radius={[4,4,0,0]} opacity={0.85} />
+                  <Bar dataKey="ai"   name="AI"   fill="#8b5cf6" radius={[4,4,0,0]} opacity={0.85} />
                 </BarChart>
               </ResponsiveContainer>
               <div className="flex items-center gap-5 mt-2">
@@ -486,7 +447,6 @@ export default function AnalyticsPage() {
             </ChartCard>
           </div>
 
-          {/* Hourly Activity */}
           <ChartCard title="Today's Activity" subtitle="Requests by hour" delay={0.3}>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={activityData} margin={{ top: 4, right: 4, left: -28, bottom: 0 }} barCategoryGap="28%">
@@ -495,7 +455,7 @@ export default function AnalyticsPage() {
                   tickFormatter={(v) => `${v}h`} />
                 <YAxis tick={{ fill: "#4b5563", fontSize: 10 }} axisLine={false} tickLine={false} />
                 <Tooltip content={<CustomTooltip color="#06b6d4" />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
-                <Bar dataKey="activity" name="Requests" fill="#06b6d4" radius={[4, 4, 0, 0]} opacity={0.85} />
+                <Bar dataKey="activity" name="Requests" fill="#06b6d4" radius={[4,4,0,0]} opacity={0.85} />
               </BarChart>
             </ResponsiveContainer>
           </ChartCard>
@@ -503,28 +463,19 @@ export default function AnalyticsPage() {
 
         {/* Bottom Row */}
         <div className="grid xl:grid-cols-2 gap-5">
-
-          {/* Top Documents */}
           <ChartCard title="Top Documents" subtitle="Largest documents in workspace (KB)" delay={0.35}>
             <TopDocsTable docs={analyticsData.topDocs} />
           </ChartCard>
 
-          {/* AI Usage Metrics */}
           <ChartCard title="AI Usage Breakdown" subtitle="Requests by feature" delay={0.4}>
             <div className="space-y-3">
-              {[
-                { label: "Document Summarization", value: 68, color: "#8b5cf6", icon: <FiZap /> },
-                { label: "Smart Search", value: 51, color: "#3b82f6", icon: <FiActivity /> },
-                { label: "OCR Extraction", value: 34, color: "#10b981", icon: <FiFileText /> },
-                { label: "Workflow Automation", value: 22, color: "#f59e0b", icon: <FiTrendingUp /> },
-                { label: "File Classification", value: 15, color: "#06b6d4", icon: <FiFilter /> },
-              ].map((item, i) => (
+              {AI_USAGE.map((item, i) => (
                 <motion.div key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.5 + i * 0.07 }}
                   className="flex items-center gap-3 group">
                   <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-xs"
                     style={{ background: `${item.color}18`, border: `1px solid ${item.color}30`, color: item.color }}>
-                    {item.icon}
+                    {[<FiZap />, <FiActivity />, <FiFileText />, <FiTrendingUp />, <FiFilter />][i]}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
@@ -544,8 +495,6 @@ export default function AnalyticsPage() {
                 </motion.div>
               ))}
             </div>
-
-            {/* Totals strip */}
             <div className="mt-5 pt-4 border-t border-[#1F2937] flex items-center justify-between">
               <div className="flex items-center gap-2 text-gray-600 text-[11px]">
                 <FiClock className="text-[10px]" /> Updated just now
