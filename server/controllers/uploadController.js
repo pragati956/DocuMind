@@ -1,6 +1,8 @@
 import Activity from "../models/Activity.js";
 import Document from "../models/Document.js";
 import cloudinary from "../config/cloudinary.js"; 
+import SearchHistory
+from "../models/SearchHistory.js";
 
 export const uploadDocument = async (req, res) => {
   try {
@@ -510,6 +512,149 @@ async (req,res)=>{
   res.status(500).json({
    success:false,
    message:error.message
+  });
+
+ }
+
+};
+export const saveSearchHistory =
+async (req,res)=>{
+
+ try{
+
+  const {
+   query,
+   resultsCount
+  } = req.body;
+
+  const history =
+   await SearchHistory.create({
+
+    userId:req.user.id,
+
+    query,
+
+    resultsCount
+
+   });
+
+  res.status(201).json({
+
+   success:true,
+   history
+
+  });
+
+ }
+ catch(error){
+
+  res.status(500).json({
+
+   success:false,
+   message:error.message
+
+  });
+
+ }
+
+};
+export const getSearchHistory =
+async (req,res)=>{
+
+ try{
+
+  const history =
+
+   await SearchHistory.find({
+
+    userId:req.user.id
+
+   })
+
+   .sort({
+    createdAt:-1
+   })
+
+   .limit(10);
+
+  res.json({
+
+   success:true,
+   history
+
+  });
+
+ }
+ catch(error){
+
+  res.status(500).json({
+
+   success:false,
+   message:error.message
+
+  });
+
+ }
+
+};
+export const clearSearchHistory =
+async (req,res)=>{
+
+ try{
+
+  await SearchHistory.deleteMany({
+
+   userId:req.user.id
+
+  });
+
+  res.json({
+
+   success:true
+
+  });
+
+ }
+ catch(error){
+
+  res.status(500).json({
+
+   success:false,
+   message:error.message
+
+  });
+
+ }
+
+};
+export const deleteSearchHistory =
+async (req,res)=>{
+
+ try{
+
+  await SearchHistory.findOneAndDelete({
+
+   _id:req.params.id,
+
+   userId:req.user.id
+
+  });
+
+  res.json({
+
+   success:true
+
+  });
+
+ }
+ catch(error){
+
+  res.status(500).json({
+
+   success:false,
+
+   message:error.message
+
   });
 
  }

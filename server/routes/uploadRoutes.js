@@ -11,7 +11,9 @@ import {
   toggleStarDocument, 
    getSearchStats,
     getCategories,
-    getDocumentsByType,getSuggestions,
+    getDocumentsByType,getSuggestions,saveSearchHistory,
+getSearchHistory,
+clearSearchHistory,deleteSearchHistory,
 } from "../controllers/uploadController.js";
 
 const router = express.Router();
@@ -36,6 +38,28 @@ router.get(
 // ─── SEARCH ───
 // STEP 5: Search documents (MUST be above /:id)
 router.get("/search", authMiddleware, searchDocuments);
+router.post(
+ "/search-history",
+ authMiddleware,
+ saveSearchHistory
+);
+
+router.get(
+ "/search-history",
+ authMiddleware,
+ getSearchHistory
+);
+
+router.delete(
+ "/search-history",
+ authMiddleware,
+ clearSearchHistory
+);
+router.delete(
+ "/search-history/:id",
+ authMiddleware,
+ deleteSearchHistory
+);
 router.get(
  "/stats",
  authMiddleware,
