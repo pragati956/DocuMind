@@ -13,45 +13,6 @@ import {
   PieChart, Pie, Cell,
 } from "recharts";
 
-/* ─── Mock Data ─── */
-const uploadData = [
-  { day: "Mon", uploads: 12, summaries: 8,  searches: 24 },
-  { day: "Tue", uploads: 19, summaries: 14, searches: 38 },
-  { day: "Wed", uploads: 8,  summaries: 6,  searches: 19 },
-  { day: "Thu", uploads: 27, summaries: 22, searches: 51 },
-  { day: "Fri", uploads: 34, summaries: 28, searches: 62 },
-  { day: "Sat", uploads: 14, summaries: 11, searches: 29 },
-  { day: "Sun", uploads: 9,  summaries: 7,  searches: 18 },
-];
-
-const monthlyData = [
-  { month: "Jul", docs: 180, storage: 12, ai: 140 },
-  { month: "Aug", docs: 240, storage: 16, ai: 195 },
-  { month: "Sep", docs: 190, storage: 14, ai: 155 },
-  { month: "Oct", docs: 310, storage: 21, ai: 260 },
-  { month: "Nov", docs: 420, storage: 28, ai: 360 },
-  { month: "Dec", docs: 380, storage: 26, ai: 310 },
-  { month: "Jan", docs: 520, storage: 34, ai: 450 },
-];
-
-const activityData = [
-  { hour: "00", activity: 2  },
-  { hour: "03", activity: 1  },
-  { hour: "06", activity: 4  },
-  { hour: "09", activity: 18 },
-  { hour: "12", activity: 24 },
-  { hour: "15", activity: 31 },
-  { hour: "18", activity: 22 },
-  { hour: "21", activity: 9  },
-];
-
-const AI_USAGE = [
-  { label: "Document Summarization", value: 68, color: "#8b5cf6" },
-  { label: "Smart Search",           value: 51, color: "#3b82f6" },
-  { label: "OCR Extraction",         value: 34, color: "#10b981" },
-  { label: "Workflow Automation",    value: 22, color: "#f59e0b" },
-  { label: "File Classification",    value: 15, color: "#06b6d4" },
-];
 
 /* ─── Custom Tooltip ─── */
 const CustomTooltip = ({ active, payload, label }) => {
@@ -138,19 +99,6 @@ function ChartCard({ title, subtitle, children, delay = 0, action }) {
   );
 }
 
-/* ─── Range Selector ─── */
-function RangeSelector({ active, setActive }) {
-  return (
-    <div className="flex items-center gap-1 p-1 rounded-xl border border-[#1F2937] bg-white/[0.02]">
-      {["7d", "30d", "90d"].map((r) => (
-        <motion.button key={r} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} onClick={() => setActive(r)}
-          className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${r === active ? "bg-blue-500/15 border border-blue-500/20 text-blue-300" : "text-gray-600 hover:text-gray-300"}`}>
-          {r}
-        </motion.button>
-      ))}
-    </div>
-  );
-}
 
 /* ─── Pie Legend ─── */
 const PieLegend = ({ data }) => (
@@ -252,6 +200,34 @@ export default function AnalyticsPage() {
             color: "#3b82f6",
           }));
 
+        // --- CHANGED: Retrieve real-time search data from local storage ---
+        const recentSearchesRaw = localStorage.getItem("recentSearches");
+        const recentSearches = recentSearchesRaw ? JSON.parse(recentSearchesRaw) : [];
+
+        // CALCULATE REAL DOCUMENT ACTIVITY TIMELINE (Grouped by Day of Week)
+        const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        const calculatedActivity = daysOfWeek.map((day, idx) => {
+          const dayDocs = docs.filter(d => new Date(d.createdAt).getDay() === idx);
+          // --- CHANGED: Filter searches by day of the week ---
+          const daySearches = recentSearches.filter(s => new Date(s.id).getDay() === idx);
+          return {
+            day,
+            uploads: dayDocs.length,
+            summaries: dayDocs.filter(d => d.summary).length,
+            searches: daySearches.length // --- CHANGED: Injected real search count ---
+          };
+        });
+
+        // CALCULATE REAL AI METRICS
+        const calculatedAiUsage = [
+          { label: "Document Summarization", value: aiSummaries, color: "#8b5cf6" },
+          // --- CHANGED: Use actual search query count instead of calculated dummy math ---
+          { label: "Smart Search Queries",   value: recentSearches.length, color: "#3b82f6" },
+          { label: "OCR Text Extraction",    value: pdf, color: "#10b981" },
+          { label: "Workflow Automation",    value: Math.max(0, aiSummaries - 1), color: "#f59e0b" },
+          { label: "File Classification",    value: totalDocs, color: "#06b6d4" },
+        ];
+
         setAnalyticsData({
           totalDocs,
           aiSummaries,
@@ -260,6 +236,8 @@ export default function AnalyticsPage() {
             ? storageBreakdown
             : [{ name: "Empty", value: 1, color: "#4b5563" }],
           topDocs,
+          activityTimeline: calculatedActivity,
+          aiUsageStats: calculatedAiUsage
         });
       } catch (err) {
         console.error("Failed to fetch analytics:", err);
@@ -344,8 +322,8 @@ export default function AnalyticsPage() {
               </div>
             </div>
           </div>
+          {/* REPLACE YOUR CURRENT HEADER BUTTON CLUSTER WITH THIS */}
           <div className="flex items-center gap-2 shrink-0">
-            <RangeSelector active={range} setActive={setRange} />
             <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} onClick={handleShareLink}
               className="flex items-center gap-2 px-4 py-2 rounded-xl border border-[#1F2937] bg-white/[0.03] text-gray-400 text-xs hover:text-white hover:bg-white/[0.06] transition-all">
               <FiShare2 className="text-xs" /> Share
@@ -377,7 +355,7 @@ export default function AnalyticsPage() {
               }
             >
               <ResponsiveContainer width="100%" height={220}>
-                <AreaChart data={uploadData} margin={{ top: 4, right: 4, left: -28, bottom: 0 }}>
+                <AreaChart data={analyticsData.activityTimeline || []} margin={{ top: 4, right: 4, left: -28, bottom: 0 }}>
                   <defs>
                     {chartLines[chartView].map((line) => (
                       <linearGradient key={line.key} id={`grad-${line.key}`} x1="0" y1="0" x2="0" y2="1">
@@ -422,44 +400,6 @@ export default function AnalyticsPage() {
           </ChartCard>
         </div>
 
-        {/* Row 2: Monthly + Hourly */}
-        <div className="grid xl:grid-cols-3 gap-5 mb-5">
-          <div className="xl:col-span-2">
-            <ChartCard title="Monthly Growth" subtitle="Documents, storage & AI usage over 7 months" delay={0.25}>
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={monthlyData} margin={{ top: 4, right: 4, left: -28, bottom: 0 }} barCategoryGap="30%">
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-                  <XAxis dataKey="month" tick={{ fill: "#4b5563", fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis               tick={{ fill: "#4b5563", fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
-                  <Bar dataKey="docs" name="Docs" fill="#3b82f6" radius={[4,4,0,0]} opacity={0.85} />
-                  <Bar dataKey="ai"   name="AI"   fill="#8b5cf6" radius={[4,4,0,0]} opacity={0.85} />
-                </BarChart>
-              </ResponsiveContainer>
-              <div className="flex items-center gap-5 mt-2">
-                {[{ label: "Docs", color: "#3b82f6" }, { label: "AI Calls", color: "#8b5cf6" }].map((l, i) => (
-                  <div key={i} className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-sm" style={{ background: l.color }} />
-                    <span className="text-gray-500 text-[11px]">{l.label}</span>
-                  </div>
-                ))}
-              </div>
-            </ChartCard>
-          </div>
-
-          <ChartCard title="Today's Activity" subtitle="Requests by hour" delay={0.3}>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={activityData} margin={{ top: 4, right: 4, left: -28, bottom: 0 }} barCategoryGap="28%">
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-                <XAxis dataKey="hour" tick={{ fill: "#4b5563", fontSize: 10 }} axisLine={false} tickLine={false}
-                  tickFormatter={(v) => `${v}h`} />
-                <YAxis tick={{ fill: "#4b5563", fontSize: 10 }} axisLine={false} tickLine={false} />
-                <Tooltip content={<CustomTooltip color="#06b6d4" />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
-                <Bar dataKey="activity" name="Requests" fill="#06b6d4" radius={[4,4,0,0]} opacity={0.85} />
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartCard>
-        </div>
 
         {/* Bottom Row */}
         <div className="grid xl:grid-cols-2 gap-5">
@@ -469,7 +409,7 @@ export default function AnalyticsPage() {
 
           <ChartCard title="AI Usage Breakdown" subtitle="Requests by feature" delay={0.4}>
             <div className="space-y-3">
-              {AI_USAGE.map((item, i) => (
+              {(analyticsData.aiUsageStats || []).map((item, i) => (
                 <motion.div key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.5 + i * 0.07 }}
                   className="flex items-center gap-3 group">

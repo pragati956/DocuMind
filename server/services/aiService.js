@@ -1,15 +1,3 @@
-// import { GoogleGenerativeAI }
-// from "@google/generative-ai";
-
-// const genAI =
-// new GoogleGenerativeAI(
-//  process.env.GEMINI_API_KEY
-// );
-
-// export const generateSummary =
-// async(text)=>{
-
-// };
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(
@@ -64,14 +52,20 @@ ${documentText}
 
   } catch (error) {
 
-    console.error(
-      "Gemini Error:",
-      error
-    );
+    console.error("Gemini Error:", error?.message || error);
+    // Log any HTTP response body from the underlying client for easier debugging
+    try {
+      if (error?.response) {
+        console.error("Gemini Response Error:", error.response);
+        if (error.response.data) {
+          console.error("Gemini Response Data:", error.response.data);
+        }
+      }
+    } catch (logErr) {
+      console.error("Error while logging Gemini response:", logErr);
+    }
 
-    throw new Error(
-      "Failed to generate summary"
-    );
+    throw new Error("Failed to generate summary");
 
   }
 };
