@@ -357,8 +357,6 @@ const navMain = [
           ))}
         </nav>
 
-        {/* ── Storage ── */}
-        <StorageBar collapsed={collapsed} />
 
         {/* ── Collapse toggle ── */}
         {/* ── Collapse toggle ── */}
