@@ -129,3 +129,48 @@ async ()=>{
  return response.data;
 
 };
+export const saveSearchHistory =
+async(data)=>{
+
+ const response =
+  await API.post(
+   "/documents/search-history",
+   data
+  );
+
+ return response.data;
+
+};
+export const getSearchHistory =
+async()=>{
+
+ const response =
+  await API.get(
+   "/documents/search-history"
+  );
+
+ return response.data;
+
+};
+export const clearSearchHistory =
+async()=>{
+
+ const response =
+  await API.delete(
+   "/documents/search-history"
+  );
+
+ return response.data;
+
+};
+export const deleteSearchHistory =
+async(id)=>{
+
+ const response =
+  await API.delete(
+   `/documents/search-history/${id}`
+  );
+
+ return response.data;
+
+};
