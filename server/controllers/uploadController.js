@@ -128,33 +128,50 @@ await Document.find({
  .sort({
    createdAt:-1
  });
+const scoredDocuments =
+documents.map(doc=>{
 
-    const scoredDocuments = documents.map(doc => {
-      let score = 0;
+ let score = 0;
 
-      if (doc.title?.toLowerCase().includes(q.toLowerCase())) {
-        score += 50;
-      }
-      if (doc.summary?.toLowerCase().includes(q.toLowerCase())) {
-        score += 30;
-      }
-      if (doc.tags?.some(tag => tag.toLowerCase().includes(q.toLowerCase()))) {
-        score += 20;
-      }
+ if(
+  doc.title?.toLowerCase()
+   .includes(q.toLowerCase())
+ ){
+  score += 50;
+ }
 
-      return {
-        ...doc.toObject(),
-        relevance: score
-      };
-    });
+ if(
+  doc.summary?.toLowerCase()
+   .includes(q.toLowerCase())
+ ){
+  score += 30;
+ }
 
-    scoredDocuments.sort((a, b) => b.relevance - a.relevance);
+ if(
+  doc.tags?.some(tag =>
+   tag.toLowerCase()
+    .includes(q.toLowerCase())
+  )
+ ){
+  score += 20;
+ }
 
-    res.status(200).json({
-      success: true,
-      documents: scoredDocuments
-    });
-  } catch (error) {
+ return {
+  ...doc.toObject(),
+  relevance: score
+ };
+
+})
+scoredDocuments.sort(
+ (a,b)=>
+  b.relevance-a.relevance
+);
+
+
+res.status(200).json({
+ success:true,
+ documents: scoredDocuments
+});  } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -453,6 +470,89 @@ async (req,res)=>{
      count:txt
     }
    ]
+  });
+
+ }
+ catch(error){
+
+  res.status(500).json({
+   success:false,
+   message:error.message
+  });
+
+ }
+
+};
+export const getDocumentsByType =
+async (req,res)=>{
+
+ try{
+
+  const { type } =
+   req.params;
+
+  let regex = "";
+
+if (type === "PDF") {
+ regex = "pdf";
+}
+
+else if (type === "DOCX") {
+ regex = "word";
+}
+
+else if (type === "TXT") {
+ regex = "text";
+}
+
+else if (type === "IMAGE") {
+ regex = "image";
+}
+
+const documents =
+ await Document.find({
+  uploadedBy: req.user.id,
+  fileType: {
+   $regex: regex,
+   $options: "i",
+  },
+ });
+
+  res.json({
+   success:true,
+   documents
+  });
+
+ }
+ catch(error){
+
+  res.status(500).json({
+   success:false,
+   message:error.message
+  });
+
+ }
+
+};
+export const getSuggestions =
+async (req,res)=>{
+
+ try{
+
+  const documents =
+   await Document.find({
+    uploadedBy:req.user.id
+   })
+   .limit(10);
+
+  const suggestions =
+   documents.map(
+    doc => doc.title
+   );
+
+  res.json({
+   success:true,
+   suggestions
   });
 
  }
