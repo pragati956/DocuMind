@@ -53,7 +53,10 @@ app.use(
   "/api/user",
   userRoutes
 );
-app.use("/api/collections", collectionRoutes);
+app.use(
+  "/api/collections",
+  collectionRoutes
+);
 
 // TEST ROUTE
 app.get("/", (req, res) => {
