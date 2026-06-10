@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { toast }
+from "react-hot-toast";
 import {
   fetchDocuments,
   deleteDocument,
@@ -6,7 +8,6 @@ import {
   toggleStarDocument,
 } from "../../services/documentService";
 import { summarizeDocument } from "../../services/aiService";
-import { toast } from "react-hot-toast";
 import EditDocumentModal from "../../components/dashboard/EditDocumentModal";
 import UploadModal from "../../components/dashboard/UploadModal"; // <-- Imported Global Modal
 import { motion, AnimatePresence } from "framer-motion";
@@ -30,23 +31,37 @@ import {
   HiOutlineViewList,
 } from "react-icons/hi";
 import { HiOutlineDocumentDuplicate, HiMiniSparkles } from "react-icons/hi2";
-import { BsFilePdf, BsFileWord, BsFileText, BsStars } from "react-icons/bs";
+import { BsFilePdf, BsFileWord, BsFileText, BsStars,BsFileImage } from "react-icons/bs";
 import { FiStar } from "react-icons/fi";
 import AddToCollectionModal from "../../components/dashboard/AddToCollectionModal";
 import { FiFolderPlus } from "react-icons/fi";
 
-const FILTERS = ["All", "PDF", "DOCX", "TXT", "AI Summarized"];
-
+const FILTERS = [
+ "All",
+ "PDF",
+ "DOCX",
+ "TXT",
+ "IMAGE",
+ "AI Summarized"
+];
 // ── helpers ───────────────────────────────────────────────────────────────────
 const fileIcon = (type) => {
   if (type === "PDF") return <BsFilePdf className="text-[#ff6b6b]" />;
   if (type === "DOCX") return <BsFileWord className="text-[#4fc3f7]" />;
+  if(type==="IMAGE")
+ return (
+  <BsFileImage
+   className="text-pink-300"
+  />
+ );
   return <BsFileText className="text-[#a5d6a7]" />;
 };
 
 const badgeStyle = {
   PDF: "bg-[#ff6b6b]/10 text-[#ff6b6b] border-[#ff6b6b]/20",
   DOCX: "bg-[#4fc3f7]/10 text-[#4fc3f7] border-[#4fc3f7]/20",
+  IMAGE:
+ "bg-pink-500/10 text-pink-300 border-pink-500/20",
   TXT: "bg-[#a5d6a7]/10 text-[#a5d6a7] border-[#a5d6a7]/20",
 };
 
@@ -94,14 +109,40 @@ function ActionsMenu({
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.92, y: -6 }}
       transition={{ duration: 0.15 }}
-      className="absolute top-8 right-0 z-50 w-52 rounded-xl border border-white/10 bg-[#141414]/95 shadow-2xl backdrop-blur-xl overflow-hidden"
+      className="
+absolute top-8 right-0
+z-[9999] w-52 rounded-xl border border-white/10 bg-[#141414]/95 shadow-2xl backdrop-blur-xl overflow-hidden"
     >
       {actions.map((a, i) => (
         <button
           key={i}
           onClick={() => {
             if (a.label === "Delete") onDelete(documentData.id);
+            
             if (a.label === "View") onView(documentData);
+            if (
+ a.label === "Download"
+){
+
+ window.open(
+  documentData.fileUrl,
+  "_blank"
+ );
+
+}
+if(
+ a.label==="Share"
+){
+
+ navigator.clipboard.writeText(
+  documentData.fileUrl
+ );
+
+toast.success(
+ "Link copied!"
+);
+
+}
             if (a.label === "Edit") onEdit(documentData);
             if (a.label === "Summarize with AI") onSummarize(documentData.id);
             if (a.label === "Add to Collection") onAddToCollection(documentData); // <--- ADD THIS LINE
@@ -126,6 +167,9 @@ function DocRow({ doc, index, onSummarize, onDelete, onToggleStar, onView, onEdi
 
   return (
     <motion.div
+    style={{
+ zIndex: menuOpen ? 999 : 1
+}}
       layout
       initial={{ opacity: 0, x: -12 }}
       animate={{ opacity: 1, x: 0 }}
@@ -186,15 +230,19 @@ function DocCard({ doc, view, onDelete, onView, onEdit, onSummarize, onToggleSta
   return (
     <motion.div
       layout
+    
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 16 }}
       whileHover={{ y: -3, boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => { setHovered(false); setMenuOpen(false); }}
-      className="group relative flex flex-col rounded-2xl border border-white/[0.07] bg-white/[0.03] backdrop-blur-sm overflow-hidden cursor-pointer"
-      style={{ background: "linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)" }}
-    >
+      className="group relative flex flex-col rounded-2xl border border-white/[0.07] bg-white/[0.03] backdrop-blur-sm overflow-visible cursor-pointer"
+style={{
+ zIndex: menuOpen ? 999 : 1,
+ background:
+  "linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)"
+}}    >
       <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
         style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 60%)" }} />
 
@@ -212,7 +260,7 @@ function DocCard({ doc, view, onDelete, onView, onEdit, onSummarize, onToggleSta
           <button onClick={() => setMenuOpen((v) => !v)} className="rounded-lg p-1.5 text-white/25 hover:bg-white/10 hover:text-white/70 transition-colors">
             <HiOutlineDotsVertical />
           </button>
-          <AnimatePresence>
+          <AnimatePresence mode="wait">
             {menuOpen && (
               <ActionsMenu
                 onClose={() => setMenuOpen(false)}
@@ -298,6 +346,12 @@ export default function DocumentsPage() {
   
   // Real documents from backend
   const [documents, setDocuments] = useState([]);
+  const [
+ totalDocuments,
+ setTotalDocuments
+]
+=
+useState(0);
   const [loading, setLoading] = useState(true);
 
   // Pagination
@@ -360,6 +414,9 @@ export default function DocumentsPage() {
       setLoading(true);
       const data = await fetchDocuments(page);
       setDocuments(data.documents || []);
+      setTotalDocuments(
+ data.totalDocuments || 0
+);
       setTotalPages(data.totalPages || 1);
     } catch (error) {
       console.error("Error fetching documents:", error);
@@ -375,8 +432,14 @@ export default function DocumentsPage() {
   const docs = documents.map((doc) => ({
     id: doc._id, 
     name: doc.title,
-    type: doc.fileType?.includes("pdf") ? "PDF" : doc.fileType?.includes("word") ? "DOCX" : "TXT",
-    size: `${(doc.fileSize / 1024 / 1024).toFixed(2)} MB`,
+type:
+ doc.fileType?.includes("pdf")
+ ? "PDF"
+ : doc.fileType?.includes("word")
+ ? "DOCX"
+ : doc.fileType?.includes("image")
+ ? "IMAGE"
+ : "TXT",    size: `${(doc.fileSize / 1024 / 1024).toFixed(2)} MB`,
     date: new Date(doc.createdAt).toLocaleDateString(),
     summary: doc.summary || "",
     summaryStatus: doc.summary ? "done" : "none",
@@ -392,7 +455,7 @@ export default function DocumentsPage() {
   });
 
   const stats = [
-    { label: "Total Files", value: docs.length, icon: <HiOutlineDocumentText /> },
+    { label: "Total Files", value: totalDocuments, icon: <HiOutlineDocumentText /> },
     { label: "AI Summarized", value: docs.filter((d) => d.summaryStatus === "done").length, icon: <BsStars />, accent: true },
     { label: "Processing", value: docs.filter((d) => d.summaryStatus === "processing").length, icon: <HiOutlineLightningBolt /> },
   ];
@@ -504,9 +567,17 @@ export default function DocumentsPage() {
 
         {/* ── Document Grid / List ── */}
         <AnimatePresence mode="wait">
-          <motion.div key={view + filter} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className={view === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" : "flex flex-col gap-2"}
-          >
+         <motion.div
+  key={view + filter}
+  initial={{ opacity: 0 }}
+  animate={{ opacity: 1 }}
+  exit={{ opacity: 0 }}
+  className={
+    view === "grid"
+      ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-visible"
+      : "flex flex-col gap-2"
+  }
+>
             <AnimatePresence>
               {filtered.length === 0 ? (
                 <EmptyState onUpload={() => setUploadOpen(true)} />
