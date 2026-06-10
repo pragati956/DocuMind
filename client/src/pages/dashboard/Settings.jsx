@@ -58,7 +58,6 @@ const NAV = [
   { id: "security", label: "Security", icon: <HiOutlineLockClosed /> },
   { id: "notifications", label: "Notifications", icon: <HiOutlineBell /> },
   { id: "storage", label: "Storage & Plan", icon: <HiOutlineDatabase /> },
-  { id: "integrations", label: "Integrations", icon: <HiOutlineGlobe /> },
   { id: "danger", label: "Danger Zone", icon: <HiOutlineTrash />, danger: true },
 ];
 
@@ -69,7 +68,6 @@ const getInitials = (name) =>
     .join("")
     .toUpperCase();
 
-const PLAN_COLORS = { Pro: "#7c3aed", Free: "#6b7280", Enterprise: "#f59e0b" };
 
 // ─── tiny helpers ─────────────────────────────────────────────────────────────
 function SectionTitle({ children }) {
@@ -205,12 +203,15 @@ function ProfileSection() {
   const [role, setRole] =
   useState("Student");
   const { user } = useContext(AuthContext);
-
+const [profile, setProfile] =
+  useState(null);
   const [name, setName] =
     useState(user?.name || "");
+    const [documentsCount,
+ setDocumentsCount] =
+ useState(0);
 
-  const [email, setEmail] =
-    useState(user?.email || "");
+
   const [bio, setBio] = useState("Building great products with AI-powered document intelligence.");
   const [saved, setSaved] = useState(false);
 
@@ -251,12 +252,15 @@ useEffect(() => {
       try {
 
         const token =
-          localStorage.getItem("token");
+ localStorage.getItem("token");
 
-        const data =
-          await getProfile(
-            token
-          );
+const data =
+ await getProfile(token);
+
+setProfile(data.user);
+          setDocumentsCount(
+ data.documentsCount || 0
+);
 
         setName(
           data.user.name || ""
@@ -309,7 +313,20 @@ useEffect(() => {
               <p className="text-sm text-white/40">{role}</p>
               <p className="mt-2 text-xs text-white/25 flex items-center gap-1.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 inline-block" />
-                Member since January 2024 · 142 documents uploaded
+                Member since {
+new Date(
+ profile?.createdAt ||
+ Date.now()
+)
+ .toLocaleDateString(
+   "en-US",
+   {
+     month:"long",
+     year:"numeric"
+   }
+ )
+} · {documentsCount}
+documents uploaded
               </p>
             </div>
             <Btn small variant="ghost" icon={<HiOutlinePencil />}>Edit Avatar</Btn>
@@ -556,18 +573,7 @@ async () => {
             sub="Manage devices signed into your account">
             <Btn small variant="ghost">View All</Btn>
           </Row>
-          <Row icon={<HiOutlineKey />} label="API Keys"
-            sub="Manage your DocuMind API access tokens">
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-xs text-white/25 border border-white/[0.07] rounded-lg px-2.5 py-1.5 bg-white/[0.02]">
-                dm_sk_••••••••4a2f
-              </span>
-              <button onClick={() => { setCopied(true); setTimeout(() => setCopied(false), 1800); }}
-                className="rounded-lg p-1.5 text-white/25 hover:bg-white/[0.06] hover:text-white/60 transition-colors">
-                {copied ? <HiOutlineCheck className="text-emerald-400 text-sm" /> : <HiOutlineClipboardCopy className="text-sm" />}
-              </button>
-            </div>
-          </Row>
+        
         </div>
       </Card>
     </div>
@@ -622,14 +628,12 @@ async (key) => {
       rows: [
         { key: "upload", label: "Upload Complete", sub: "When a document finishes uploading", icon: <HiOutlineDocumentDuplicate /> },
         { key: "summary", label: "AI Summary Ready", sub: "When DocuMind AI finishes summarizing", icon: <BsStars /> },
-        { key: "mentions", label: "Mentions & Comments", sub: "When someone mentions you in a document", icon: <HiOutlineBell /> },
       ],
     },
     {
       title: "Reports & Digests",
       rows: [
         { key: "weekly", label: "Weekly Digest", sub: "Summary of your weekly document activity", icon: <HiOutlineMail /> },
-        { key: "product", label: "Product Updates", sub: "New features and improvements", icon: <HiMiniSparkles /> },
       ],
     },
     {
@@ -643,7 +647,6 @@ async (key) => {
       rows: [
         { key: "email", label: "Email Notifications", sub: "alex.johnson@company.com", icon: <HiOutlineMail /> },
         { key: "browser", label: "Browser Push", sub: "In-browser desktop notifications", icon: <HiOutlineGlobe /> },
-        { key: "slack", label: "Slack Integration", sub: "Receive updates in your Slack workspace", icon: <BsSlack /> },
       ],
     },
   ];
@@ -691,7 +694,7 @@ async (key) => {
           <div className="px-6 pb-4 divide-y divide-white/[0.05]">
             {g.rows.map((r) => (
               <Row key={r.key} icon={r.icon} label={r.label} sub={r.sub}>
-                <Toggle value={notifs[r.key]} onChange={() => toggle(r.key)} />
+                <Toggle value={Boolean(notifs[r.key])} onChange={() => toggle(r.key)} />
               </Row>
             ))}
           </div>
@@ -710,6 +713,8 @@ function StorageSection() {
       txtCount: 0,
       totalStorageMB: 0,
     });
+    const totalFiles =
+ Math.max(stats.totalDocuments,1);
     useEffect(() => {
 
   const fetchStats =
@@ -742,36 +747,48 @@ function StorageSection() {
 
 }, []);
   
-  const used =
-  stats.totalStorageMB;
+ const usedMB =
+ stats.totalStorageMB;
+
+const totalMB =
+ 102400;
+
+const usedPercentage =
+ Math.min(
+  (usedMB / totalMB) * 100,
+  100
+ );
 
 const total = 100;
  const breakdown = [
   {
     label: "PDF Files",
     size: `${stats.pdfCount} files`,
-    pct: stats.pdfCount * 10,
+    pct:
+ (stats.pdfCount / totalFiles) * 100,
     color: "#ff6b6b",
   },
 
   {
     label: "DOCX Files",
     size: `${stats.docxCount} files`,
-    pct: stats.docxCount * 10,
+   pct:
+ (stats.docxCount / totalFiles) * 100,
     color: "#4fc3f7",
   },
 
   {
     label: "TXT Files",
     size: `${stats.txtCount} files`,
-    pct: stats.txtCount * 10,
+   pct:
+ (stats.txtCount / totalFiles) * 100,
     color: "#81c784",
   },
 
   {
     label: "Documents",
     size: `${stats.totalDocuments} files`,
-    pct: stats.totalDocuments * 10,
+    pct: 100,
     color: "#ffb74d",
   },
 ];
@@ -797,13 +814,13 @@ const total = 100;
           {/* usage bar */}
           <div className="mb-3 flex items-center justify-between text-xs">
 <span className="text-white/45 font-medium">
-  {used} MB used
+  {usedMB.toFixed(2)} MB used
 </span>            <span className="text-white/25">{total} GB total</span>
           </div>
           <div className="h-2 w-full rounded-full bg-white/[0.06] overflow-hidden mb-1">
             <motion.div
               initial={{ width: 0 }}
-              animate={{ width: `${used}%` }}
+              animate={{ width: `${usedPercentage}%` }}
               transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
               className="h-full rounded-full"
               style={{ background: "linear-gradient(90deg, #7c3aed, #a78bfa)", boxShadow: "0 0 12px rgba(124,58,237,0.4)" }}
@@ -849,48 +866,7 @@ const total = 100;
   );
 }
 
-function IntegrationsSection() {
-  const [connected, setConnected] = useState({ google: true, github: false, slack: false });
-  const toggle = (k) => setConnected((c) => ({ ...c, [k]: !c[k] }));
 
-  const integrations = [
-    {
-      key: "google", label: "Google Drive", sub: "Import documents directly from Drive",
-      icon: <BsGoogle />, color: "#ea4335",
-    },
-    {
-      key: "github", label: "GitHub", sub: "Link repositories and README files",
-      icon: <BsGithub />, color: "#ffffff",
-    },
-    {
-      key: "slack", label: "Slack", sub: "Send AI summaries to Slack channels",
-      icon: <BsSlack />, color: "#4a154b",
-    },
-  ];
-
-  return (
-    <div className="space-y-4">
-      <SectionTitle>Integrations</SectionTitle>
-      <Card>
-        <div className="px-6 py-4 divide-y divide-white/[0.05]">
-          {integrations.map((it) => (
-            <Row key={it.key}
-              icon={<span style={{ color: it.color }}>{it.icon}</span>}
-              label={it.label} sub={it.sub}>
-              <div className="flex items-center gap-2.5">
-                {connected[it.key] && <Badge color="#10b981">Connected</Badge>}
-                <Btn small variant={connected[it.key] ? "ghost" : "primary"}
-                  onClick={() => toggle(it.key)}>
-                  {connected[it.key] ? "Disconnect" : "Connect"}
-                </Btn>
-              </div>
-            </Row>
-          ))}
-        </div>
-      </Card>
-    </div>
-  );
-}
 
 function DangerSection() {
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -946,7 +922,6 @@ const SECTIONS = {
   security: <SecuritySection />,
   notifications: <NotificationsSection />,
   storage: <StorageSection />,
-  integrations: <IntegrationsSection />,
   danger: <DangerSection />,
 };
 
@@ -1074,19 +1049,7 @@ export default function SettingsPage() {
             ))}
 
             {/* plan badge in nav */}
-            <div className="mt-4 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3.5">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-white/60">Storage</span>
-                <span className="text-xs text-white/30 font-mono">68/100 GB</span>
-              </div>
-              <div className="h-1 w-full rounded-full bg-white/[0.06] overflow-hidden">
-                <motion.div initial={{ width: 0 }} animate={{ width: "68%" }}
-                  transition={{ duration: 1, ease: "easeOut" }}
-                  className="h-full rounded-full"
-                  style={{ background: "linear-gradient(90deg,#7c3aed,#a78bfa)" }} />
-              </div>
-              <p className="mt-2 text-[10px] text-white/20">32 GB remaining on Pro</p>
-            </div>
+        
           </motion.nav>
 
           {/* ── content ── */}
