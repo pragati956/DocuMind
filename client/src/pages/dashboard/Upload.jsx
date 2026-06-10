@@ -2,6 +2,8 @@ import { useState, useRef, useCallback, useEffect, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import toast from "react-hot-toast";
+const API_URL =
+ import.meta.env.VITE_API_URL;
 import { AuthContext } from "../../context/AuthContext";
 import {
   HiOutlineCloudUpload,
@@ -219,7 +221,7 @@ function DropZone({ onFiles, dragging, setDragging }) {
         ref={inputRef} 
         type="file" 
         multiple 
-        accept=".pdf,.docx,.txt,.png,.jpg,.jpeg" 
+accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.webp"
         className="hidden" 
         onChange={handleChange} 
       />
@@ -245,7 +247,7 @@ function DropZone({ onFiles, dragging, setDragging }) {
           <p className="text-base font-semibold text-white/80">
             {dragging ? "Release to upload" : "Drop files here or click to browse"}
           </p>
-          <p className="mt-1.5 text-sm text-white/30">PDF, DOCX, TXT, PNG, JPG — up to 50 MB each</p>
+          <p className="mt-1.5 text-sm text-white/30">PDF, DOCX, TXT, PNG, JPG, WEBP — up to 50 MB each</p>
         </div>
 
         {/* Pointer events auto so the button is clickable */}
@@ -267,8 +269,7 @@ function DropZone({ onFiles, dragging, setDragging }) {
 export default function UploadPage() {
   const [dragging, setDragging] = useState(false);
   const [uploads, setUploads] = useState([]); 
-  const [tab, setTab] = useState("all"); 
-  const { user } = useContext(AuthContext); // Access context for auth token if needed
+  useContext(AuthContext);// Access context for auth token if needed
 
   // GLOBAL DRAG PREVENTION: Stops browser from opening files if you miss the dropzone
   useEffect(() => {
@@ -299,16 +300,27 @@ const executeUpload = async (fileRaw) => {
   try {
     const token = localStorage.getItem("token");
     // This is the real request
-    const response = await axios.post("http://localhost:5000/api/documents/upload", formData, {
-      headers: { 
-        "Content-Type": "multipart/form-data",
-        "Authorization": `Bearer ${token}` 
-      },
-      onUploadProgress: (e) => {
-        const p = Math.round((e.loaded * 100) / e.total);
-        setUploads((u) => u.map((f) => f.id === id ? { ...f, progress: p } : f));
-      }
-    });
+const response = await axios.post(
+  `${API_URL}/documents/upload`,
+  formData,
+  {
+    headers: {
+      "Content-Type": "multipart/form-data",
+      "Authorization": `Bearer ${token}`
+    },
+    onUploadProgress: (e) => {
+      const p = Math.round((e.loaded * 100) / e.total);
+
+      setUploads((u) =>
+        u.map((f) =>
+          f.id === id
+            ? { ...f, progress: p }
+            : f
+        )
+      );
+    }
+  }
+);
 
     // Only set to "done" if the BACKEND successfully returns the saved document
     setUploads((u) => u.map((f) => f.id === id ? { ...f, status: "done", progress: 100 } : f));
@@ -320,20 +332,61 @@ const executeUpload = async (fileRaw) => {
     setUploads((u) => u.map((f) => f.id === id ? { ...f, status: "error" } : f));
   }
 };
+const allowedTypes = [
 
-  const handleFiles = (files) => {
-    setDragging(false);
-    files.forEach(executeUpload);
-  };
+ "application/pdf",
 
-  const filtered = uploads.filter((f) => {
-    if (tab === "active") return f.status === "uploading" || f.status === "summarizing";
-    if (tab === "done")   return f.status === "done" || f.status === "error";
-    return true;
-  });
+ "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 
-  const activeCount = uploads.filter((f) => f.status === "uploading" || f.status === "summarizing").length;
-  const doneCount   = uploads.filter((f) => f.status === "done").length;
+ "application/msword",
+
+ "text/plain",
+
+ "image/png",
+
+ "image/jpeg",
+
+ "image/jpg",
+
+ "image/webp"
+
+];
+
+ const handleFiles = (files) => {
+
+ setDragging(false);
+
+ files.forEach(file => {
+  if(
+ file.size >
+ 50* 1024 * 1024
+){
+
+ toast.error(
+  `${file.name} exceeds 10MB limit`
+ );
+
+ return;
+
+}
+
+  if(
+   !allowedTypes.includes(file.type)
+  ){
+   toast.error(
+    `${file.name} is not supported`
+   );
+   return;
+  }
+
+  executeUpload(file);
+
+ });
+
+};
+
+ 
+
 
   return (
     <div className="min-h-screen text-white overflow-x-hidden"
@@ -368,8 +421,7 @@ const executeUpload = async (fileRaw) => {
             <div>
               <h1 className="text-3xl font-bold tracking-tight text-white">Upload Documents</h1>
               <p className="mt-1 text-sm text-white/35 max-w-md">
-                Drop your files below — DocuMind AI will process and summarize them automatically.
-              </p>
+Drop your files below — DocuMind will securely upload and organize them.              </p>
             </div>
           </div>
         </motion.div>
@@ -402,7 +454,7 @@ const executeUpload = async (fileRaw) => {
             {/* queue list */}
             <div className="flex flex-col gap-2.5 overflow-y-auto" style={{ maxHeight: 520 }}>
               <AnimatePresence mode="popLayout">
-                {filtered.length === 0 ? (
+{uploads.length === 0 ? (  
                   <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center py-16 text-center">
                     <div className="h-14 w-14 rounded-2xl border border-white/[0.07] bg-white/[0.02] flex items-center justify-center text-2xl text-white/15 mb-3">
                       <HiOutlineDocumentText />
@@ -410,7 +462,7 @@ const executeUpload = async (fileRaw) => {
                     <p className="text-sm text-white/30 font-medium">No uploads yet</p>
                   </motion.div>
                 ) : (
-                  filtered.map((file) => (
+                  uploads.map((file) => (
                     <UploadCard key={file.id} file={file} onRemove={removeUpload} />
                   ))
                 )}

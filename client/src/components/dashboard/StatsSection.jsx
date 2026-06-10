@@ -8,17 +8,50 @@ import { FiFileText, FiZap, FiTrendingUp, FiActivity } from "react-icons/fi";
 function useCountUp(target, duration = 1600, start = false) {
   const [value, setValue] = useState(0);
   useEffect(() => {
-    if (!start) return;
-    let startTime = null;
-    const step = (timestamp) => {
-      if (!startTime) startTime = timestamp;
-      const progress = Math.min((timestamp - startTime) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setValue(Math.floor(eased * target));
-      if (progress < 1) requestAnimationFrame(step);
-    };
+
+  if (!start) return;
+
+  let startTime = null;
+  let frameId;
+
+  const step = (timestamp) => {
+
+    if (!startTime)
+      startTime = timestamp;
+
+    const progress =
+      Math.min(
+        (timestamp - startTime)
+        / duration,
+        1
+      );
+
+    const eased =
+      1 - Math.pow(
+        1 - progress,
+        3
+      );
+
+    setValue(
+      Math.floor(
+        eased * target
+      )
+    );
+
+    if (progress < 1) {
+      frameId =
+        requestAnimationFrame(step);
+    }
+
+  };
+
+  frameId =
     requestAnimationFrame(step);
-  }, [target, duration, start]);
+
+  return () =>
+    cancelAnimationFrame(frameId);
+
+}, [target, duration, start]);
   return value;
 }
 
@@ -50,19 +83,19 @@ const stats = [
     glowColor: "rgba(139,92,246,0.22)",
   },
   {
-    id: "processing",
-    icon: <FiActivity />,
-    label: "Processing",
-    sub: "Pending AI processing",
-    accent: "#10b981",
-    accentDim: "rgba(16,185,129,0.12)",
-    accentBorder: "rgba(16,185,129,0.2)",
-    accentText: "text-emerald-400",
-    accentBg: "bg-emerald-500/10",
-    gradFrom: "from-emerald-500",
-    gradTo: "to-teal-400",
-    glowColor: "rgba(16,185,129,0.22)",
-  },
+  id: "starred",
+  icon: <FiActivity />,
+  label: "Starred",
+  sub: "Starred documents",
+  accent: "#10b981",
+  accentDim: "rgba(16,185,129,0.12)",
+  accentBorder: "rgba(16,185,129,0.2)",
+  accentText: "text-emerald-400",
+  accentBg: "bg-emerald-500/10",
+  gradFrom: "from-emerald-500",
+  gradTo: "to-teal-400",
+  glowColor: "rgba(16,185,129,0.22)",
+},
 ];
 
 /* ─── Stat Card ─── */
@@ -175,48 +208,51 @@ function SectionHeader() {
 /* ─── Main Export ─── */
 export default function StatsSection() {
 
-  const [statsData, setStatsData] = useState({
-    totalDocuments: 0,
-    summarizedDocuments: 0,
-    processingDocuments: 0,
-  });
+ const [statsData, setStatsData] = useState({
+  totalDocuments: 0,
+  summarizedDocuments: 0,
+  starredDocuments: 0,
+});
 
   useEffect(() => {
 
-    const fetchStats = async () => {
-      try {
+  const fetchStats = async () => {
+    try {
+      const data =
+        await getDashboardStats();
 
-        const data = await getDashboardStats();
+      setStatsData(data);
 
-        console.log(
-          "Dashboard Stats:",
-          data
-        );
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
-        setStatsData(data);
+  fetchStats();
 
-      } catch (error) {
-        console.error(error);
-      }
-    };
+  const interval =
+    setInterval(
+      fetchStats,
+      30000
+    );
 
-    fetchStats();
+  return () =>
+    clearInterval(interval);
 
-  }, []);
+}, []);
 
   const dynamicStats = stats.map((config) => ({
     ...config,
-    value:
-      config.id === "docs"
-        ? statsData.totalDocuments
-        : config.id === "summaries"
-          ? statsData.summarizedDocuments
-          : statsData.processingDocuments,
+  value:
+  config.id === "docs"
+    ? statsData.totalDocuments
+    : config.id === "summaries"
+      ? statsData.summarizedDocuments
+      : statsData.starredDocuments,
   }));
 
   return (
     <div style={{ fontFamily: "'Poppins', sans-serif" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');`}</style>
 
       <SectionHeader />
 

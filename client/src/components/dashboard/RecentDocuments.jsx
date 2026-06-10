@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { summarizeDocument } from "../../services/aiService";
 import axios from "axios"; 
+const API_URL =
+ import.meta.env.VITE_API_URL;
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiFileText, FiMoreHorizontal, FiDownload,
@@ -314,7 +316,7 @@ export default function RecentDocuments() {
   const fetchDocuments = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:5000/api/documents/all", {
+      const res = await axios.get(`${API_URL}/api/documents/all`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -364,17 +366,21 @@ export default function RecentDocuments() {
 
   useEffect(() => {
     fetchDocuments();
-    const interval = setInterval(fetchDocuments, 5000);
+    const interval = setInterval(fetchDocuments, 30000);
     return () => clearInterval(interval);
   }, []);
 
   const handleDelete = async (docId) => {
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:5000/api/documents/${docId}`, {
+      await axios.delete(`${API_URL}/api/documents/${docId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setDocs(docs.filter(d => d.id !== docId));
+setDocs(prev =>
+ prev.filter(
+  d => d.id !== docId
+ )
+);
     } catch (err) {
       console.error("Failed to delete", err);
     }
@@ -384,7 +390,7 @@ export default function RecentDocuments() {
     try {
       const token = localStorage.getItem("token");
       await axios.patch(
-        `http://localhost:5000/api/documents/${docId}/star`,
+        `${API_URL}/api/documents/${docId}/star`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -420,7 +426,6 @@ export default function RecentDocuments() {
 
   return (
     <>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');`}</style>
       <div style={{ fontFamily: "'Poppins', sans-serif" }} className="mb-6">
 
         {/* Header - No Upload, No Search */}

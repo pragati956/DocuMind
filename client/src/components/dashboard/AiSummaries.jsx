@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   FiZap, FiStar, FiTag, FiEye, FiCopy, FiShare2,
   FiChevronDown, FiChevronUp, FiClock, FiFileText,
-  FiMoreHorizontal, FiArrowRight, FiCheck, FiFilter,
+  FiMoreHorizontal, FiArrowRight, FiCheck, 
   FiSearch, FiBookmark, FiTrendingUp,
 } from "react-icons/fi";
 
@@ -134,8 +134,15 @@ function SummaryCard({ summary, index }) {
 
           {/* Right actions */}
           <div className="flex items-center gap-1.5 shrink-0">
-            <ConfidenceRing value={summary.confidence} color={summary.accent} />
-
+{
+  summary.confidence !== null &&
+  (
+    <ConfidenceRing
+      value={summary.confidence}
+      color={summary.accent}
+    />
+  )
+}
             <motion.button
               whileHover={{ scale: 1.15 }}
               whileTap={{ scale: 0.9 }}
@@ -297,69 +304,146 @@ function SummaryCard({ summary, index }) {
 }
 
 /* ─── Filter Bar ─── */
-function FilterBar({ active, setActive }) {
-  const filters = ["All", "Starred", "Finance", "Legal", "Product", "Meetings"];
-  return (
-    <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{ scrollbarWidth: "none" }}>
-      {filters.map((f) => (
-        <motion.button
-          key={f}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.97 }}
-          onClick={() => setActive(f)}
-          className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all duration-200 shrink-0 ${active === f
-            ? "bg-blue-500/15 border border-blue-500/25 text-blue-300"
-            : "text-gray-500 hover:text-gray-300 border border-transparent hover:border-white/[0.07] hover:bg-white/[0.04]"
-            }`}
-        >
-          {f}
-        </motion.button>
-      ))}
-    </div>
-  );
-}
+
 
 /* ─── Main Export ─── */
 export default function AiSummaries() {
   const navigate = useNavigate();
   const [summaries, setSummaries] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeFilter, setActiveFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
+  const getTimeAgo = (date) => {
+
+  const diff =
+    Date.now() -
+    new Date(date).getTime();
+
+  const minutes =
+    Math.floor(diff / 60000);
+if (minutes <= 0)
+  return "Just now";
+
+if (minutes < 60)
+  return `${minutes}m ago`;
+
+  const hours =
+    Math.floor(minutes / 60);
+
+  if (hours < 24)
+    return `${hours}h ago`;
+
+  const days =
+    Math.floor(hours / 24);
+
+  return `${days}d ago`;
+
+};
   
-  const fetchSummaries = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const data = await getSummaries(token);
-      setSummaries(
-        data.documents.map((doc) => ({
-          _id: doc.id,
-          title: doc.title,
-          insight: doc.summary,
-          file: doc.title,
-          readTime: "30 sec read",
-          confidence: 95,
-          keyPoints: 4,
-          createdAt: doc.createdAt || new Date().toISOString(),
-          time: "Just now",
+ const fetchSummaries = async () => {
+
+  try {
+
+    const token =
+      localStorage.getItem("token");
+
+    const data =
+      await getSummaries(token);
+
+    setSummaries(
+      data.documents.map((doc) => {
+
+        const words =
+          (doc.summary || "")
+            .trim()
+            .split(/\s+/)
+            .filter(Boolean)
+            .length;
+
+        const readTime =
+          `${Math.max(
+            1,
+            Math.ceil(words / 200)
+          )} min read`;
+
+        return {
+          _id: doc._id || doc.id,
+
+          title:
+            doc.title ||
+            "Untitled Document",
+
+          insight:
+            doc.summary ||
+            "No summary available",
+
+          file:
+            doc.title ||
+            "Untitled Document",
+
+          readTime,
+
+          confidence: null,
+
+         keyPoints:
+  doc.summary
+    ?.split(".")
+    .filter(Boolean)
+    .length || 1,
+
+          createdAt:
+            doc.createdAt ||
+            new Date().toISOString(),
+
+          time:
+            getTimeAgo(
+              doc.createdAt
+            ),
+
           starred: false,
-          tags: doc.tags || ["AI"],
-          keyInsights: ["AI Generated"],
-          color: "from-purple-500 to-pink-600",
-          accent: "#8b5cf6",
-          accentDim: "rgba(139,92,246,0.1)",
-          accentBorder: "rgba(139,92,246,0.2)",
-          accentText: "text-purple-300",
-          tagBg: "bg-purple-500/10 border-purple-500/20 text-purple-300",
-        }))
-      );
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+
+          tags:
+            doc.tags?.length
+              ? doc.tags
+              : ["AI"],
+
+          keyInsights: [
+            "AI Generated"
+          ],
+
+          color:
+            "from-purple-500 to-pink-600",
+
+          accent:
+            "#8b5cf6",
+
+          accentDim:
+            "rgba(139,92,246,0.1)",
+
+          accentBorder:
+            "rgba(139,92,246,0.2)",
+
+          accentText:
+            "text-purple-300",
+
+          tagBg:
+            "bg-purple-500/10 border-purple-500/20 text-purple-300",
+        };
+
+      })
+    );
+
+  } catch (error) {
+
+    console.error(error);
+
+  } finally {
+
+    setLoading(false);
+
+  }
+
+};
   
   useEffect(() => {
     fetchSummaries();
@@ -383,7 +467,6 @@ export default function AiSummaries() {
 
   return (
     <div style={{ fontFamily: "'Poppins', sans-serif" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap'); .scrollbar-hide::-webkit-scrollbar{display:none}`}</style>
 
       {/* Header */}
       <motion.div
@@ -431,12 +514,7 @@ export default function AiSummaries() {
             />
           </motion.div>
 
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/[0.07] bg-white/[0.03] text-gray-500 hover:text-gray-300 text-xs transition-all hover:bg-white/[0.06]"
-          >
-            <FiFilter className="text-[10px]" /> Filter
-          </motion.button>
+         
 
           <button
             onClick={() => navigate("/dashboard/summaries")}
@@ -448,14 +526,7 @@ export default function AiSummaries() {
       </motion.div>
 
       {/* Filter bar */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.15 }}
-        className="mb-5"
-      >
-        <FilterBar active={activeFilter} setActive={setActiveFilter} />
-      </motion.div>
+     
 
       {/* Cards */}
       <AnimatePresence mode="popLayout">
