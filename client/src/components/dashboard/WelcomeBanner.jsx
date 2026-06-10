@@ -1,6 +1,6 @@
 import React, {
   useState,
-  useContext,
+  useContext,useMemo,
   useEffect,
 } from "react";
 import { useNavigate } from "react-router-dom";
@@ -70,8 +70,6 @@ export default function WelcomeBanner({ onUpload }) {
       processingDocuments: 0,
     });
 
-  useEffect(() => {
-
     const fetchStats = async () => {
 
       try {
@@ -91,19 +89,32 @@ export default function WelcomeBanner({ onUpload }) {
       }
     };
 
-    fetchStats();
 
-  }, []);// Dynamically access global user context
+    useEffect(() => {
+
+ fetchStats();
+
+ const interval =
+  setInterval(
+   fetchStats,
+   30000
+  );
+
+ return () =>
+  clearInterval(interval);
+
+}, []);// Dynamically access global user context
 
   // Get the first name or default to 'User'
   const firstName = user?.name ? user.name.split(" ")[0] : "User";
 
-  const particles = Array.from({ length: 18 }, (_, i) => ({
+ const particles = useMemo(
+ () => Array.from({ length: 18 }, (_, i) => ({
     x: Math.random() * 100,
     y: Math.random() * 100,
     delay: i * 0.25,
     size: Math.random() > 0.6 ? 3 : 2,
-  }));
+  })), []);
 
   const stats = [
     {

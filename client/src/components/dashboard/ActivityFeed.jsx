@@ -24,8 +24,13 @@ import {
 
 /* ─── Activity Data ─── */
 
-const actionFilters = ["All", "Uploads", "AI", "Shared", "Searches"];
-
+const actionFilters = [
+ "All",
+ "Uploads",
+ "Edited",
+ "Deleted",
+ "Starred"
+];
 /* ─── Avatar ─── */
 function Avatar({ user, size = "sm" }) {
   const sz = size === "sm" ? "w-7 h-7 text-[10px]" : "w-8 h-8 text-xs";
@@ -265,13 +270,13 @@ export default function ActivityFeed() {
   const [showAll, setShowAll] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  const filterMap = {
-    "All": null,
-    "Uploads": "uploaded",
-    "AI": "summarized",
-    "Shared": "shared",
-    "Searches": "searched",
-  };
+ const filterMap = {
+ "All":null,
+ "Uploads":"uploaded",
+ "Edited":"edited",
+ "Deleted":"deleted",
+ "Starred":"starred",
+};
   const [activities, setActivities] =
   useState([]);
   const fetchActivities =
@@ -282,10 +287,7 @@ export default function ActivityFeed() {
       const data =
         await getActivities();
 
-      console.log(
-        "Activities:",
-        data
-      );
+      
 
       setActivities(
         data.activities || []
@@ -300,8 +302,19 @@ export default function ActivityFeed() {
 
     }
   };
- useEffect(() => {
-  fetchActivities();
+useEffect(() => {
+
+ fetchActivities();
+
+ const interval =
+  setInterval(
+   fetchActivities,
+   30000
+  );
+
+ return () =>
+  clearInterval(interval);
+
 }, []);
 const getTimeAgo = (
   dateString
@@ -376,12 +389,14 @@ initials:
         "from-blue-500 to-indigo-600",
     },
 
-    icon:
-      activity.action === "uploaded"
-        ? <FiUpload />
-        : activity.action === "edited"
-        ? <FiEdit3 />
-        : <FiTrash2 />,
+   icon:
+ activity.action === "uploaded"
+ ? <FiUpload />
+ : activity.action === "edited"
+ ? <FiEdit3 />
+ : activity.action === "starred"
+ ? <FiZap />
+ : <FiTrash2 />,
 
     iconColor:
       activity.action === "uploaded"
@@ -448,7 +463,6 @@ mappedActivities.filter((a) => {
 
   return (
     <div style={{ fontFamily: "'Poppins', sans-serif" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');`}</style>
 
       {/* Header */}
       <motion.div

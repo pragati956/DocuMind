@@ -2,7 +2,6 @@ import Activity from "../models/Activity.js";
 import Document from "../models/Document.js";
 export const getActivities =
 async (req, res) => {
-
   try {
 
     const activities =
@@ -43,15 +42,20 @@ export const getDashboardStats = async (
         uploadedBy: req.user.id,
         summary: { $ne: "" },
       });
+      const starredDocuments =
+  await Document.countDocuments({
+    uploadedBy: req.user.id,
+    starred: true,
+  });
 
-    const processingDocuments = 0;
+   
 
-    res.status(200).json({
-      success: true,
-      totalDocuments,
-      summarizedDocuments,
-      processingDocuments,
-    });
+   res.status(200).json({
+  success: true,
+  totalDocuments,
+  summarizedDocuments,
+  starredDocuments,
+});
 
   } catch (error) {
 
