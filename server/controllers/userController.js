@@ -10,10 +10,16 @@ export const getProfile = async (req, res) => {
         req.user.id
       ).select("-password");
 
-    res.status(200).json({
-      success: true,
-      user,
-    });
+    const documentsCount =
+ await Document.countDocuments({
+   uploadedBy:req.user.id
+ });
+
+res.status(200).json({
+ success:true,
+ user,
+ documentsCount,
+});
 
   } catch (error) {
 

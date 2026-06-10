@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API_URL =
-  "http://localhost:5000/api/user";
+  `${import.meta.env.VITE_API_URL}/user`;
 
 export const getProfile =
   async (token) => {

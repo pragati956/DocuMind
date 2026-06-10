@@ -202,9 +202,15 @@ function Btn({ children, variant = "ghost", onClick, danger, icon, small }) {
 function ProfileSection() {
   const [role, setRole] = useState("Student");
   const { user } = useContext(AuthContext);
-  const [profile, setProfile] = useState(null);
-  const [name, setName] = useState(user?.name || "");
-  const [documentsCount, setDocumentsCount] = useState(0);
+const [profile, setProfile] =
+  useState(null);
+  const [name, setName] =
+    useState(user?.name || "");
+    const [documentsCount,
+ setDocumentsCount] =
+ useState(0);
+
+
   const [bio, setBio] = useState("Building great products with AI-powered document intelligence.");
   const [saved, setSaved] = useState(false);
 
@@ -245,12 +251,15 @@ useEffect(() => {
       try {
 
         const token =
-          localStorage.getItem("token");
+ localStorage.getItem("token");
 
-        const data =
-          await getProfile(
-            token
-          );
+const data =
+ await getProfile(token);
+
+setProfile(data.user);
+          setDocumentsCount(
+ data.documentsCount || 0
+);
 
         setName(
           data.user.name || ""
@@ -304,11 +313,19 @@ useEffect(() => {
               <p className="mt-2 text-xs text-white/25 flex items-center gap-1.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 inline-block" />
                 Member since {
-                  new Date(profile?.createdAt || Date.now()).toLocaleDateString("en-US", {
-                    month: "long",
-                    year: "numeric"
-                  })
-                } · {documentsCount} documents uploaded
+new Date(
+ profile?.createdAt ||
+ Date.now()
+)
+ .toLocaleDateString(
+   "en-US",
+   {
+     month:"long",
+     year:"numeric"
+   }
+ )
+} · {documentsCount}
+documents uploaded
               </p>
             </div>
             <Btn small variant="ghost" icon={<HiOutlinePencil />}>Edit Avatar</Btn>
@@ -695,6 +712,8 @@ function StorageSection() {
       txtCount: 0,
       totalStorageMB: 0,
     });
+    const totalFiles =
+ Math.max(stats.totalDocuments,1);
     useEffect(() => {
 
   const fetchStats =
@@ -727,36 +746,48 @@ function StorageSection() {
 
 }, []);
   
-  const used =
-  stats.totalStorageMB;
+ const usedMB =
+ stats.totalStorageMB;
+
+const totalMB =
+ 102400;
+
+const usedPercentage =
+ Math.min(
+  (usedMB / totalMB) * 100,
+  100
+ );
 
 const total = 100;
  const breakdown = [
   {
     label: "PDF Files",
     size: `${stats.pdfCount} files`,
-    pct: stats.pdfCount * 10,
+    pct:
+ (stats.pdfCount / totalFiles) * 100,
     color: "#ff6b6b",
   },
 
   {
     label: "DOCX Files",
     size: `${stats.docxCount} files`,
-    pct: stats.docxCount * 10,
+   pct:
+ (stats.docxCount / totalFiles) * 100,
     color: "#4fc3f7",
   },
 
   {
     label: "TXT Files",
     size: `${stats.txtCount} files`,
-    pct: stats.txtCount * 10,
+   pct:
+ (stats.txtCount / totalFiles) * 100,
     color: "#81c784",
   },
 
   {
     label: "Documents",
     size: `${stats.totalDocuments} files`,
-    pct: stats.totalDocuments * 10,
+    pct: 100,
     color: "#ffb74d",
   },
 ];
@@ -782,7 +813,7 @@ const total = 100;
           {/* usage bar */}
           <div className="mb-3 flex items-center justify-between text-xs">
 <span className="text-white/45 font-medium">
-  {used} MB used
+  {usedMB.toFixed(2)} MB used
 </span>            <span className="text-white/25">{total} GB total</span>
           </div>
           <div className="h-2 w-full rounded-full bg-white/[0.06] overflow-hidden mb-1">
