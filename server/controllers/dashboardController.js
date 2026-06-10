@@ -50,7 +50,7 @@ export const getDashboardStats = async (
     starred: true,
   });
 
-   const totalUsers = await UserModel.countDocuments();
+   
 
    res.status(200).json({
   success: true,
