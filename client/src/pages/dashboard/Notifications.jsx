@@ -7,31 +7,24 @@ import {
  FiTrash2,
  FiAlertCircle,
  FiInbox,
- FiZap,
- FiUpload,
- FiShare2,
- FiStar,
- FiShield,
- FiInfo,
  FiCheckCircle
 } from "react-icons/fi";
 import NotificationRow from "../../components/notifications/NotificationRow";
 import NotificationSkeleton from "../../components/notifications/NotificationSkeleton";
 import NotificationFilters from "../../components/notifications/NotificationFilters";
-import NotificationDrawer from "../../components/notifications/NotificationDrawer";
 
 /* ─── Helpers ─── */
 
 /* ─── Mock API ─── */
 
 /* ─── Helpers ─── */
-function timeAgo(date) {
-    const diff = Math.floor((Date.now() - date) / 1000);
-    if (diff < 60) return "Just now";
-    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-    return `${Math.floor(diff / 86400)}d ago`;
-}
+// function timeAgo(date) {
+//     const diff = Math.floor((Date.now() - date) / 1000);
+//     if (diff < 60) return "Just now";
+//     if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+//     if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+//     return `${Math.floor(diff / 86400)}d ago`;
+// }
 
 function groupByDate(notifications) {
     const groups = {};
@@ -52,14 +45,14 @@ function groupByDate(notifications) {
     return groups;
 }
 
-function getIcon(type) {
-    const map = {
-        zap: <FiZap />, upload: <FiUpload />, share: <FiShare2 />,
-        star: <FiStar />, trash: <FiTrash2 />, shield: <FiShield />,
-        info: <FiInfo />, check: <FiCheckCircle />,
-    };
-    return map[type] || <FiBell />;
-}
+// function getIcon(type) {
+//     const map = {
+//         zap: <FiZap />, upload: <FiUpload />, share: <FiShare2 />,
+//         star: <FiStar />, trash: <FiTrash2 />, shield: <FiShield />,
+//         info: <FiInfo />, check: <FiCheckCircle />,
+//     };
+//     return map[type] || <FiBell />;
+// }
 
 /* ─── Fake API fetch ─── */
 
@@ -93,6 +86,7 @@ export default function NotificationsPage() {
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [selected, setSelected] = useState(null);
     const [refreshing, setRefreshing] = useState(false);
+   
 
   //  const markAllRead =
     // async () => {
@@ -131,14 +125,28 @@ export default function NotificationsPage() {
         }
     };
 
-    const handleRefresh = async () => {
-        setRefreshing(true);
-        await loadNotifications();
-        setRefreshing(false);
-    };
+  const handleRefresh = async () => {
+  try {
+
+    setError(null);
+    setRefreshing(true);
+
+    await loadNotifications();
+
+  } catch (err) {
+
+    setError(
+      "Failed to load notifications"
+    );
+
+  } finally {
+
+    setRefreshing(false);
+
+  }
+};
 
     /* Filter counts */
-    const actions = useMemo(() => Array.from(new Set(notifications.map((n) => n.action))), [notifications]);
     
 
     const filterCounts = useMemo(() => {
