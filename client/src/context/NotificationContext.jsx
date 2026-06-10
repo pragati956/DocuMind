@@ -152,7 +152,7 @@ useEffect(() => {
   const interval =
     setInterval(() => {
       loadNotifications();
-    }, 5000);
+    }, 30000);
 
   return () =>
     clearInterval(interval);
