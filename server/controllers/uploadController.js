@@ -14,8 +14,8 @@ export const uploadDocument = async (req, res) => {
       console.log("❌ ERROR: req.file is undefined. Multer or Cloudinary rejected the stream.");
       return res.status(400).json({ message: "No file uploaded" });
     }
-    console.log("REQ FILE DATA:");
-console.log(req.file);
+    
+
 
     const fileUrl = req.file.path || req.file.secure_url;
     const publicId = req.file.filename || req.file.public_id;
