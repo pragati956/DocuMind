@@ -1,4 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
 import {
@@ -9,10 +13,10 @@ import {
 } from "../../services/collectionService";
 import {
   FiFolder, FiPlus, FiMoreHorizontal, FiFileText,
-  FiStar, FiUsers, FiLock, FiGlobe, FiEdit3,
+  FiStar, FiUsers, FiLock, FiGlobe, 
   FiTrash2, FiShare2, FiGrid, FiList, FiSearch,
-  FiClock, FiZap, FiCheck, FiX, FiChevronRight,
-  FiArrowRight, FiCopy,
+   FiCheck, FiX, 
+  FiArrowRight, 
 } from "react-icons/fi";
 
 /* ─── Privacy Icon ─── */
@@ -25,11 +29,12 @@ function PrivacyIcon({ type }) {
 /* ─── Context Menu ─── */
 function ContextMenu({ onClose, onAction }) {
   const items = [
-    { icon: <FiEdit3 />, label: "Rename" },
-    { icon: <FiShare2 />, label: "Share" },
-    { icon: <FiCopy />, label: "Duplicate" },
-    { icon: <FiTrash2 />, label: "Delete", danger: true },
-  ];
+  {
+    icon: <FiTrash2 />,
+    label: "Delete",
+    danger: true,
+  },
+];
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9, y: -6 }}
@@ -60,6 +65,8 @@ function ContextMenu({ onClose, onAction }) {
 
 /* ─── Create Collection Modal ─── */
 function CreateModal({ onClose, onCreate }) {
+  const [creating, setCreating] =
+ useState(false);
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
   const [privacy, setPrivacy] = useState("team");
@@ -180,9 +187,38 @@ function CreateModal({ onClose, onCreate }) {
               className="flex-1 py-3 rounded-xl border border-white/10 bg-white/[0.04] text-gray-300 text-sm font-medium hover:bg-white/[0.07] transition-all">
               Cancel
             </motion.button>
-            <motion.button whileHover={name ? { scale: 1.02, boxShadow: "0 0 25px rgba(59,130,246,0.4)" } : {}} whileTap={name ? { scale: 0.97 } : {}}
-              onClick={() => { if (name) { onCreate({ name, desc, privacy, color: colorOptions[selectedColor].gradient }); onClose(); } }}
-              className={`flex-1 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all ${name ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white" : "bg-white/10 text-gray-600 cursor-not-allowed"}`}>
+            <motion.button
+            disabled={creating} whileHover={name ? { scale: 1.02, boxShadow: "0 0 25px rgba(59,130,246,0.4)" } : {}} whileTap={name ? { scale: 0.97 } : {}}
+onClick={async () => {
+
+  if (creating) return;
+
+  setCreating(true);
+
+  try {
+
+    if (name) {
+
+      await onCreate({
+        name,
+        desc,
+        privacy,
+        color:
+          colorOptions[selectedColor]
+            .gradient
+      });
+
+      onClose();
+
+    }
+
+  } finally {
+
+    setCreating(false);
+
+  }
+
+}}              className={`flex-1 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all ${name ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white" : "bg-white/10 text-gray-600 cursor-not-allowed"}`}>
               <FiPlus /> Create Collection
             </motion.button>
           </div>
@@ -342,63 +378,177 @@ function EmptyCollectionState({ onCreate }) {
 
 /* ─── Main Page ─── */
 export default function Collections() {
-  const [collections, setCollections] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [view, setView] = useState("grid");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchFocused, setSearchFocused] = useState(false);
+ const [collections, setCollections] = useState([]);
+const [loading, setLoading] = useState(true);
+const [view, setView] = useState("grid");
+const [searchQuery, setSearchQuery] = useState("");
+const [searchFocused, setSearchFocused] =
+ useState(false);
+
+const isSearching =
+ searchQuery.trim() !== "";
   const [showModal, setShowModal] = useState(false);
   const [activeFilter, setActiveFilter] = useState("All");
 
   const filterOptions = ["All", "Starred", "Private", "Team", "Public"];
 
-  const fetchCollectionsData = async () => {
+ const fetchCollectionsData =
+  useCallback(async () => {
     try {
-      setLoading(true);
-      const data = await getCollections();
-      setCollections(data.collections || []);
-    } catch (error) {
-      toast.error("Failed to load collections");
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  useEffect(() => {
-    fetchCollectionsData();
+      setLoading(true);
+
+      const data =
+        await getCollections();
+
+      setCollections(
+        data.collections || []
+      );
+
+    } catch (error) {
+
+      console.error(error);
+
+      toast.error(
+        "Failed to load collections"
+      );
+
+    } finally {
+
+      setLoading(false);
+
+    }
   }, []);
 
+ useEffect(() => {
+  fetchCollectionsData();
+}, [fetchCollectionsData]);
+
   const handleCreate = async ({ name, desc, privacy, color }) => {
+    if (!name.trim()) {
+  toast.error(
+    "Collection name required"
+  );
+  return;
+}
+if (
+ name.trim().length < 2
+) {
+ toast.error(
+  "Minimum 2 characters required"
+ );
+ return;
+}
+if (
+ name.trim().length > 50
+){
+  toast.error(
+    "Maximum 50 characters allowed"
+  );
+   return;
+}
+  if (
+ desc.length > 300
+) {
+ toast.error(
+  "Description too long"
+ );
+ return;
+}
+ 
     try {
-      await createCollection({ name, desc, privacy, color });
-      toast.success("Collection created!");
-      fetchCollectionsData();
+     const response =
+  await createCollection({
+    name,
+    desc,
+    privacy,
+    color,
+  });
+
+setCollections(prev => [
+  response.collection,
+  ...prev,
+]);
+
+toast.success(
+  "Collection created!"
+);
     } catch (error) {
-      toast.error("Failed to create collection");
-    }
+
+ console.error(error);
+
+ toast.error(
+  "Failed to create collection"
+ );
+
+}
   };
 
   const handleDelete = async (id) => {
     try {
-      await deleteCollection(id);
-      toast.success("Collection deleted");
-      fetchCollectionsData();
+      if (
+ !window.confirm(
+  "Delete this collection?"
+ )
+) {
+ return;
+}
+
+await deleteCollection(id);
+
+setCollections(prev =>
+  prev.filter(
+    col => col._id !== id
+  )
+);
+
+toast.success(
+  "Collection deleted"
+);
     } catch (error) {
-      toast.error("Failed to delete collection");
-    }
+
+ console.error(error);
+
+ toast.error(
+  "Failed to delete collection"
+ );
+
+}
   };
 
   const handleToggleStar = async (id) => {
     try {
       await toggleStarCollection(id);
-      fetchCollectionsData();
+
+setCollections(prev =>
+ prev.map(col =>
+  col._id === id
+   ? {
+      ...col,
+      starred: !col.starred,
+     }
+   : col
+ )
+);
     } catch (error) {
-      toast.error("Failed to update status");
-    }
+
+ console.error(error);
+
+ toast.error(
+  "Failed to update status"
+ );
+
+}
   };
 
   const filtered = collections.filter((c) => {
-    const matchSearch = !searchQuery || c.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchSearch = !searchQuery ||(c.name || "")
+.toLowerCase()
+.includes(
+ searchQuery
+  .trim()
+  .toLowerCase()
+);
     const matchFilter = activeFilter === "All" ? true
       : activeFilter === "Starred" ? c.starred
       : c.privacy === activeFilter.toLowerCase();
@@ -407,7 +557,6 @@ export default function Collections() {
 
   return (
     <div className="min-h-screen bg-[#0B0F19]" style={{ fontFamily: "'Poppins', sans-serif" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');`}</style>
 
       {/* Ambient Background */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
@@ -483,13 +632,33 @@ export default function Collections() {
                 className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
                 {filtered.length > 0
                   ? filtered.map((col, i) => <CollectionCard key={col._id} col={col} index={i} view="grid" onToggleStar={handleToggleStar} onDelete={handleDelete} />)
-                  : <EmptyCollectionState onCreate={() => setShowModal(true)} />}
+                 : isSearching ? (
+    <div className="col-span-full text-center py-20 text-gray-500">
+      No matching collections found
+    </div>
+  ) : (
+    <EmptyCollectionState
+      onCreate={() =>
+        setShowModal(true)
+      }
+    />
+  )}
               </motion.div>
             ) : (
               <motion.div key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
                 {filtered.length > 0
                   ? filtered.map((col, i) => <CollectionCard key={col._id} col={col} index={i} view="list" onToggleStar={handleToggleStar} onDelete={handleDelete} />)
-                  : <EmptyCollectionState onCreate={() => setShowModal(true)} />}
+                 : isSearching ? (
+    <div className="col-span-full text-center py-20 text-gray-500">
+      No matching collections found
+    </div>
+  ) : (
+    <EmptyCollectionState
+      onCreate={() =>
+        setShowModal(true)
+      }
+    />
+  )}
               </motion.div>
             )}
           </AnimatePresence>

@@ -3,13 +3,18 @@ import mongoose from "mongoose";
 const collectionSchema = new mongoose.Schema(
   {
     name: {
-      type: String,
-      required: true,
-    },
+  type: String,
+  required: true,
+  trim: true,
+  minlength: 2,
+  maxlength: 50,
+},
     desc: {
-      type: String,
-      default: "",
-    },
+  type: String,
+  default: "",
+  
+  maxlength: 300,
+},
     privacy: {
       type: String,
       enum: ["private", "team", "public"],
@@ -38,5 +43,9 @@ const collectionSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+collectionSchema.index({
+  createdBy: 1,
+  createdAt: -1,
+});
 
 export default mongoose.model("Collection", collectionSchema);
