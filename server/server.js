@@ -27,11 +27,23 @@ initializePassport();
 const app = express();
 
 // DATABASE CONNECTION
-connectDB();
+
 
 // MIDDLEWARE
-app.use(cors());
-app.use(express.json());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      process.env.CLIENT_URL,
+    ],
+    credentials: true,
+  })
+);
+app.use(
+  express.json({
+    limit: "10mb",
+  })
+);
 app.use(passport.initialize()); // Initialized passport middleware
 
 // ROUTES
@@ -73,6 +85,23 @@ app.get("/api/auth/debug", (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
-});
+const startServer = async () => {
+  try {
+    await connectDB();
+
+    app.listen(PORT, () => {
+      console.log(`✅ Server running on port ${PORT}`);
+    });
+
+  } catch (error) {
+
+    console.error(
+      "Server Startup Failed:",
+      error
+    );
+
+    process.exit(1);
+  }
+};
+
+startServer();

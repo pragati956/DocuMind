@@ -12,8 +12,10 @@ const storage = new CloudinaryStorage({
       folder: "documind-documents",
       resource_type: isImage ? "image" : "raw",
       // Adding public_id generator to ensure unique names
-      public_id: `${Date.now()}-${file.originalname.split('.')[0]}`
-    };
+public_id:
+ `${Date.now()}-${file.originalname
+   .split(".")[0]
+   .replace(/[^a-zA-Z0-9]/g,"-")}`    };
   },
 });
 

@@ -11,19 +11,26 @@ export const extractDocumentText = async (fileUrl, fileType) => { // Changed fun
     const fileBuffer = Buffer.from(response.data); // Renamed to fileBuffer
 
     // Added conditional routing based on fileType
-    if (fileType.includes("pdf")) {
+   if(
+ fileType?.toLowerCase()
+  .includes("pdf")
+) {
       const parser = new PDFParse({
         data: fileBuffer,
       });
       const data = await parser.getText();
       return data.text;
     } 
-    else if (fileType.includes("word") || fileType.includes("docx")) {
-      const result = await mammoth.extractRawText({ buffer: fileBuffer });
+else if (
+  fileType?.toLowerCase()?.includes("word") ||
+  fileType?.toLowerCase()?.includes("docx")
+) {      const result = await mammoth.extractRawText({ buffer: fileBuffer });
       return result.value;
     } 
-    else if (fileType.includes("text") || fileType.includes("plain")) {
-      return fileBuffer.toString("utf-8");
+else if (
+  fileType?.toLowerCase()?.includes("text") ||
+  fileType?.toLowerCase()?.includes("plain")
+) {      return fileBuffer.toString("utf-8");
     } 
     else {
       throw new Error("Unsupported file type for extraction");

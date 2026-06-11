@@ -75,13 +75,9 @@ function SummaryCard({ summary: s, index, view, onDelete, onToggleStar }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-40px" });
 
-  const menuItems = [
-    { icon: <FiEye />, label: "View document" },
-    { icon: <FiDownload />, label: "Export summary" },
-    { icon: <FiShare2 />, label: "Share" },
-    { icon: <FiRefreshCw />, label: "Regenerate" },
-    { icon: <FiTrash2 />, label: "Delete", danger: true },
-  ];
+ const menuItems = [
+  { icon:<FiTrash2 />, label:"Delete", danger:true }
+];
 
   const handleMenuAction = (item, e) => {
     e.stopPropagation();
@@ -117,7 +113,6 @@ function SummaryCard({ summary: s, index, view, onDelete, onToggleStar }) {
           <p className="text-gray-500 text-xs truncate">{s.summary.slice(0, 90)}…</p>
         </div>
         <div className="hidden md:flex items-center gap-4 text-gray-600 text-xs shrink-0">
-          <ConfidenceRing value={s.confidence} color={s.accent} size={36} />
           <div className="flex items-center gap-1"><FiClock className="text-[10px]" />{s.generatedAt}</div>
         </div>
         <div className={`flex items-center gap-1.5 transition-opacity duration-200 ${hovered ? "opacity-100" : "opacity-0"}`}>
@@ -162,7 +157,6 @@ function SummaryCard({ summary: s, index, view, onDelete, onToggleStar }) {
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
-            <ConfidenceRing value={s.confidence} color={s.accent} size={42} />
             <motion.button whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }}
               onClick={(e) => { e.stopPropagation(); onToggleStar(s._id); }}
               className="w-7 h-7 rounded-lg bg-white/5 border border-white/[0.07] flex items-center justify-center hover:bg-white/10 transition-all">
@@ -275,8 +269,16 @@ function SummaryCard({ summary: s, index, view, onDelete, onToggleStar }) {
             </motion.button>
           </div>
           <motion.button whileHover={{ scale: 1.04, x: 2 }} whileTap={{ scale: 0.97 }}
-            onClick={(e) => { e.stopPropagation(); window.open(s.fileUrl, '_blank') }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold border transition-all ${s.accentText}`}
+onClick={(e) => {
+  e.stopPropagation();
+
+  if (s.fileUrl) {
+    window.open(
+      s.fileUrl,
+      "_blank"
+    );
+  }
+}}            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold border transition-all ${s.accentText}`}
             style={{ background: s.accentDim, borderColor: s.accentBorder }}>
             <FiEye className="text-[10px]" /> View Full
             <motion.span animate={{ x: hovered ? [0, 3, 0] : 0 }} transition={{ duration: 1, repeat: hovered ? Infinity : 0 }}>
@@ -367,8 +369,8 @@ export default function AiSummariesPage() {
           fileUrl: doc.fileUrl,
           category: doc.tags?.[0] || "Document",
           generatedAt: new Date(doc.createdAt).toLocaleDateString(),
-          readTime: "1 min", 
-          confidence: 95, 
+        
+          
           starred: doc.starred || false,
           tags: doc.tags && doc.tags.length > 0 ? doc.tags : ["AI Summary"],
           gradient: grad,
@@ -378,11 +380,10 @@ export default function AiSummariesPage() {
           accentText: text,
           tagBg: `bg-white/5 border-white/10 ${text}`,
           keyInsights: keyInsights,
-          sentiment: "Neutral",
-          sentimentColor: "text-gray-400",
-          pages: 1,
+          
+pages: "-",
           wordCount: `${rawText.split(" ").length} words`,
-          status: "Complete",
+          
         };
       });
 
@@ -396,7 +397,7 @@ export default function AiSummariesPage() {
 
   useEffect(() => {
     fetchSummaries();
-    const intervalId = setInterval(fetchSummaries, 5000); // Polling for new summaries
+    const intervalId = setInterval(fetchSummaries, 30000); // Polling for new summaries
     return () => clearInterval(intervalId);
   }, []);
 
@@ -430,7 +431,6 @@ export default function AiSummariesPage() {
   });
 
   filtered.sort((a, b) => {
-    if (sortBy === "confidence") return b.confidence - a.confidence;
     if (sortBy === "starred") return Number(b.starred) - Number(a.starred);
     return 0; // "newest" is handled by the backend sort order
   });
@@ -488,7 +488,6 @@ export default function AiSummariesPage() {
           <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}
             className="px-3 py-1.5 rounded-xl border border-[#1F2937] bg-[#111827] text-gray-400 text-xs outline-none cursor-pointer">
             <option value="newest">Newest</option>
-            <option value="confidence">Confidence</option>
             <option value="starred">Starred</option>
           </select>
 
