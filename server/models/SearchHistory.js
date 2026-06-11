@@ -10,10 +10,11 @@ const searchHistorySchema =
     required:true,
    },
 
-   query:{
-    type:String,
-    required:true,
-   },
+   query: {
+ type:String,
+ required:true,
+ trim:true
+},
 
    resultsCount:{
     type:Number,
