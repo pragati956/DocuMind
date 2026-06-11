@@ -200,107 +200,50 @@ function Btn({ children, variant = "ghost", onClick, danger, icon, small }) {
 // ═════════════════════════════════════════════════════════════════════════════
 
 function ProfileSection() {
-  const [role, setRole] =
-  useState("Student");
+  const [role, setRole] = useState("Student");
   const { user } = useContext(AuthContext);
-const [profile, setProfile] =
-  useState(null);
-  const [name, setName] =
-    useState(user?.name || "");
-    const [documentsCount,
- setDocumentsCount] =
- useState(0);
-
-
+  const [profile, setProfile] = useState(null);
+  const [name, setName] = useState(user?.name || "");
+  const [documentsCount, setDocumentsCount] = useState(0);
   const [bio, setBio] = useState("Building great products with AI-powered document intelligence.");
   const [saved, setSaved] = useState(false);
 
   const save = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      await updateProfile(
+        {
+          name,
+          role,
+          bio,
+        },
+        token
+      );
+      setSaved(true);
+      setTimeout(() => {
+        setSaved(false);
+      }, 2000);
+    } catch (error) {
+      console.error(error);
+    }
+  }; // FIXED: Removed the duplicate nested save function and closed the brackets properly
 
-  try {
-
-    const token =
-      localStorage.getItem("token");
-
-    await updateProfile(
-      {
-        name,
-        role,
-        bio,
-      },
-      token
-    );
-
-  const save = async () => {
-
-  try {
-
-    const token =
-      localStorage.getItem("token");
-
-    await updateProfile(
-      {
-        name,
-        role,
-        bio,
-      },
-      token
-    );
-
-    setSaved(true);
-
-    setTimeout(() => {
-      setSaved(false);
-    }, 2000);
-
-  } catch (error) {
-
-    console.error(error);
-
-  }
-
-};
-useEffect(() => {
-
-  const fetchProfile =
-    async () => {
-
+  useEffect(() => {
+    const fetchProfile = async () => {
       try {
-
-        const token =
- localStorage.getItem("token");
-
-const data =
- await getProfile(token);
-
-setProfile(data.user);
-          setDocumentsCount(
- data.documentsCount || 0
-);
-
-        setName(
-          data.user.name || ""
-        );
-
-        setRole(
-          data.user.role || "Student"
-        );
-
-        setBio(
-          data.user.bio || ""
-        );
-
+        const token = localStorage.getItem("token");
+        const data = await getProfile(token);
+        setProfile(data.user);
+        setDocumentsCount(data.documentsCount || 0);
+        setName(data.user.name || "");
+        setRole(data.user.role || "Student");
+        setBio(data.user.bio || "");
       } catch (error) {
-
         console.error(error);
-
       }
-
     };
-
-  fetchProfile();
-
-}, []);
+    fetchProfile();
+  }, []);
 
   return (
     <div className="space-y-4">
@@ -330,19 +273,11 @@ setProfile(data.user);
               <p className="mt-2 text-xs text-white/25 flex items-center gap-1.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 inline-block" />
                 Member since {
-new Date(
- profile?.createdAt ||
- Date.now()
-)
- .toLocaleDateString(
-   "en-US",
-   {
-     month:"long",
-     year:"numeric"
-   }
- )
-} · {documentsCount}
-documents uploaded
+                  new Date(profile?.createdAt || Date.now()).toLocaleDateString("en-US", {
+                    month: "long",
+                    year: "numeric"
+                  })
+                } · {documentsCount} documents uploaded
               </p>
             </div>
             <Btn small variant="ghost" icon={<HiOutlinePencil />}>Edit Avatar</Btn>
