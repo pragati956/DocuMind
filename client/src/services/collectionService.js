@@ -5,13 +5,11 @@ export const createCollection = async (collectionData) => {
   const response = await API.post("/collections", collectionData);
   return response.data;
 };
-
 // GET ALL COLLECTIONS
 export const getCollections = async () => {
   const response = await API.get("/collections");
   return response.data;
 };
-
 // TOGGLE STAR STATUS
 export const toggleStarCollection = async (id) => {
   const response = await API.patch(`/collections/${id}/star`);

@@ -5,21 +5,58 @@ import Document from "../models/Document.js"; // <-- ADDED MISSING MODEL IMPORT
 // CREATE COLLECTION
 export const createCollection = async (req, res) => {
   try {
-    const { name, desc, privacy, color } = req.body;
+    
 
-    const newCollection = await Collection.create({
-      name,
-      desc,
-      privacy,
-      color,
-      createdBy: req.user.id,
-    });
+    const {
+  name,
+  desc,
+  privacy,
+  color,
+} = req.body;
 
-    await Activity.create({
-      userId: req.user.id,
-      action: "created_collection",
-      documentName: newCollection.name, // using documentName field to store collection name
-    });
+if (!name?.trim()) {
+  return res.status(400).json({
+    success: false,
+    message:
+      "Collection name is required",
+  });
+}
+
+if (name.length > 50) {
+  return res.status(400).json({
+    success: false,
+    message:
+      "Collection name too long",
+  });
+}
+
+const existing =
+  await Collection.findOne({
+    createdBy: req.user.id,
+    name: name.trim(),
+  });
+
+if (existing) {
+  return res.status(400).json({
+    success: false,
+    message:
+      "Collection already exists",
+  });
+}
+
+const newCollection =
+  await Collection.create({
+    name: name.trim(),
+    desc,
+    privacy,
+    color,
+    createdBy: req.user.id,
+  });
+  await Activity.create({
+  userId: req.user.id,
+  action: "created_collection",
+  documentName: newCollection.name,
+});
 
     res.status(201).json({ success: true, collection: newCollection });
   } catch (error) {
@@ -31,7 +68,10 @@ export const createCollection = async (req, res) => {
 export const getCollections = async (req, res) => {
   try {
     const collections = await Collection.find({ createdBy: req.user.id })
-      .populate("documents") // populate to get document counts/details later
+      .populate(
+  "documents",
+  "title fileType"
+) // populate to get document counts/details later
       .sort({ createdAt: -1 });
 
     res.status(200).json({ success: true, collections });
@@ -90,6 +130,19 @@ export const addDocumentToCollection = async (req, res) => {
   try {
     const { documentId } = req.body;
     const collectionId = req.params.id;
+    const document =
+  await Document.findOne({
+    _id: documentId,
+    uploadedBy: req.user.id,
+  });
+
+if (!document) {
+  return res.status(404).json({
+    success: false,
+    message:
+      "Document not found",
+  });
+}
 
     // $addToSet prevents the same document from being added twice
     const collection = await Collection.findOneAndUpdate(
