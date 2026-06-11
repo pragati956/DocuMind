@@ -8,13 +8,7 @@ export const generateSummary = async (
   documentText
 ) => {
   try {
-
-    console.log(
-      "GEMINI KEY:",
-      process.env.GEMINI_API_KEY
-        ? "Loaded"
-        : "Missing"
-    );
+   
 
    const model =
   genAI.getGenerativeModel({

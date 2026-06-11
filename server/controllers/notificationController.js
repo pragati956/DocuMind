@@ -6,11 +6,7 @@ export const getNotifications = async (
 ) => {
   try {
 
-    console.log("REQ USER");
-    console.log(req.user);
-
-    console.log("REQ USER ID");
-    console.log(req.user.id);
+   
 
     const notifications =
       await Activity.find({

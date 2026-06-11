@@ -13,7 +13,17 @@ const authMiddleware = async (req, res, next) => {
     }
 
     // Remove "Bearer "
-    const token = authHeader.split(" ")[1];
+    if (
+  !authHeader.startsWith("Bearer ")
+) {
+  return res.status(401).json({
+    success: false,
+    message: "Invalid authorization format",
+  });
+}
+
+const token =
+  authHeader.split(" ")[1];
 
     const decoded = jwt.verify(
       token,
