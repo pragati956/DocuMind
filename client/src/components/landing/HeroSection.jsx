@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+
 import {
   FiArrowRight,
   FiPlay,
@@ -92,16 +94,27 @@ function StatCard({ value, label, delay }) {
 
 /* ─── Hero Section ─── */
 export default function HeroSection() {
-  const particles = Array.from({ length: 18 }, (_, i) => ({
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    size: Math.random() * 4 + 2,
-    delay: i * 0.3,
-    color: i % 2 === 0 ? "rgba(34,211,238,0.6)" : "rgba(99,102,241,0.6)",
-  }));
+ const [particles] = useState(
+ Array.from(
+  { length: 18 },
+  (_, i) => ({
+   x: Math.random()*100,
+   y: Math.random()*100,
+   size: Math.random()*4+2,
+   delay:i*0.3,
+   color:
+    i%2===0
+    ? "rgba(34,211,238,0.6)"
+    : "rgba(99,102,241,0.6)"
+  })
+ )
+);
 
   return (
-    <section className="relative overflow-hidden bg-[#0B0F19] pt-40 pb-28">
+   <section
+ id="home"
+ className="relative overflow-hidden bg-[#0B0F19] pt-40 pb-28"
+>
 
       {/* Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -196,28 +209,53 @@ export default function HeroSection() {
 
             {/* Buttons */}
             <div className="mt-12 flex flex-col sm:flex-row gap-5">
-              <motion.button
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.6 }}
-                whileHover={{ scale: 1.04, boxShadow: "0 0 50px rgba(59,130,246,0.6)" }}
-                whileTap={{ scale: 0.96 }}
-                className="group flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-indigo-500 text-white font-semibold shadow-[0_0_35px_rgba(59,130,246,0.45)]"
-              >
-                Get Started
-                <motion.span animate={{ x: [0, 4, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
-                  <FiArrowRight />
-                </motion.span>
-              </motion.button>
+             <motion.div
+ whileHover={{
+  scale:1.04
+ }}
+ whileTap={{
+  scale:0.96
+ }}
+>
+ <Link
+  to="/register"
+  className="
+  group
+  flex
+  items-center
+  justify-center
+  gap-2
+  px-8
+  py-4
+  rounded-2xl
+  bg-gradient-to-r
+  from-cyan-500
+  to-indigo-500
+  text-white
+  font-semibold
+ "
+ >
+  Get Started
+  <FiArrowRight />
+ </Link>
+</motion.div>
 
-              <motion.button
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.7 }}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.96 }}
-                className="flex items-center justify-center gap-3 px-8 py-4 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl text-white transition-all duration-300"
-              >
+            <motion.button
+ onClick={()=>{
+  document
+   .getElementById("features")
+   ?.scrollIntoView({
+    behavior:"smooth"
+   });
+ }}
+ aria-label="Watch Demo"
+ initial={{ opacity:0,x:20 }}
+ animate={{ opacity:1,x:0 }}
+ transition={{ delay:0.7 }}
+ whileHover={{ scale:1.03 }}
+ whileTap={{ scale:0.96 }}
+ className="flex items-center justify-center gap-3 px-8 py-4 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl text-white"
+>
                 <motion.span
                   animate={{ scale: [1, 1.3, 1] }}
                   transition={{ duration: 1.5, repeat: Infinity }}
@@ -226,6 +264,7 @@ export default function HeroSection() {
                   <FiPlay />
                 </motion.span>
                 Watch Demo
+                
               </motion.button>
             </div>
 
