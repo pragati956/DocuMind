@@ -109,8 +109,104 @@ export default function HeroSection() {
   })
  )
 );
+const [stats,setStats] =
+ useState({
+  totalDocuments:0,
+  totalUsers:0,
+  totalSummaries:0,
+ });
+ const [loading,setLoading] =
+ useState(true);
+ const [error,setError] =
+ useState("");
+const [preview,setPreview] =
+ useState({
+  totalDocuments:0,
+  totalSummaries:0,
+  totalUsers:0,
+  processing:0,
+  latestSummary:"",
+  documentsProcessedToday:0,
+ });
+useEffect(()=>{
+
+ const controller =
+  new AbortController();
+
+ const fetchStats =
+ async()=>{
+
+  try{
+
+   const response =
+    await fetch(
+`${import.meta.env.VITE_API_URL}/dashboard/public-stats`,
+{
+ signal:controller.signal
+}
+);
+
+const data =
+ await response.json();
+
+if(data.success){
+
+ setStats(data);
+
+}
+ const previewResponse =
+ await fetch(
+`${import.meta.env.VITE_API_URL}/dashboard/hero-preview`,
+{
+ signal:controller.signal
+}
+);
+
+const previewData =
+ await previewResponse.json();
+
+if(previewData.success){
+
+ setPreview(previewData);
+
+}
+
+}catch(error){
+
+ if(
+  error.name !==
+  "AbortError"
+ ){
+
+  console.error(error);
+
+  setError(
+   "Failed to load statistics"
+  );
+
+ }
+
+
+
+}finally{
+
+ setLoading(false);
+
+}
+
+ };
+
+ fetchStats();
+ return ()=>{
+
+ controller.abort();
+
+};
+
+},[]);
 
   return (
+    
    <section
  id="home"
  className="relative overflow-hidden bg-[#0B0F19] pt-40 pb-28"
@@ -218,7 +314,8 @@ export default function HeroSection() {
  }}
 >
  <Link
-  to="/register"
+ to="/register"
+ aria-label="Create Account"
   className="
   group
   flex
@@ -242,11 +339,18 @@ export default function HeroSection() {
 
             <motion.button
  onClick={()=>{
-  document
-   .getElementById("features")
-   ?.scrollIntoView({
-    behavior:"smooth"
-   });
+  const section =
+ document.getElementById(
+  "features"
+ );
+
+if(section){
+
+ section.scrollIntoView({
+  behavior:"smooth"
+ });
+
+}
  }}
  aria-label="Watch Demo"
  initial={{ opacity:0,x:20 }}

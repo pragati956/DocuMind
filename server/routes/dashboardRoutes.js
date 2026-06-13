@@ -3,7 +3,7 @@ import authMiddleware from "../middleware/authMiddleware.js";
 
 import {
   getDashboardStats,
-  getActivities, getPublicStats,getHeroPreview,getFeaturesStats,
+  getActivities, getPublicStats,getHeroPreview,
 } from "../controllers/dashboardController.js";
 
 const router = express.Router();

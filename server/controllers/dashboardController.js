@@ -50,7 +50,7 @@ export const getDashboardStats = async (
     starred: true,
   });
 
-   
+   const totalUsers = await User.countDocuments();
 
    res.status(200).json({
   success: true,
@@ -173,42 +173,6 @@ async(req,res)=>{
    processing,
    latestSummary,
    documentsProcessedToday,
-  });
-
- }catch(error){
-
-  res.status(500).json({
-   success:false,
-   message:error.message
-  });
-
- }
-
-};
-export const getFeaturesStats =
-async(req,res)=>{
-
- try{
-
-  const totalDocuments =
-   await Document.countDocuments();
-
-  const totalSummaries =
-   await Document.countDocuments({
-    summary:{
-     $exists:true,
-     $ne:""
-    }
-   });
-
-  const totalUsers =
-   await UserModel.countDocuments();
-
-  res.status(200).json({
-   success:true,
-   totalDocuments,
-   totalSummaries,
-   totalUsers
   });
 
  }catch(error){
