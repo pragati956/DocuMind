@@ -185,3 +185,39 @@ async(req,res)=>{
  }
 
 };
+export const getFeaturesStats =
+async(req,res)=>{
+
+ try{
+
+  const totalDocuments =
+   await Document.countDocuments();
+
+  const totalSummaries =
+   await Document.countDocuments({
+    summary:{
+     $exists:true,
+     $ne:""
+    }
+   });
+
+  const totalUsers =
+   await UserModel.countDocuments();
+
+  res.status(200).json({
+   success:true,
+   totalDocuments,
+   totalSummaries,
+   totalUsers
+  });
+
+ }catch(error){
+
+  res.status(500).json({
+   success:false,
+   message:error.message
+  });
+
+ }
+
+};

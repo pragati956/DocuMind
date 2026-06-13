@@ -3,7 +3,7 @@ import authMiddleware from "../middleware/authMiddleware.js";
 
 import {
   getDashboardStats,
-  getActivities, getPublicStats,getHeroPreview,
+  getActivities, getPublicStats,getHeroPreview,getFeaturesStats,
 } from "../controllers/dashboardController.js";
 
 const router = express.Router();
@@ -19,6 +19,10 @@ router.get(
   "/stats",
   authMiddleware,
   getDashboardStats
+);
+router.get(
+ "/features-stats",
+ getFeaturesStats
 );
 router.get(
   "/activities",
