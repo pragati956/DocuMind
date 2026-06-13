@@ -27,3 +27,15 @@ export const addDocumentToCollection = async (collectionId, documentId) => {
   const response = await API.post(`/collections/${collectionId}/documents`, { documentId });
   return response.data;
 };
+
+// GET SINGLE COLLECTION
+export const getCollectionById = async (id) => {
+  const response = await API.get(`/collections/${id}`);
+  return response.data;
+};
+
+// SUMMARIZE COLLECTION
+export const summarizeCollection = async (id) => {
+  const response = await API.post(`/collections/${id}/summarize`);
+  return response.data;
+};
