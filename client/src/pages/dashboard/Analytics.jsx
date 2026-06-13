@@ -223,7 +223,7 @@ export default function AnalyticsPage() {
           { label: "Document Summarization", value: aiSummaries, color: "#8b5cf6" },
           // --- CHANGED: Use actual search query count instead of calculated dummy math ---
           { label: "Smart Search Queries",   value: recentSearches.length, color: "#3b82f6" },
-          { label: "OCR Text Extraction",    value: pdf, color: "#10b981" },
+          { label: "Document Text Extraction",    value: pdf, color: "#10b981" },
           { label: "Workflow Automation",    value: Math.max(0, aiSummaries - 1), color: "#f59e0b" },
           { label: "File Classification",    value: totalDocs, color: "#06b6d4" },
         ];
@@ -287,6 +287,9 @@ export default function AnalyticsPage() {
       { key: "searches", color: "#06b6d4", label: "Searches" },
     ],
   };
+
+  // Calculate dynamic maximum to prevent hardcoded scaling caps
+  const maxAiValue = Math.max(...(analyticsData.aiUsageStats || []).map(item => item.value), 1);
 
   return (
     <div className="min-h-screen bg-[#0B0F19]" style={{ fontFamily: "'Poppins', sans-serif" }}>
@@ -425,7 +428,8 @@ export default function AnalyticsPage() {
                     <div className="h-1.5 rounded-full bg-white/[0.05] overflow-hidden">
                       <motion.div
                         initial={{ width: 0 }}
-                        animate={{ width: `${(item.value / 68) * 100}%` }}
+                        // CHANGE THIS LINE: Swap 68 for maxAiValue
+                        animate={{ width: `${(item.value / maxAiValue) * 100}%` }}
                         transition={{ duration: 1, delay: 0.6 + i * 0.07, ease: "easeOut" }}
                         className="h-full rounded-full"
                         style={{ background: item.color }}
