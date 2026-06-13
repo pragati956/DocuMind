@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react";
 import { motion, useInView } from "framer-motion";
+import { useEffect } from "react";
 import {
   FiFileText,
   FiSearch,
@@ -12,92 +13,7 @@ import {
 } from "react-icons/fi";
 
 /* ─── Feature Data (same 6, enriched) ─── */
-const features = [
-  {
-    title: "AI Document Summary",
-    description:
-      "Generate intelligent summaries instantly using advanced AI workflows.",
-    icon: <FiCpu />,
-    glow: "rgba(34,211,238,0.22)",
-    accent: "from-cyan-500 to-blue-500",
-    border: "hover:border-cyan-500/40",
-    shadow: "hover:shadow-[0_0_50px_rgba(34,211,238,0.18)]",
-    badgeColor: "text-cyan-300",
-    stat: "10x",
-    statLabel: "faster reading",
-    visual: <SummaryVisual />,
-  },
-  {
-    title: "OCR Text Extraction",
-    description:
-      "Extract text accurately from scanned documents and images.",
-    icon: <FiFileText />,
-    glow: "rgba(168,85,247,0.2)",
-    accent: "from-purple-500 to-pink-500",
-    border: "hover:border-purple-500/40",
-    shadow: "hover:shadow-[0_0_50px_rgba(168,85,247,0.18)]",
-    badgeColor: "text-purple-300",
-    stat: "99.7%",
-    statLabel: "accuracy",
-    visual: <OcrVisual />,
-  },
-  {
-    title: "Smart Search",
-    description:
-      "Find documents semantically using AI-powered contextual search.",
-    icon: <FiSearch />,
-    glow: "rgba(59,130,246,0.2)",
-    accent: "from-blue-500 to-indigo-500",
-    border: "hover:border-blue-500/40",
-    shadow: "hover:shadow-[0_0_50px_rgba(59,130,246,0.18)]",
-    badgeColor: "text-blue-300",
-    stat: "<50ms",
-    statLabel: "query time",
-    visual: <SearchVisual />,
-  },
-  {
-    title: "Secure File Sharing",
-    description:
-      "Share files securely with encrypted access and permissions.",
-    icon: <FiShield />,
-    glow: "rgba(16,185,129,0.2)",
-    accent: "from-emerald-500 to-teal-500",
-    border: "hover:border-emerald-500/40",
-    shadow: "hover:shadow-[0_0_50px_rgba(16,185,129,0.18)]",
-    badgeColor: "text-emerald-300",
-    stat: "E2E",
-    statLabel: "encrypted",
-    visual: <ShareVisual />,
-  },
-  {
-    title: "Cloud Storage",
-    description:
-      "Store and manage all your documents securely in the cloud.",
-    icon: <FiCloud />,
-    glow: "rgba(251,191,36,0.18)",
-    accent: "from-amber-400 to-orange-500",
-    border: "hover:border-amber-500/40",
-    shadow: "hover:shadow-[0_0_50px_rgba(251,191,36,0.15)]",
-    badgeColor: "text-amber-300",
-    stat: "∞",
-    statLabel: "storage",
-    visual: <CloudVisual />,
-  },
-  {
-    title: "Workflow Automation",
-    description:
-      "Automate repetitive document workflows with AI intelligence.",
-    icon: <FiLayers />,
-    glow: "rgba(239,68,68,0.18)",
-    accent: "from-rose-500 to-red-500",
-    border: "hover:border-rose-500/40",
-    shadow: "hover:shadow-[0_0_50px_rgba(239,68,68,0.15)]",
-    badgeColor: "text-rose-300",
-    stat: "100+",
-    statLabel: "integrations",
-    visual: <WorkflowVisual />,
-  },
-];
+
 
 /* ─── Mini Visuals ─── */
 function SummaryVisual() {
@@ -126,44 +42,7 @@ function SummaryVisual() {
   );
 }
 
-function OcrVisual() {
-  return (
-    <div className="mt-6 grid grid-cols-3 gap-1.5">
-      {Array.from({ length: 9 }).map((_, i) => (
-        <motion.div
-          key={i}
-          initial={{ opacity: 0, scale: 0.6 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2 + i * 0.06, type: "spring" }}
-          viewport={{ once: true }}
-          className="h-2 rounded-full"
-          style={{
-            background:
-              i % 4 === 0
-                ? "rgba(168,85,247,0.55)"
-                : i % 3 === 0
-                ? "rgba(168,85,247,0.25)"
-                : "rgba(255,255,255,0.07)",
-          }}
-        />
-      ))}
-      <motion.div
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        transition={{ delay: 0.8 }}
-        viewport={{ once: true }}
-        className="col-span-3 mt-2 flex items-center gap-2 text-[11px] text-purple-300"
-      >
-        <motion.span
-          animate={{ opacity: [1, 0.3, 1] }}
-          transition={{ duration: 1.4, repeat: Infinity }}
-          className="w-1.5 h-1.5 rounded-full bg-purple-400 inline-block"
-        />
-        Scanning page 2 of 5…
-      </motion.div>
-    </div>
-  );
-}
+
 
 function SearchVisual() {
   return (
@@ -305,14 +184,16 @@ function FeatureCard({ feature, index }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 40 }}
-      whileInView={{ opacity: 1, y: 0 }}
+  role="article"
+  aria-label={feature.title}
+  initial={{ opacity: 0, y: 40 }}
+  whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7, delay: index * 0.1, ease: "easeOut" }}
       viewport={{ once: true }}
       whileHover={{ y: -10 }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className={`group relative rounded-3xl border border-white/10 bg-white/5 backdrop-blur-2xl p-8 overflow-hidden transition-all duration-500 cursor-pointer ${feature.border} ${feature.shadow}`}
+      className={`group relative rounded-3xl border border-white/10 bg-white/5 backdrop-blur-2xl p-6 md:p-8 overflow-hidden transition-all duration-500 cursor-pointer ${feature.border} ${feature.shadow}`}
       style={{
         boxShadow: hovered ? `0 0 55px ${feature.glow}` : undefined,
       }}
@@ -352,7 +233,7 @@ function FeatureCard({ feature, index }) {
       </div>
       {/* Content */}
       <div className="relative z-10 mt-8">
-        <h3 className="text-2xl font-semibold text-white">{feature.title}</h3>
+        <h3 className="text-xl md:text-2xl font-semibold text-white">{feature.title}</h3>
         <p className="mt-4 text-gray-400 leading-relaxed">{feature.description}</p>
       </div>
 
@@ -388,13 +269,144 @@ function FeatureCard({ feature, index }) {
 export default function FeaturesSection() {
   const headerRef = useRef(null);
   const headerInView = useInView(headerRef, { once: true, margin: "-60px" });
+  const [loading,setLoading] =
+ useState(true);
+  const [stats,setStats] =
+ useState({
+  totalDocuments:0,
+  totalSummaries:0,
+  totalUsers:0
+ });
+ const features = [
+  {
+    title: "AI Document Summary",
+    description:
+      "Generate intelligent summaries instantly using advanced AI workflows.",
+    icon: <FiCpu />,
+    glow: "rgba(34,211,238,0.22)",
+    accent: "from-cyan-500 to-blue-500",
+    border: "hover:border-cyan-500/40",
+    shadow: "hover:shadow-[0_0_50px_rgba(34,211,238,0.18)]",
+    badgeColor: "text-cyan-300",
+   stat: stats.totalSummaries,
+    statLabel: "faster reading",
+    visual: <SummaryVisual />,
+  },
 
+  {
+    title: "Smart Search",
+    description:
+      "Find documents semantically using AI-powered contextual search.",
+    icon: <FiSearch />,
+    glow: "rgba(59,130,246,0.2)",
+    accent: "from-blue-500 to-indigo-500",
+    border: "hover:border-blue-500/40",
+    shadow: "hover:shadow-[0_0_50px_rgba(59,130,246,0.18)]",
+    badgeColor: "text-blue-300",
+    stat: "<50ms",
+    statLabel: "query time",
+    visual: <SearchVisual />,
+  },
+  {
+    title: "Secure File Sharing",
+    description:
+      "Share files securely with encrypted access and permissions.",
+    icon: <FiShield />,
+    glow: "rgba(16,185,129,0.2)",
+    accent: "from-emerald-500 to-teal-500",
+    border: "hover:border-emerald-500/40",
+    shadow: "hover:shadow-[0_0_50px_rgba(16,185,129,0.18)]",
+    badgeColor: "text-emerald-300",
+    stat: "E2E",
+    statLabel: "encrypted",
+    visual: <ShareVisual />,
+  },
+  {
+    title: "Cloud Storage",
+    description:
+      "Store and manage all your documents securely in the cloud.",
+    icon: <FiCloud />,
+    glow: "rgba(251,191,36,0.18)",
+    accent: "from-amber-400 to-orange-500",
+    border: "hover:border-amber-500/40",
+    shadow: "hover:shadow-[0_0_50px_rgba(251,191,36,0.15)]",
+    badgeColor: "text-amber-300",
+   stat: stats.totalDocuments,
+    statLabel: "storage",
+    visual: <CloudVisual />,
+  },
+  {
+    title: "Workflow Automation",
+    description:
+      "Automate repetitive document workflows with AI intelligence.",
+    icon: <FiLayers />,
+    glow: "rgba(239,68,68,0.18)",
+    accent: "from-rose-500 to-red-500",
+    border: "hover:border-rose-500/40",
+    shadow: "hover:shadow-[0_0_50px_rgba(239,68,68,0.15)]",
+    badgeColor: "text-rose-300",
+    stat: stats.totalUsers,
+    statLabel: "integrations",
+    visual: <WorkflowVisual />,
+  },
+];
+ useEffect(()=>{
+
+ const loadStats =
+ async()=>{
+
+  try{
+
+   const res =
+    await fetch(
+`${import.meta.env.VITE_API_URL}/dashboard/features-stats`
+    );
+
+  if(!res.ok){
+
+ throw new Error(
+  "Failed to fetch stats"
+ );
+
+}
+
+const data =
+ await res.json();
+
+   if(data.success){
+
+    setStats(data);
+
+   }
+
+  }catch(error){
+
+   console.error(error);
+
+  }
+
+ };
+
+ loadStats();
+
+ const interval =
+  setInterval(
+   loadStats,
+   30000
+  );
+
+ return ()=>{
+
+  clearInterval(interval);
+
+ };
+
+},[]);
   return (
     <section
-      className="relative overflow-hidden bg-[#0B0F19] py-28"
+className="relative overflow-hidden bg-[#0B0F19] py-20 md:py-28"
       style={{ fontFamily: "'Poppins', sans-serif" }}
     >
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');`}</style>
 
       {/* Ambient Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -423,8 +435,7 @@ export default function FeaturesSection() {
         />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6">
-
+<div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6">
         {/* Section Header */}
         <div ref={headerRef} className="max-w-3xl mx-auto text-center">
           <motion.div
@@ -465,8 +476,8 @@ export default function FeaturesSection() {
         </div>
 
         {/* Features Grid */}
-        <div className="mt-20 grid md:grid-cols-2 xl:grid-cols-3 gap-8">
-          {features.map((feature, index) => (
+<div className="mt-16 md:mt-20 grid md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
+            {features.map((feature, index) => (
             <FeatureCard key={index} feature={feature} index={index} />
           ))}
         </div>
