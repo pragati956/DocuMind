@@ -109,8 +109,104 @@ export default function HeroSection() {
   })
  )
 );
+const [stats,setStats] =
+ useState({
+  totalDocuments:0,
+  totalUsers:0,
+  totalSummaries:0,
+ });
+ const [loading,setLoading] =
+ useState(true);
+ const [error,setError] =
+ useState("");
+const [preview,setPreview] =
+ useState({
+  totalDocuments:0,
+  totalSummaries:0,
+  totalUsers:0,
+  processing:0,
+  latestSummary:"",
+  documentsProcessedToday:0,
+ });
+useEffect(()=>{
+
+ const controller =
+  new AbortController();
+
+ const fetchStats =
+ async()=>{
+
+  try{
+
+   const response =
+    await fetch(
+`${import.meta.env.VITE_API_URL}/dashboard/public-stats`,
+{
+ signal:controller.signal
+}
+);
+
+const data =
+ await response.json();
+
+if(data.success){
+
+ setStats(data);
+
+}
+ const previewResponse =
+ await fetch(
+`${import.meta.env.VITE_API_URL}/dashboard/hero-preview`,
+{
+ signal:controller.signal
+}
+);
+
+const previewData =
+ await previewResponse.json();
+
+if(previewData.success){
+
+ setPreview(previewData);
+
+}
+
+}catch(error){
+
+ if(
+  error.name !==
+  "AbortError"
+ ){
+
+  console.error(error);
+
+  setError(
+   "Failed to load statistics"
+  );
+
+ }
+
+
+
+}finally{
+
+ setLoading(false);
+
+}
+
+ };
+
+ fetchStats();
+ return ()=>{
+
+ controller.abort();
+
+};
+
+},[]);
 
   return (
+    
    <section
  id="home"
  className="relative overflow-hidden bg-[#0B0F19] pt-40 pb-28"
@@ -218,7 +314,8 @@ export default function HeroSection() {
  }}
 >
  <Link
-  to="/register"
+ to="/register"
+ aria-label="Create Account"
   className="
   group
   flex
@@ -242,11 +339,18 @@ export default function HeroSection() {
 
             <motion.button
  onClick={()=>{
-  document
-   .getElementById("features")
-   ?.scrollIntoView({
-    behavior:"smooth"
-   });
+  const section =
+ document.getElementById(
+  "features"
+ );
+
+if(section){
+
+ section.scrollIntoView({
+  behavior:"smooth"
+ });
+
+}
  }}
  aria-label="Watch Demo"
  initial={{ opacity:0,x:20 }}
@@ -273,12 +377,48 @@ export default function HeroSection() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.9 }}
-              className="mt-12 grid grid-cols-3 gap-3"
+              className="mt-12 grid grid-cols-1
+sm:grid-cols-3 gap-3"
             >
-              <StatCard value="50K+" label="Documents Processed" delay={1.0} />
-              <StatCard value="99.9%" label="Accuracy Rate" delay={1.1} />
-              <StatCard value="2.5x" label="Faster Workflows" delay={1.2} />
-            </motion.div>
+<StatCard
+ value={
+  loading
+   ? "..."
+   : stats.totalDocuments
+ }
+ label="Documents Processed"
+/>           
+<StatCard
+ value={
+  loading
+   ? "..."
+   : stats.totalUsers
+ }
+ label="Total Users"
+ delay={1.1}
+/>             
+<StatCard
+ value={
+  loading
+   ? "..."
+   : stats.totalSummaries
+ }
+ label="AI Summaries"
+ delay={1.2}
+/>            </motion.div>
+{
+ error && (
+  <p
+   className="
+   mt-4
+   text-red-400
+   text-sm
+  "
+  >
+   {error}
+  </p>
+ )
+}
           </div>
 
           {/* RIGHT VISUAL */}
@@ -338,11 +478,27 @@ export default function HeroSection() {
               {/* Grid */}
               <div className="grid grid-cols-2 gap-4">
                 {[
-                  { icon: <FiFileText />, label: "Reports", count: "142" },
-                  { icon: <FiZap />, label: "Summaries", count: "89" },
-                  { icon: <FiSearch />, label: "Searches", count: "2.4k" },
-                  { icon: <FiShield />, label: "Secured", count: "100%" },
-                ].map(({ icon, label, count }, i) => (
+ {
+  icon:<FiFileText />,
+  label:"Reports",
+  count:preview.totalDocuments
+ },
+ {
+  icon:<FiZap />,
+  label:"Summaries",
+  count:preview.totalSummaries
+ },
+ {
+  icon:<FiSearch />,
+  label:"Users",
+  count:preview.totalUsers
+ },
+ {
+  icon:<FiShield />,
+  label:"Secured",
+  count:"100%"
+ }
+].map(({ icon, label, count }, i) => (
                   <motion.div
                     key={i}
                     initial={{ opacity: 0, y: 20 }}
@@ -362,12 +518,17 @@ export default function HeroSection() {
               <div className="mt-5 p-3 rounded-xl bg-[#111827] border border-white/5">
                 <div className="flex justify-between text-xs text-gray-400 mb-2">
                   <span>Processing Queue</span>
-                  <span>78%</span>
+                 <span>
+ {preview.processing}%
+</span>
                 </div>
                 <div className="h-2 rounded-full bg-white/10 overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
-                    animate={{ width: "78%" }}
+                    animate={{
+ width:
+ `${preview.processing}%`
+}}
                     transition={{ duration: 2, delay: 2, ease: "easeOut" }}
                     className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-indigo-500"
                   />
@@ -394,13 +555,25 @@ export default function HeroSection() {
                   className="mt-5 p-4 rounded-2xl bg-cyan-500/10 border"
                 >
                   <p className="text-cyan-300 text-sm font-medium">✨ AI Summary Generated</p>
-                  <motion.p animate={{ opacity: [0, 1] }} transition={{ duration: 0.5, delay: 2.5 }} className="text-gray-400 text-xs mt-1">
-                    3 key insights found
+                  <motion.p animate={{ opacity: [0, 1] }} transition={{ duration: 0.5, delay: 2.5 }} 
+ className="
+ text-gray-400
+ text-xs
+ mt-1
+ truncate
+ "
+>
+{
+ preview.latestSummary ||
+ "No summaries yet"
+}
                   </motion.p>
                 </motion.div>
                 <motion.div animate={{ opacity: [0, 1, 0] }} transition={{ duration: 3, repeat: Infinity, delay: 1 }} className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-green-400" />
-                  <span className="text-green-400 text-xs">Processing complete</span>
+                  <span className="text-green-400 text-xs">{preview.documentsProcessedToday || 0}
+{" "}docs processed today
+ </span>
                 </motion.div>
               </div>
             </motion.div>
