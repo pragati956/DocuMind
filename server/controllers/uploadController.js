@@ -1,8 +1,7 @@
 import Activity from "../models/Activity.js";
 import Document from "../models/Document.js";
 import cloudinary from "../config/cloudinary.js"; 
-import SearchHistory
-from "../models/SearchHistory.js";
+import SearchHistory from "../models/SearchHistory.js";
 
 // ─── UPLOAD DOCUMENT ───
 export const uploadDocument = async (req, res) => {
@@ -14,8 +13,6 @@ export const uploadDocument = async (req, res) => {
       console.log("❌ ERROR: req.file is undefined. Multer or Cloudinary rejected the stream.");
       return res.status(400).json({ message: "No file uploaded" });
     }
-    
-
 
     const fileUrl = req.file.path || req.file.secure_url;
     const publicId = req.file.filename || req.file.public_id;
@@ -30,14 +27,14 @@ export const uploadDocument = async (req, res) => {
       publicId: publicId,
       fileType: req.file.mimetype || "application/octet-stream",
       fileSize: req.file.size || 0,
-      uploadedBy: req.user.id,
+      uploadedBy: req.user.id, 
     });
 
-    await Activity.create({
-      userId: req.user.id,
-      documentId: newDocument._id,
-      action: "uploaded",
-      documentName: newDocument.title,
+   await Activity.create({
+     userId:req.user.id,
+     documentId:newDocument._id,
+     action:"uploaded",
+     documentName:newDocument.title,
     });
 
     console.log("✅ SUCCESS! Saved to MongoDB:", newDocument._id);
@@ -52,7 +49,7 @@ export const uploadDocument = async (req, res) => {
   }
 };
 
-// ─── GET ALL DOCUMENTS (WITH PAGINATION) ───
+// ─── STEP 6: GET ALL DOCUMENTS (WITH PAGINATION) ───
 export const getDocuments = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -60,14 +57,19 @@ export const getDocuments = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const totalDocuments = await Document.countDocuments({ uploadedBy: req.user.id });
-
-    const documents = await Document.find({
-      uploadedBy: req.user.id
-    })
-      .populate("uploadedBy", "name email")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+    
+   const documents = await Document.find({
+      uploadedBy:req.user.id
+   })
+   .populate(
+     "uploadedBy",
+     "name email"
+   )
+   .sort({
+     createdAt:-1
+   })
+   .skip(skip)
+   .limit(limit);
 
     res.status(200).json({
       success: true,
@@ -81,108 +83,99 @@ export const getDocuments = async (req, res) => {
   }
 };
 
-// ─── SEARCH DOCUMENTS API ───
+// ─── STEP 5: SEARCH DOCUMENTS API ───
 export const searchDocuments = async (req, res) => {
   try {
     const { q } = req.query;
-
+    
     if (!q) {
       return res.status(400).json({ success: false, message: "Search query 'q' is required" });
     }
 
-    // $regex provides a basic keyword search. $options: "i" makes it case-insensitive.
-  const documents =
-await Document.find({
-
- uploadedBy:req.user.id,
-
- $or:[
-
-  {
-   title:{
-    $regex:q,
-    $options:"i"
-   }
-  },
-
-  {
-   summary:{
-    $regex:q,
-    $options:"i"
-   }
-  },
-
-  {
-   tags:{
-    $regex:q,
-    $options:"i"
-   }
-  }
-
- ]
-
-})
- .populate(
-   "uploadedBy",
-   "name email"
- )
- .sort({
-   createdAt:-1
- });
-const scoredDocuments =
-documents.map(doc=>{
-
- let score = 0;
-
- if(
-  doc.title?.toLowerCase()
-   .includes(q.toLowerCase())
- ){
-  score += 50;
- }
-
- if(
-  doc.summary?.toLowerCase()
-   .includes(q.toLowerCase())
- ){
-  score += 30;
- }
-
- if(
-  doc.tags?.some(tag =>
-   tag.toLowerCase()
-    .includes(q.toLowerCase())
+  const documents = await Document.find({
+    uploadedBy:req.user.id,
+    $or:[
+      {
+       title:{
+        $regex:q,
+        $options:"i"
+       }
+      },
+      {
+       summary:{
+        $regex:q,
+        $options:"i"
+       }
+      },
+      {
+       tags:{
+        $regex:q,
+        $options:"i"
+       }
+      }
+    ]
+  })
+  .populate(
+     "uploadedBy",
+     "name email"
   )
- ){
-  score += 20;
- }
+  .sort({
+     createdAt:-1
+  });
 
- return {
-  ...doc.toObject(),
-  relevance: score
- };
+  const scoredDocuments = documents.map(doc=>{
+   let score = 0;
 
-})
-scoredDocuments.sort(
- (a,b)=>
-  b.relevance-a.relevance
-);
+   if(
+    doc.title?.toLowerCase()
+     .includes(q.toLowerCase())
+   ){
+    score += 50;
+   }
 
+   if(
+    doc.summary?.toLowerCase()
+     .includes(q.toLowerCase())
+   ){
+    score += 30;
+   }
 
-res.status(200).json({
- success:true,
- documents: scoredDocuments
-});  } catch (error) {
+   if(
+    doc.tags?.some(tag =>
+     tag.toLowerCase()
+      .includes(q.toLowerCase())
+    )
+   ){
+    score += 20;
+   }
+
+   return {
+    ...doc.toObject(),
+    relevance: score
+   };
+
+  })
+
+  scoredDocuments.sort(
+   (a,b)=>
+    b.relevance-a.relevance
+  );
+
+  res.status(200).json({
+   success:true,
+   documents: scoredDocuments
+  });  
+  } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// ─── GET SINGLE DOCUMENT ───
+// ─── STEP 2: GET SINGLE DOCUMENT ───
 export const getDocumentById = async (req, res) => {
   try {
-    const document = await Document.findOne({
-      _id: req.params.id,
-      uploadedBy: req.user.id
+    const document = await Document.findOne({ 
+      _id: req.params.id, 
+      uploadedBy: req.user.id 
     });
 
     if (!document) {
@@ -195,29 +188,28 @@ export const getDocumentById = async (req, res) => {
   }
 };
 
-// ─── UPDATE DOCUMENT API ───
+// ─── STEP 3: UPDATE DOCUMENT API ───
 export const updateDocument = async (req, res) => {
   try {
     const { title, tags, summary } = req.body;
 
-    const document = await Document.findOneAndUpdate(
-      { _id: req.params.id, uploadedBy: req.user.id },
-      { $set: { title, tags, summary } },
-      {
-        returnDocument: "after",
-        runValidators: true,
-      }
-    );
+   const document = await Document.findOneAndUpdate(
+    { _id: req.params.id, uploadedBy: req.user.id },
+    { $set: { title, tags, summary } },
+    {
+      returnDocument: "after",
+      runValidators: true,
+    }
+  );
 
     if (!document) {
       return res.status(404).json({ success: false, message: "Document not found or unauthorized" });
     }
-
-    await Activity.create({
-      userId: req.user.id,
-      documentId: document._id,
-      action: "edited",
-      documentName: document.title,
+   await Activity.create({
+     userId:req.user.id,
+     documentId:document._id,
+     action:"edited",
+     documentName:document.title,
     });
 
     res.status(200).json({ success: true, message: "Document updated successfully", document });
@@ -226,12 +218,12 @@ export const updateDocument = async (req, res) => {
   }
 };
 
-// ─── DELETE DOCUMENT ───
+// ─── STEP 1: DELETE DOCUMENT ───
 export const deleteDocument = async (req, res) => {
   try {
-    const document = await Document.findOne({
-      _id: req.params.id,
-      uploadedBy: req.user.id
+    const document = await Document.findOne({ 
+      _id: req.params.id, 
+      uploadedBy: req.user.id 
     });
 
     if (!document) {
@@ -241,14 +233,12 @@ export const deleteDocument = async (req, res) => {
     const resourceType = (document.fileType.includes("word") || document.fileType.includes("text")) ? "raw" : "image";
 
     await cloudinary.uploader.destroy(document.publicId, { resource_type: resourceType });
-    
     await Activity.create({
-      userId: req.user.id,
-      documentId: document._id,
-      action: "deleted",
-      documentName: document.title,
+     userId:req.user.id,
+     documentId:document._id,
+     action:"deleted",
+     documentName:document.title,
     });
-    
     await Document.findByIdAndDelete(document._id);
 
     res.status(200).json({ success: true, message: "Document deleted successfully" });
@@ -257,131 +247,67 @@ export const deleteDocument = async (req, res) => {
   }
 };
 
-// ─── TOGGLE STAR DOCUMENT ───
 export const toggleStarDocument = async (req, res) => {
-  try {
-    const document = await Document.findOne({
-      _id: req.params.id,
-      uploadedBy: req.user.id,
-    });
+ try {
+  const document = await Document.findOne({
+    _id: req.params.id,
+    uploadedBy: req.user.id,
+   });
 
-    if (!document) {
-      return res.status(404).json({
-        success: false,
-        message: "Document not found",
-      });
-    }
-
-    document.starred = !document.starred;
-    await document.save();
-    
-    await Activity.create({
-      userId: req.user.id,
-      documentId: document._id,
-      action: "starred",
-      documentName: document.title,
-    });
-
-    res.status(200).json({
-      success: true,
-      document,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+  if (!document) {
+   return res.status(404).json({
+    success: false,
+    message: "Document not found",
+   });
   }
+
+  document.starred = !document.starred;
+  await document.save();
+
+  await Activity.create({
+   userId:req.user.id,
+   documentId:document._id,
+   action:"starred",
+   documentName:document.title,
+  });
+
+  res.status(200).json({
+   success: true,
+   document,
+  });
+
+ } catch (error) {
+  res.status(500).json({
+   success: false,
+   message: error.message,
+  });
+ }
 };
 
+// Changed: Removed duplicated and cut-off functions to fix syntax errors
 // ─── GET SEARCH STATS ───
 export const getSearchStats = async (req, res) => {
-  try {
-    const totalDocs = await Document.countDocuments({ uploadedBy: req.user.id });
-    const pdfs = await Document.countDocuments({ uploadedBy: req.user.id, fileType: { $regex: "pdf", $options: "i" } });
-    const summaries = await Document.countDocuments({ uploadedBy: req.user.id, summary: { $ne: "" } });
-    const docx = await Document.countDocuments({ uploadedBy: req.user.id, fileType: { $regex: "word", $options: "i" } });
-    const txt = await Document.countDocuments({ uploadedBy: req.user.id, fileType: { $regex: "text", $options: "i" } });
-
-    res.status(200).json({
-      success: true,
-      totalDocs,
-      pdfs,
-      docx,
-      txt,
-      summaries
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// ─── GET CATEGORIES ───
-export const getCategories = async (req, res) => {
-  try {
-    const documents = await Document.find({ uploadedBy: req.user.id });
-    let pdf = 0;
-    let docx = 0;
-    let txt = 0;
-
-    documents.forEach(doc => {
-      if (doc.fileType?.includes("pdf")) {
-        pdf++;
-      } else if (doc.fileType?.includes("word")) {
-        docx++;
-      } else {
-        txt++;
-      }
-    });
-
-    res.json({
-      success: true,
-      categories: [
-        { label: "PDF", count: pdf },
-        { label: "DOCX", count: docx },
-        { label: "TXT", count: txt }
-      ]
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// ─── GET DOCUMENTS BY TYPE ───
-export const getDocumentsByType = async (req, res) => {
-  try {
-    const { type } = req.params;
-    let regex = "";
-
-};
-export const getSearchStats =
-async (req, res) => {
-
  try {
-
-  const totalDocs =
-   await Document.countDocuments({
+  const totalDocs = await Document.countDocuments({
     uploadedBy: req.user.id
    });
 
-  const pdfs =
-   await Document.countDocuments({
+  const pdfs = await Document.countDocuments({
     uploadedBy: req.user.id,
     fileType: {
      $regex: "pdf",
      $options: "i"
     }
    });
-   const summaries =
- await Document.countDocuments({
-  uploadedBy:req.user.id,
-  summary:{
-   $ne:""
-  }
- });
 
-  const docx =
-   await Document.countDocuments({
+   const summaries = await Document.countDocuments({
+    uploadedBy:req.user.id,
+    summary:{
+     $ne:""
+    }
+   });
+
+  const docx = await Document.countDocuments({
     uploadedBy: req.user.id,
     fileType: {
      $regex: "word",
@@ -389,8 +315,7 @@ async (req, res) => {
     }
    });
 
-  const txt =
-   await Document.countDocuments({
+  const txt = await Document.countDocuments({
     uploadedBy: req.user.id,
     fileType: {
      $regex: "text",
@@ -406,24 +331,18 @@ async (req, res) => {
    txt,
    summaries
   });
-
  } catch (error) {
-
   res.status(500).json({
    success: false,
    message: error.message,
   });
-
  }
-
 };
-export const getCategories =
-async (req,res)=>{
 
+// ─── GET CATEGORIES ───
+export const getCategories = async (req,res)=>{
  try{
-
-  const documents =
-   await Document.find({
+  const documents = await Document.find({
     uploadedBy:req.user.id
    });
 
@@ -432,27 +351,19 @@ async (req,res)=>{
   let txt = 0;
 
   documents.forEach(doc=>{
-
    if(
-    doc.fileType?.includes(
-      "pdf"
-    )
+    doc.fileType?.includes("pdf")
    ){
     pdf++;
    }
-
    else if(
-    doc.fileType?.includes(
-      "word"
-    )
+    doc.fileType?.includes("word")
    ){
     docx++;
    }
-
    else{
     txt++;
    }
-
   });
 
   res.json({
@@ -472,82 +383,64 @@ async (req,res)=>{
     }
    ]
   });
-
  }
  catch(error){
-
   res.status(500).json({
    success:false,
    message:error.message
   });
-
  }
-
 };
-export const getDocumentsByType =
-async (req,res)=>{
 
+// ─── GET DOCUMENTS BY TYPE ───
+export const getDocumentsByType = async (req,res)=>{
  try{
-
-  const { type } =
-   req.params;
-
+  const { type } = req.params;
   let regex = "";
 
-if (type === "PDF") {
- regex = "pdf";
-}
+  if (type === "PDF") {
+   regex = "pdf";
+  }
+  else if (type === "DOCX") {
+   regex = "word";
+  }
+  else if (type === "TXT") {
+   regex = "text";
+  }
+  else if (type === "IMAGE") {
+   regex = "image";
+  }
 
-else if (type === "DOCX") {
- regex = "word";
-}
-
-else if (type === "TXT") {
- regex = "text";
-}
-
-else if (type === "IMAGE") {
- regex = "image";
-}
-
-const documents =
- await Document.find({
-  uploadedBy: req.user.id,
-  fileType: {
-   $regex: regex,
-   $options: "i",
-  },
- });
+  const documents = await Document.find({
+    uploadedBy: req.user.id,
+    fileType: {
+     $regex: regex,
+     $options: "i",
+    },
+   });
 
   res.json({
    success:true,
    documents
   });
-
  }
  catch(error){
-
   res.status(500).json({
    success:false,
    message:error.message
   });
-
  }
-
 };
-export const getSuggestions =
-async (req,res)=>{
 
+// ─── GET SUGGESTIONS ───
+export const getSuggestions = async (req,res)=>{
  try{
-
-  const documents =
-   await Document.find({
+  const documents = await Document.find({
     uploadedBy:req.user.id
    })
    .limit(10);
 
-  const suggestions =
-   documents.map(
+  const suggestions = documents.map(
     doc => doc.title
    );
 
@@ -555,158 +448,101 @@ async (req,res)=>{
    success:true,
    suggestions
   });
-
  }
  catch(error){
-
   res.status(500).json({
    success:false,
    message:error.message
   });
-
  }
-
 };
-export const saveSearchHistory =
-async (req,res)=>{
 
+// ─── SAVE SEARCH HISTORY ───
+export const saveSearchHistory = async (req,res)=>{
  try{
-
   const {
    query,
    resultsCount
   } = req.body;
 
-  const history =
-   await SearchHistory.create({
-
+  const history = await SearchHistory.create({
     userId:req.user.id,
-
     query,
-
     resultsCount
-
    });
 
   res.status(201).json({
-
    success:true,
    history
-
   });
-
  }
  catch(error){
-
   res.status(500).json({
-
    success:false,
    message:error.message
-
   });
-
  }
-
 };
-export const getSearchHistory =
-async (req,res)=>{
 
+// ─── GET SEARCH HISTORY ───
+export const getSearchHistory = async (req,res)=>{
  try{
-
-  const history =
-
-   await SearchHistory.find({
-
+  const history = await SearchHistory.find({
     userId:req.user.id
-
    })
-
    .sort({
     createdAt:-1
    })
-
    .limit(10);
 
   res.json({
-
    success:true,
    history
-
   });
-
  }
  catch(error){
-
   res.status(500).json({
-
    success:false,
    message:error.message
-
   });
-
  }
-
 };
-export const clearSearchHistory =
-async (req,res)=>{
 
+// ─── CLEAR SEARCH HISTORY ───
+export const clearSearchHistory = async (req,res)=>{
  try{
-
   await SearchHistory.deleteMany({
-
    userId:req.user.id
-
   });
 
   res.json({
-
    success:true
-
   });
-
  }
  catch(error){
-
   res.status(500).json({
-
    success:false,
    message:error.message
-
   });
-
  }
-
 };
-export const deleteSearchHistory =
-async (req,res)=>{
 
+// ─── DELETE SEARCH HISTORY ITEM ───
+export const deleteSearchHistory = async (req,res)=>{
  try{
-
   await SearchHistory.findOneAndDelete({
-
    _id:req.params.id,
-
    userId:req.user.id
-
   });
 
   res.json({
-
    success:true
-
   });
-
  }
  catch(error){
-
   res.status(500).json({
-
    success:false,
-
    message:error.message
-
   });
-
  }
-
 };
