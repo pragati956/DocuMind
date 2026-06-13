@@ -15,6 +15,13 @@ starred: {
   type: Boolean,
   default: false,
 },
+views:{
+ type:Number,
+ default:0
+},
+lastOpened:{
+ type:Date
+},
     publicId: {
       type: String,
       required: true,
@@ -45,6 +52,20 @@ starred: {
   },
   { timestamps: true }
 );
+documentSchema.index({
+ uploadedBy:1
+});
+documentSchema.index({
+ createdAt:-1
+});
+
+documentSchema.index({
+ summary:1
+});
+
+documentSchema.index({
+ title:"text"
+});
 
 const Document = mongoose.model("Document", documentSchema);
 
