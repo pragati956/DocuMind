@@ -268,9 +268,9 @@ function FeatureCard({ feature, index }) {
 /* ─── Main Export ─── */
 export default function FeaturesSection() {
   const headerRef = useRef(null);
-  const headerInView = useInView(headerRef, { once: true, margin: "-60px" });
-  const [loading,setLoading] =
- useState(true);
+  const headerInView = useInView(headerRef, { once: true, margin: "-60px" })
+ const [error,setError] =
+ useState("");
   const [stats,setStats] =
  useState({
   totalDocuments:0,
@@ -289,7 +289,7 @@ export default function FeaturesSection() {
     shadow: "hover:shadow-[0_0_50px_rgba(34,211,238,0.18)]",
     badgeColor: "text-cyan-300",
    stat: stats.totalSummaries,
-    statLabel: "faster reading",
+    statLabel:"AI summaries",
     visual: <SummaryVisual />,
   },
 
@@ -332,7 +332,7 @@ export default function FeaturesSection() {
     shadow: "hover:shadow-[0_0_50px_rgba(251,191,36,0.15)]",
     badgeColor: "text-amber-300",
    stat: stats.totalDocuments,
-    statLabel: "storage",
+    statLabel:"documents",
     visual: <CloudVisual />,
   },
   {
@@ -346,21 +346,29 @@ export default function FeaturesSection() {
     shadow: "hover:shadow-[0_0_50px_rgba(239,68,68,0.15)]",
     badgeColor: "text-rose-300",
     stat: stats.totalUsers,
-    statLabel: "integrations",
+   statLabel:"users",
     visual: <WorkflowVisual />,
   },
 ];
  useEffect(()=>{
+  const controller =
+ new AbortController();
 
  const loadStats =
  async()=>{
 
   try{
+    
+     setError("");
 
    const res =
     await fetch(
-`${import.meta.env.VITE_API_URL}/dashboard/features-stats`
-    );
+`${import.meta.env.VITE_API_URL}/dashboard/features-stats`,
+{
+ signal:
+  controller.signal
+}
+);
 
   if(!res.ok){
 
@@ -375,15 +383,29 @@ const data =
 
    if(data.success){
 
-    setStats(data);
+ setStats(data);
 
-   }
+ setError("");
+
+ 
+
+}
 
   }catch(error){
 
-   console.error(error);
+ if(error.name === "AbortError"){
+  return;
+ }
 
-  }
+
+
+ setError(
+  "Unable to load statistics"
+ );
+
+ console.error(error);
+
+}
 
  };
 
@@ -397,9 +419,11 @@ const data =
 
  return ()=>{
 
-  clearInterval(interval);
+ clearInterval(interval);
 
- };
+ controller.abort();
+
+};
 
 },[]);
   return (
@@ -450,13 +474,16 @@ className="relative overflow-hidden bg-[#0B0F19] py-20 md:py-28"
               className="w-2 h-2 rounded-full bg-cyan-400"
             />
             <span className="text-cyan-300 text-sm font-medium">Powerful AI Features</span>
+            
           </motion.div>
 
           <motion.h2
             initial={{ opacity: 0, y: 40 }}
             animate={headerInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.8, delay: 0.1 }}
-            className="text-4xl md:text-6xl font-bold tracking-tight leading-tight text-white"
+            className="text-3xl
+sm:text-4xl
+md:text-6xl font-bold tracking-tight leading-tight text-white"
           >
             Everything You Need For
             <span className="block mt-2 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-500">
@@ -468,15 +495,32 @@ className="relative overflow-hidden bg-[#0B0F19] py-20 md:py-28"
             initial={{ opacity: 0 }}
             animate={headerInView ? { opacity: 1 } : {}}
             transition={{ delay: 0.3 }}
-            className="mt-6 text-lg text-gray-400 leading-relaxed"
+            className="mt-6
+text-base
+md:text-lg
+text-gray-400
+leading-relaxed
+max-w-2xl
+mx-auto"
           >
             Powerful AI-driven tools designed to simplify document processing,
             search, collaboration and automation.
           </motion.p>
+          {
+ error &&
+ (
+  <p className="mt-4 text-red-400 text-sm">
+   {error}
+  </p>
+ )
+}
         </div>
 
         {/* Features Grid */}
-<div className="mt-16 md:mt-20 grid md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
+<div className="mt-16 md:mt-20 grid
+grid-cols-1
+md:grid-cols-2
+xl:grid-cols-3 gap-6 md:gap-8">
             {features.map((feature, index) => (
             <FeatureCard key={index} feature={feature} index={index} />
           ))}
