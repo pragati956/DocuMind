@@ -302,13 +302,14 @@ export default function Login() {
               </div>
               <span className="text-gray-400 text-xs font-medium select-none">Remember me</span>
             </label>
-            <motion.a
-              href="#"
-              whileHover={{ color: "#93c5fd" }}
-              className="text-blue-400 text-xs font-medium transition-colors duration-200 hover:underline underline-offset-2"
-            >
-              Forgot password?
-            </motion.a>
+            <Link to="/forgot-password">
+              <motion.span
+                whileHover={{ color: "#93c5fd" }}
+                className="text-blue-400 text-xs font-medium transition-colors duration-200 hover:underline underline-offset-2"
+              >
+                Forgot password?
+              </motion.span>
+            </Link>
           </motion.div>
 
           {/* ── Submit Button ── */}
