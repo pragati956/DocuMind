@@ -200,8 +200,7 @@ function Btn({ children, variant = "ghost", onClick, danger, icon, small }) {
 // ═════════════════════════════════════════════════════════════════════════════
 
 function ProfileSection() {
-  const [role, setRole] =
-  useState("Student");
+  const [role, setRole] = useState("Student");
   const { user } = useContext(AuthContext);
 const [profile, setProfile] =
   useState(null);

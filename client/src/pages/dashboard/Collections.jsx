@@ -13,11 +13,14 @@ import {
 } from "../../services/collectionService";
 import {
   FiFolder, FiPlus, FiMoreHorizontal, FiFileText,
-  FiStar, FiUsers, FiLock, FiGlobe, 
+  FiStar, FiUsers, FiLock, FiGlobe, FiZap,
   FiTrash2, FiShare2, FiGrid, FiList, FiSearch,
    FiCheck, FiX, 
   FiArrowRight, 
 } from "react-icons/fi";
+// Add the new services and markdown support
+import { getCollectionById, summarizeCollection } from "../../services/collectionService";
+import ReactMarkdown from "react-markdown";
 
 /* ─── Privacy Icon ─── */
 function PrivacyIcon({ type }) {
@@ -229,7 +232,7 @@ onClick={async () => {
 }
 
 /* ─── Collection Card (Grid / List) ─── */
-function CollectionCard({ col, index, view, onToggleStar, onDelete }) {
+function CollectionCard({ col, index, view, onToggleStar, onDelete, onView }) {
   const [hovered, setHovered] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -268,6 +271,16 @@ function CollectionCard({ col, index, view, onToggleStar, onDelete }) {
         </div>
 
         <div className={`flex items-center gap-1.5 transition-opacity duration-200 ${hovered ? "opacity-100" : "opacity-0"}`}>
+          {/* --- ADD THIS VIEW BUTTON --- */}
+          <motion.button 
+            whileHover={{ scale: 1.05 }} 
+            whileTap={{ scale: 0.95 }}
+            onClick={(e) => { e.stopPropagation(); onView(col._id); }}
+            className="px-3 py-1 rounded-lg bg-blue-500/10 text-blue-400 text-[10px] font-semibold hover:bg-blue-500/20 transition-all"
+          >
+            View
+          </motion.button>
+          {/* ---------------------------- */}
           <motion.button whileHover={{ scale: 1.12 }} whileTap={{ scale: 0.9 }}
             onClick={(e) => { e.stopPropagation(); onToggleStar(col._id); }}
             className="w-7 h-7 rounded-lg bg-white/5 border border-white/[0.07] flex items-center justify-center hover:bg-white/10 transition-all">
@@ -347,9 +360,13 @@ function CollectionCard({ col, index, view, onToggleStar, onDelete }) {
             <div className="flex items-center gap-1"><FiFileText className="text-[9px]" />{docCount} files</div>
             <div className="flex items-center gap-1"><PrivacyIcon type={col.privacy} />{col.privacy}</div>
           </div>
-          <motion.div animate={{ opacity: hovered ? 1 : 0.4 }} className="flex items-center gap-1 text-[10px] font-medium text-blue-400">
+          <motion.button 
+            onClick={(e) => { e.stopPropagation(); onView(col._id); }}
+            animate={{ opacity: hovered ? 1 : 0.4 }} 
+            className="flex items-center gap-1 text-[10px] font-medium text-blue-400 hover:text-blue-300"
+          >
             View <FiArrowRight className="text-[9px] mt-0.5" />
-          </motion.div>
+          </motion.button>
         </div>
       </div>
     </motion.div>
@@ -376,6 +393,114 @@ function EmptyCollectionState({ onCreate }) {
   );
 }
 
+/* ─── View Collection Modal ─── */
+function ViewCollectionModal({ collectionId, onClose }) {
+  const [col, setCol] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [summarizing, setSummarizing] = useState(false);
+
+  useEffect(() => {
+    getCollectionById(collectionId).then(data => {
+      setCol(data.collection);
+      setLoading(false);
+    });
+  }, [collectionId]);
+
+  const handleSummarize = async () => {
+    setSummarizing(true);
+    const toastId = toast.loading("Analyzing collection...");
+    try {
+      const data = await summarizeCollection(collectionId);
+      setCol(data.collection);
+      toast.success("Collection summarized!", { id: toastId });
+    } catch (err) {
+      toast.error("Failed to summarize", { id: toastId });
+    }
+    setSummarizing(false);
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: "rgba(0,0,0,0.8)", backdropFilter: "blur(8px)" }}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} className="w-full max-w-3xl max-h-[85vh] flex flex-col bg-[#111827] rounded-2xl border border-white/10 overflow-hidden shadow-2xl">
+        
+        {loading || !col ? (
+          <div className="p-10 text-center text-gray-500 flex flex-col items-center gap-3">
+             <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+             Loading collection...
+          </div>
+        ) : (
+          <>
+            {/* Header */}
+            <div className="p-6 border-b border-white/10 flex items-start justify-between bg-white/[0.02]">
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-1">{col.name}</h2>
+                <p className="text-sm text-gray-500 flex items-center gap-2">
+                  <FiFileText /> {col.documents.length} Documents
+                </p>
+              </div>
+              <button onClick={onClose} className="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-white/50 hover:text-white transition-colors">
+                <FiX className="text-lg" />
+              </button>
+            </div>
+
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6" style={{ scrollbarWidth: "thin" }}>
+              
+              {/* AI Summary Section */}
+              <div className="rounded-xl border border-purple-500/20 bg-purple-500/5 p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-purple-300 font-semibold flex items-center gap-2">
+                    <FiZap /> Collection AI Summary
+                  </h3>
+                  <button onClick={handleSummarize} disabled={summarizing || col.documents.length === 0} 
+                    className="px-4 py-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-xs font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-lg shadow-purple-500/20">
+                    {summarizing ? "Analyzing..." : col.aiSummary ? "Regenerate Summary" : "Generate Summary"}
+                  </button>
+                </div>
+                {col.aiSummary ? (
+                   <div className="prose prose-invert max-w-none text-sm text-gray-300">
+                     <ReactMarkdown>{col.aiSummary}</ReactMarkdown>
+                   </div>
+                ) : (
+                   <p className="text-sm text-purple-300/50">Click generate to analyze connections and extract themes across all documents in this collection.</p>
+                )}
+              </div>
+
+              {/* Documents List */}
+              <div>
+                <h3 className="text-white font-semibold mb-4">Files in Collection</h3>
+                {col.documents.length === 0 ? (
+                  <div className="text-center p-8 rounded-xl border border-dashed border-white/10 bg-white/[0.01]">
+                    <p className="text-sm text-gray-500">No documents added to this collection yet.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {col.documents.map(doc => (
+                      <div key={doc._id} className="p-4 rounded-xl border border-white/5 bg-white/[0.02] flex items-center gap-3 hover:bg-white/[0.04] transition-colors cursor-pointer" onClick={() => window.open(doc.fileUrl, "_blank")}>
+                        <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 shrink-0">
+                          <FiFileText />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-white/90 truncate">{doc.title}</p>
+                          <p className="text-[10px] text-gray-500 uppercase mt-0.5">{doc.fileType || "Document"}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+      </motion.div>
+    </motion.div>
+  );
+}
+
 /* ─── Main Page ─── */
 export default function Collections() {
  const [collections, setCollections] = useState([]);
@@ -392,6 +517,8 @@ const isSearching =
 
   const filterOptions = ["All", "Starred", "Private", "Team", "Public"];
 
+  // --- ADD THIS STATE ---
+  const [viewingCollection, setViewingCollection] = useState(null);
  const fetchCollectionsData =
   useCallback(async () => {
     try {
@@ -630,8 +757,8 @@ setCollections(prev =>
             {view === "grid" ? (
               <motion.div key="grid" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-                {filtered.length > 0
-                  ? filtered.map((col, i) => <CollectionCard key={col._id} col={col} index={i} view="grid" onToggleStar={handleToggleStar} onDelete={handleDelete} />)
+{filtered.length > 0
+  ? filtered.map((col, i) => <CollectionCard key={col._id} col={col} index={i} view="grid" onToggleStar={handleToggleStar} onDelete={handleDelete} onView={setViewingCollection} />)
                  : isSearching ? (
     <div className="col-span-full text-center py-20 text-gray-500">
       No matching collections found
@@ -646,8 +773,8 @@ setCollections(prev =>
               </motion.div>
             ) : (
               <motion.div key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
-                {filtered.length > 0
-                  ? filtered.map((col, i) => <CollectionCard key={col._id} col={col} index={i} view="list" onToggleStar={handleToggleStar} onDelete={handleDelete} />)
+{filtered.length > 0
+  ? filtered.map((col, i) => <CollectionCard key={col._id} col={col} index={i} view="list" onToggleStar={handleToggleStar} onDelete={handleDelete} onView={setViewingCollection} />)
                  : isSearching ? (
     <div className="col-span-full text-center py-20 text-gray-500">
       No matching collections found
@@ -668,6 +795,15 @@ setCollections(prev =>
       {/* Modal */}
       <AnimatePresence>
         {showModal && <CreateModal onClose={() => setShowModal(false)} onCreate={handleCreate} />}
+      </AnimatePresence>
+      {/* View Collection Modal */}
+      <AnimatePresence>
+        {viewingCollection && (
+          <ViewCollectionModal 
+            collectionId={viewingCollection} 
+            onClose={() => setViewingCollection(null)} 
+          />
+        )}
       </AnimatePresence>
     </div>
   );

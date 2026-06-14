@@ -14,7 +14,7 @@ import dashboardRoutes
 from "./routes/dashboardRoutes.js";
 import userRoutes
 from "./routes/userRoutes.js";
-import collectionRoutes from "./routes/collectionRoutes.js";
+import collectionRoutes from "./routes/collectionRoutes.js"; // Imported collection routes
 // Import the initialization function
 
 import connectDB from "./config/db.js";
@@ -65,10 +65,7 @@ app.use(
   "/api/user",
   userRoutes
 );
-app.use(
-  "/api/collections",
-  collectionRoutes
-);
+app.use("/api/collections", collectionRoutes); // Mounted collection routes
 
 // TEST ROUTE
 app.get("/", (req, res) => {

@@ -28,6 +28,11 @@ const collectionSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    // Add this new field inside collectionSchema
+    aiSummary: {
+      type: String,
+      default: "",
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
