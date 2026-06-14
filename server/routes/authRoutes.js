@@ -1,13 +1,15 @@
 import express from "express";
 import passport from "passport"; // Imported passport
 import jwt from "jsonwebtoken"; // Imported jsonwebtoken to manually sign tokens for OAuth users
-import { registerUser, loginUser } from "../controllers/authController.js";
+import { registerUser, loginUser, forgotPassword, resetPassword } from "../controllers/authController.js";
 
 const router = express.Router();
 
 // AUTH ROUTES
 router.post("/register", registerUser);
 router.post("/login", loginUser);
+router.post("/forgot-password", forgotPassword);
+router.put("/reset-password/:token", resetPassword);
 
 // Added Google OAuth Initialization Route
 router.get("/google", (req, res, next) => {
