@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import DemoModal from "./DemoModal";
 
 import {
   FiArrowRight,
@@ -94,6 +95,8 @@ function StatCard({ value, label, delay }) {
 
 /* ─── Hero Section ─── */
 export default function HeroSection() {
+  const [showDemo,setShowDemo] =
+ useState(false);
  const [particles] = useState(
  Array.from(
   { length: 18 },
@@ -206,6 +209,7 @@ if(previewData.success){
 },[]);
 
   return (
+      <>
     
    <section
  id="home"
@@ -338,20 +342,9 @@ if(previewData.success){
 </motion.div>
 
             <motion.button
- onClick={()=>{
-  const section =
- document.getElementById(
-  "features"
- );
-
-if(section){
-
- section.scrollIntoView({
-  behavior:"smooth"
- });
-
-}
- }}
+onClick={()=>{
+ setShowDemo(true);
+}}
  aria-label="Watch Demo"
  initial={{ opacity:0,x:20 }}
  animate={{ opacity:1,x:0 }}
@@ -582,5 +575,13 @@ sm:grid-cols-3 gap-3"
         </div>
       </div>
     </section>
+   <DemoModal
+ isOpen={showDemo}
+ onClose={()=>
+  setShowDemo(false)
+ }
+/>
+</>
+    
   );
 }
