@@ -427,7 +427,7 @@ const data =
 
 },[]);
   return (
-    <section
+    <section  id="features"
 className="relative overflow-hidden bg-[#0B0F19] py-20 md:py-28"
       style={{ fontFamily: "'Poppins', sans-serif" }}
     >

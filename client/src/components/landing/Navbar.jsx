@@ -9,8 +9,6 @@ import { useNavigate } from "react-router-dom";// Imported Lucide icons
 const navLinks = [
  { name: "Home", href: "#home" },
  { name: "Features", href: "#features" },
- { name: "AI Workflow", href: "#workflow" },
- { name: "Pricing", href: "#pricing" },
 ];
 
 export default function Navbar() {
@@ -111,7 +109,25 @@ useEffect(() => {
             className="flex items-center justify-between border border-white/10 backdrop-blur-xl rounded-2xl px-6 py-4"
           >
             {/* Logo */}
-<Link to="/">
+<Link
+ to="/"
+ onClick={(e)=>{
+
+  if(
+   window.location.pathname === "/"
+  ){
+
+   e.preventDefault();
+
+   window.scrollTo({
+    top:0,
+    behavior:"smooth"
+   });
+
+  }
+
+ }}
+>
 <motion.div
  whileHover={{ scale: 1.05 }}
  className="flex items-center gap-2 cursor-pointer"
@@ -129,13 +145,43 @@ useEffect(() => {
             {/* Desktop Nav */}
             <div className="hidden md:flex items-center gap-8">
               {navLinks.map((link, i) => (
-                <motion.a
-                  key={i}
-                  href={link.href}
-                  whileHover={{ scale: 1.06 }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                  className="text-gray-300 hover:text-white text-sm font-medium transition-all duration-300 relative group"
-                >
+               <motion.a
+ key={i}
+ href={link.href}
+ onClick={(e)=>{
+
+  e.preventDefault();
+
+  const section =
+   document.querySelector(
+    link.href
+   );
+
+  if(section){
+
+   section.scrollIntoView({
+    behavior:"smooth"
+   });
+
+  }
+
+ }}
+ whileHover={{ scale: 1.06 }}
+ transition={{
+  type:"spring",
+  stiffness:300
+ }}
+ className="
+ text-gray-300
+ hover:text-white
+ text-sm
+ font-medium
+ transition-all
+ duration-300
+ relative
+ group
+ "
+>
                   {link.name}
                   <span className="absolute left-0 -bottom-1 w-0 h-[2px] bg-gradient-to-r from-cyan-400 to-indigo-500 transition-all duration-300 group-hover:w-full" />
                 </motion.a>
@@ -244,16 +290,39 @@ useEffect(() => {
               >
                 <div className="flex flex-col p-6 gap-5">
                   {navLinks.map((link, i) => (
-                   <motion.a
- key={i}
+                  <motion.a
+                   key={i}
  href={link.href}
- whileHover={{ x: 5 }}
- onClick={() =>
-  setMobileMenu(false)
- }
+ onClick={(e)=>{
 
-                      className="text-gray-300 hover:text-white text-base font-medium transition-all duration-300"
-                    >
+  e.preventDefault();
+
+  setMobileMenu(false);
+
+  const section =
+   document.querySelector(
+    link.href
+   );
+
+  if(section){
+
+   section.scrollIntoView({
+    behavior:"smooth"
+   });
+
+  }
+
+ }}
+ whileHover={{ x:5 }}
+ className="
+ text-gray-300
+ hover:text-white
+ text-base
+ font-medium
+ transition-all
+ duration-300
+ "
+>
                       {link.name}
                     </motion.a>
                   ))}
@@ -265,7 +334,10 @@ useEffect(() => {
                           <p className="text-xs text-gray-400">Signed in as</p>
                           <p className="text-sm font-medium text-white truncate">{user.email}</p>
                         </div>
-                        <button className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-300 flex justify-center items-center gap-2">
+                        <button   onClick={()=>{
+  navigate("/dashboard");
+  setMobileMenu(false);
+ }}className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-300 flex justify-center items-center gap-2">
                           <Settings size={18} /> My Workspace
                         </button>
                         <button
