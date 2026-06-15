@@ -143,8 +143,8 @@ useEffect(() => {
             </Link>
 
             {/* Desktop Nav */}
-            <div className="hidden md:flex items-center gap-8">
-              {navLinks.map((link, i) => (
+<div className="hidden md:flex items-center gap-12 lg:gap-14 xl:gap-16">
+                {navLinks.map((link, i) => (
                <motion.a
  key={i}
  href={link.href}
@@ -172,6 +172,7 @@ useEffect(() => {
   stiffness:300
  }}
  className="
+ px-2
  text-gray-300
  hover:text-white
  text-sm
@@ -180,8 +181,7 @@ useEffect(() => {
  duration-300
  relative
  group
- "
->
+ ">
                   {link.name}
                   <span className="absolute left-0 -bottom-1 w-0 h-[2px] bg-gradient-to-r from-cyan-400 to-indigo-500 transition-all duration-300 group-hover:w-full" />
                 </motion.a>
