@@ -1,10 +1,11 @@
 import {
   useState,
-  useRef,
+  
   useContext,
   useEffect
 }
 from "react";
+import toast from "react-hot-toast";
 import {
   changePassword,
 }
@@ -27,38 +28,31 @@ import {
 from "../../services/userService";
 import {
   HiOutlineUser,
-  HiOutlineMail,
+
   HiOutlineLockClosed,
   HiOutlineBell,
-  HiOutlineShieldCheck,
+  
   HiOutlineDatabase,
-  HiOutlineCreditCard,
-  HiOutlineLogout,
-  HiOutlineTrash,
+  
+  
+  
   HiOutlineChevronRight,
   HiOutlineCheck,
-  HiOutlinePencil,
+  
   HiOutlineEye,
   HiOutlineEyeOff,
   HiOutlineKey,
-  HiOutlineDeviceMobile,
-  HiOutlineGlobe,
-  HiOutlineColorSwatch,
-  HiOutlineClipboardCopy,
-  HiOutlineLightningBolt,
-  HiOutlineExclamation,
+  
 } from "react-icons/hi";
-import { BsStars, BsGoogle, BsGithub, BsSlack } from "react-icons/bs";
-import { HiOutlineDocumentDuplicate, HiMiniSparkles } from "react-icons/hi2";
+import { BsStars} from "react-icons/bs";
+import { HiOutlineDocumentDuplicate } from "react-icons/hi2";
 
 // ─── constants ────────────────────────────────────────────────────────────────
 const NAV = [
   { id: "profile", label: "Profile", icon: <HiOutlineUser /> },
-  { id: "account", label: "Account", icon: <HiOutlineMail /> },
   { id: "security", label: "Security", icon: <HiOutlineLockClosed /> },
   { id: "notifications", label: "Notifications", icon: <HiOutlineBell /> },
-  { id: "storage", label: "Storage & Plan", icon: <HiOutlineDatabase /> },
-  { id: "danger", label: "Danger Zone", icon: <HiOutlineTrash />, danger: true },
+  { id: "storage", label: "Storage", icon: <HiOutlineDatabase /> },
 ];
 
 const getInitials = (name) =>
@@ -78,18 +72,8 @@ function SectionTitle({ children }) {
   );
 }
 
-function Divider() {
-  return <div className="my-5 border-t border-white/[0.05]" />;
-}
 
-function Badge({ children, color = "#7c3aed" }) {
-  return (
-    <span className="rounded-md border px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase"
-      style={{ color, borderColor: `${color}33`, background: `${color}12` }}>
-      {children}
-    </span>
-  );
-}
+
 
 // ─── toggle switch ─────────────────────────────────────────────────────────────
 function Toggle({ value, onChange }) {
@@ -204,6 +188,8 @@ function ProfileSection() {
   const { user } = useContext(AuthContext);
 const [profile, setProfile] =
   useState(null);
+  const [savingProfile, setSavingProfile] =
+ useState(false);
   const [name, setName] =
     useState(user?.name || "");
     const [documentsCount,
@@ -215,6 +201,16 @@ const [profile, setProfile] =
   const [saved, setSaved] = useState(false);
 
   const save = async () => {
+     if (!name.trim()) {
+
+    toast.error(
+      "Name is required"
+    );
+
+    return;
+
+  }
+    setSavingProfile(true);
 
   try {
 
@@ -236,11 +232,16 @@ const [profile, setProfile] =
       setSaved(false);
     }, 2000);
 
-  } catch (error) {
+  } catch(error){
 
-    console.error(error);
+ console.error(error);
 
-  }
+}
+finally{
+
+ setSavingProfile(false);
+
+}
 
 };
 useEffect(() => {
@@ -300,14 +301,12 @@ setProfile(data.user);
               >
                 {getInitials(name)}
               </div>
-              <button className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity text-white/80">
-                <HiOutlinePencil className="text-sm" />
-              </button>
+      
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-2 mb-1">
                 <p className="text-base font-semibold text-white/90">{name}</p>
-                <Badge>Pro</Badge>
+                
               </div>
               <p className="text-sm text-white/40">{role}</p>
               <p className="mt-2 text-xs text-white/25 flex items-center gap-1.5">
@@ -328,7 +327,6 @@ new Date(
 documents uploaded
               </p>
             </div>
-            <Btn small variant="ghost" icon={<HiOutlinePencil />}>Edit Avatar</Btn>
           </div>
         </div>
       </Card>
@@ -351,9 +349,19 @@ documents uploaded
             />
           </div>
           <div className="flex justify-end">
-            <Btn variant="primary" onClick={save} icon={saved ? <HiOutlineCheck /> : null}>
-              {saved ? "Saved!" : "Save Changes"}
-            </Btn>
+           <Btn
+ variant="primary"
+ onClick={save}
+ icon={saved ? <HiOutlineCheck /> : null}
+>
+ {
+  savingProfile
+   ? "Saving..."
+   : saved
+     ? "Saved!"
+     : "Save Changes"
+ }
+</Btn>
           </div>
         </div>
       </Card>
@@ -361,64 +369,7 @@ documents uploaded
   );
 }
 
-function AccountSection() {
-  const { user } = useContext(AuthContext);
-  const [email, setEmail] = useState(user?.email || "");
-  const [lang, setLang] = useState("English (US)");
-  const [theme, setTheme] = useState("dark");
-  const [saved, setSaved] = useState(false);
 
-  return (
-    <div className="space-y-4">
-      <SectionTitle>Account</SectionTitle>
-      <Card>
-        <div className="p-6 space-y-4">
-          <Field
-            label="Email Address"
-            value={email}
-            onChange={setEmail}
-            type="email"
-            placeholder="your@email.com"
-            rightEl={<HiOutlineMail className="text-white/20 text-sm" />}
-          />
-          <Divider />
-          <Row icon={<HiOutlineColorSwatch />} label="Appearance" sub="Choose your interface theme">
-            <div className="flex items-center gap-1.5">
-              {["dark", "light", "system"].map((t) => (
-                <button key={t} onClick={() => setTheme(t)}
-                  className={`rounded-lg px-2.5 py-1.5 text-xs capitalize font-medium transition-all border
-                    ${theme === t
-                      ? "border-violet-500/40 bg-violet-500/15 text-violet-300"
-                      : "border-white/[0.07] bg-white/[0.02] text-white/35 hover:text-white/60"}`}>
-                  {t}
-                </button>
-              ))}
-            </div>
-          </Row>
-          <Divider />
-          <Row icon={<HiOutlineGlobe />} label="Language" sub="Interface display language">
-            <select
-              value={lang} onChange={(e) => setLang(e.target.value)}
-              className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-xs text-white/60 outline-none focus:border-violet-500/30 cursor-pointer"
-              style={{ fontFamily: "inherit" }}
-            >
-              {["English (US)", "English (UK)", "Français", "Deutsch", "日本語"].map((l) => (
-                <option key={l} value={l} style={{ background: "#111" }}>{l}</option>
-              ))}
-            </select>
-          </Row>
-          <Divider />
-          <div className="flex justify-end">
-            <Btn variant="primary" onClick={() => { setSaved(true); setTimeout(() => setSaved(false), 2000); }}
-              icon={saved ? <HiOutlineCheck /> : null}>
-              {saved ? "Saved!" : "Save Account"}
-            </Btn>
-          </div>
-        </div>
-      </Card>
-    </div>
-  );
-}
 
 function SecuritySection() {
   const [showCurr, setShowCurr] = useState(false);
@@ -430,9 +381,7 @@ function SecuritySection() {
 useState(false);
   const [confirm, setConfirm] =
   useState("");
-  const [twoFA, setTwoFA] = useState(true);
-  const [sessions, setSessions] = useState(true);
-  const [copied, setCopied] = useState(false);
+ 
 
   const strength = newP.length === 0 ? 0 : newP.length < 6 ? 1 : newP.length < 10 ? 2 : 3;
   const strengthColors = ["transparent", "#ef4444", "#f59e0b", "#10b981"];
@@ -441,12 +390,21 @@ useState(false);
 async () => {
 
   try {
+    if (newP.length < 8) {
+
+ toast.error(
+  "Password must be at least 8 characters"
+ );
+
+ return;
+
+}
 
     if (
       newP !== confirm
     ) {
 
-      alert(
+      toast.error(
         "Passwords do not match"
       );
 
@@ -471,7 +429,7 @@ async () => {
         token
       );
 
-    alert(
+    toast.success(
       response.message
     );
 
@@ -481,7 +439,7 @@ async () => {
 
   } catch (error) {
 
-    alert(
+    toast.error(
       error.response?.data?.message ||
       "Failed to update password"
     );
@@ -559,22 +517,7 @@ async () => {
       </Card>
 
       {/* 2FA + sessions */}
-      <Card>
-        <div className="p-6 divide-y divide-white/[0.05]">
-          <Row icon={<HiOutlineShieldCheck />} label="Two-Factor Authentication"
-            sub="Add an extra layer of security to your account">
-            <div className="flex items-center gap-2.5">
-              {twoFA && <Badge color="#10b981">Active</Badge>}
-              <Toggle value={twoFA} onChange={setTwoFA} />
-            </div>
-          </Row>
-          <Row icon={<HiOutlineDeviceMobile />} label="Active Sessions"
-            sub="Manage devices signed into your account">
-            <Btn small variant="ghost">View All</Btn>
-          </Row>
-        
-        </div>
-      </Card>
+   
     </div>
   );
 }
@@ -584,12 +527,10 @@ function NotificationsSection() {
 useState({
   upload: true,
   summary: true,
-  weekly: false,
-  security: true,
-  email: true,
-  browser: true,
 });
 
+const { user } =
+ useContext(AuthContext);
   const toggle =
 async (key) => {
 
@@ -598,7 +539,7 @@ async (key) => {
     [key]:
       !notifs[key],
   };
-
+const previous = notifs;
   setNotifs(updated);
 
   try {
@@ -614,41 +555,33 @@ async (key) => {
     );
 
   } catch (error) {
+     setNotifs(previous);
 
-    console.error(error);
+    toast.error("Failed to update notifications.");
 
   }
 
 };
 
-  const groups = [
-    {
-      title: "Document Activity",
-      rows: [
-        { key: "upload", label: "Upload Complete", sub: "When a document finishes uploading", icon: <HiOutlineDocumentDuplicate /> },
-        { key: "summary", label: "AI Summary Ready", sub: "When DocuMind AI finishes summarizing", icon: <BsStars /> },
-      ],
-    },
-    {
-      title: "Reports & Digests",
-      rows: [
-        { key: "weekly", label: "Weekly Digest", sub: "Summary of your weekly document activity", icon: <HiOutlineMail /> },
-      ],
-    },
-    {
-      title: "Security",
-      rows: [
-        { key: "security", label: "Security Alerts", sub: "Login from new device or location", icon: <HiOutlineShieldCheck /> },
-      ],
-    },
-    {
-      title: "Delivery Channels",
-      rows: [
-        { key: "email", label: "Email Notifications", sub: "alex.johnson@company.com", icon: <HiOutlineMail /> },
-        { key: "browser", label: "Browser Push", sub: "In-browser desktop notifications", icon: <HiOutlineGlobe /> },
-      ],
-    },
-  ];
+ const groups = [
+  {
+    title: "Document Activity",
+    rows: [
+      {
+        key: "upload",
+        label: "Upload Complete",
+        sub: "When a document finishes uploading",
+        icon: <HiOutlineDocumentDuplicate />,
+      },
+      {
+        key: "summary",
+        label: "AI Summary Ready",
+        sub: "When DocuMind AI finishes summarizing",
+        icon: <BsStars />,
+      },
+    ],
+  },
+];
   useEffect(() => {
 
   const fetchNotifications =
@@ -666,9 +599,12 @@ async (key) => {
             token
           );
 
-        setNotifs(
-          data.notifications
-        );
+       setNotifs(
+ data.notifications || {
+  upload: true,
+  summary: true,
+ }
+);
 
       } catch (error) {
 
@@ -749,12 +685,11 @@ function StorageSection() {
  const usedMB =
  stats.totalStorageMB;
 
-const totalMB =
- 102400;
+const STORAGE_LIMIT_MB = 102400;
 
 const usedPercentage =
  Math.min(
-  (usedMB / totalMB) * 100,
+  (usedMB / STORAGE_LIMIT_MB) * 100,
   100
  );
 
@@ -794,21 +729,13 @@ const total = 100;
 
   return (
     <div className="space-y-4">
-      <SectionTitle>Storage &amp; Plan</SectionTitle>
-
+<SectionTitle>
+ Storage
+</SectionTitle>
       {/* plan card */}
       <Card glow>
         <div className="p-6">
-          <div className="flex items-start justify-between gap-4 mb-6">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <p className="text-base font-bold text-white/90">Pro Plan</p>
-                <Badge>Active</Badge>
-              </div>
-              <p className="text-sm text-white/35">Renews June 18, 2026 · $24/month</p>
-            </div>
-            <Btn small variant="ghost" icon={<HiOutlineCreditCard />}>Manage</Btn>
-          </div>
+         
 
           {/* usage bar */}
           <div className="mb-3 flex items-center justify-between text-xs">
@@ -849,84 +776,29 @@ const total = 100;
       </Card>
 
       {/* upgrade nudge */}
-      <Card>
-        <div className="p-5 flex items-center gap-4">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-amber-500/20 bg-amber-500/10 text-amber-400 text-lg">
-            <HiOutlineLightningBolt />
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-white/80">Upgrade to Enterprise</p>
-            <p className="text-xs text-white/30 mt-0.5">Unlimited storage, SSO, audit logs, and priority support.</p>
-          </div>
-          <Btn small variant="primary">Upgrade</Btn>
-        </div>
-      </Card>
+     
     </div>
   );
 }
 
 
 
-function DangerSection() {
-  const [confirmDelete, setConfirmDelete] = useState(false);
 
-  return (
-    <div className="space-y-4">
-      <SectionTitle>Danger Zone</SectionTitle>
-      <Card>
-        <div className="px-6 py-4 divide-y divide-white/[0.05]">
-          <Row icon={<HiOutlineTrash />} label="Delete All Documents"
-            sub="Permanently remove all uploaded files and AI summaries" danger>
-            <Btn small danger icon={<HiOutlineTrash />}>Delete All</Btn>
-          </Row>
-          <Row icon={<HiOutlineLogout />} label="Sign Out Everywhere"
-            sub="Revoke all active sessions across every device" danger>
-            <Btn small danger icon={<HiOutlineLogout />}>Sign Out</Btn>
-          </Row>
-          <Row icon={<HiOutlineExclamation />} label="Delete Account"
-            sub="Permanently delete your DocuMind account and all data" danger>
-            {confirmDelete ? (
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-red-400/70">Are you sure?</span>
-                <Btn small danger onClick={() => setConfirmDelete(false)}>Yes, Delete</Btn>
-                <Btn small variant="ghost" onClick={() => setConfirmDelete(false)}>Cancel</Btn>
-              </div>
-            ) : (
-              <Btn small danger onClick={() => setConfirmDelete(true)}>Delete Account</Btn>
-            )}
-          </Row>
-        </div>
-      </Card>
-
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="flex items-start gap-3 rounded-xl border border-red-500/10 bg-red-500/[0.04] px-4 py-3.5"
-      >
-        <HiOutlineExclamation className="text-red-400/50 mt-0.5 shrink-0 text-base" />
-        <p className="text-xs text-red-400/50 leading-relaxed">
-          Actions in the Danger Zone are <strong className="text-red-400/70">permanent and irreversible</strong>. Please proceed with caution. Contact support if you need assistance recovering data.
-        </p>
-      </motion.div>
-    </div>
-  );
-}
 
 // ═════════════════════════════════════════════════════════════════════════════
 // MAIN
 // ═════════════════════════════════════════════════════════════════════════════
 const SECTIONS = {
   profile: <ProfileSection />,
-  account: <AccountSection />,
   security: <SecuritySection />,
   notifications: <NotificationsSection />,
   storage: <StorageSection />,
-  danger: <DangerSection />,
 };
 
 export default function SettingsPage() {
   const [active, setActive] = useState("profile");
   const [mobileNav, setMobileNav] = useState(false);
+  
 
   const activeNav = NAV.find((n) => n.id === active);
 
@@ -934,14 +806,7 @@ export default function SettingsPage() {
     <div className="min-h-screen text-white overflow-x-hidden"
       style={{ background: "#09090b", fontFamily: "'DM Sans', sans-serif" }}>
 
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
-        *, *::before, *::after { box-sizing: border-box; }
-        ::-webkit-scrollbar { width: 3px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 99px; }
-        select option { background: #111; }
-      `}</style>
+      
 
       {/* ambient */}
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
