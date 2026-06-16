@@ -75,9 +75,9 @@ function SummaryCard({ summary: s, index, view, onDelete, onToggleStar }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-40px" });
 
- const menuItems = [
-  { icon:<FiTrash2 />, label:"Delete", danger:true }
-];
+  const menuItems = [
+    { icon:<FiTrash2 />, label:"Delete", danger:true }
+  ];
 
   const handleMenuAction = (item, e) => {
     e.stopPropagation();
@@ -85,57 +85,18 @@ function SummaryCard({ summary: s, index, view, onDelete, onToggleStar }) {
     if (item.label === "Delete") {
       onDelete(s._id);
     }
-    // Add logic for other actions if needed
   };
-
-  if (view === "list") {
-    return (
-      <motion.div
-        ref={ref}
-        initial={{ opacity: 0, x: -14 }}
-        animate={inView ? { opacity: 1, x: 0 } : {}}
-        transition={{ duration: 0.45, delay: index * 0.06 }}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => { setHovered(false); setMenuOpen(false); }}
-        className="relative flex items-center gap-4 px-5 py-4 rounded-2xl border bg-[#111827] cursor-pointer transition-all duration-300"
-        style={{ borderColor: hovered ? s.accentBorder : "rgba(31,41,55,1)", boxShadow: hovered ? `0 0 28px ${s.accentDim}` : "none" }}
-      >
-        <motion.div animate={{ scale: hovered ? 1.08 : 1 }} transition={{ duration: 0.2 }}
-          className={`w-10 h-10 rounded-xl bg-gradient-to-br ${s.gradient} flex items-center justify-center text-white text-sm shrink-0`}>
-          <FiFileText />
-        </motion.div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-0.5">
-            <p className={`text-sm font-semibold truncate transition-colors ${hovered ? "text-white" : "text-gray-100"}`}>{s.title}</p>
-            {s.starred && <FiStar className="text-amber-400 text-xs shrink-0" style={{ fill: "#f59e0b" }} />}
-            <span className={`hidden sm:inline px-2 py-0.5 rounded-full text-[9px] font-bold border ${s.tagBg}`}>{s.category}</span>
-          </div>
-          <p className="text-gray-500 text-xs truncate">{s.summary.slice(0, 90)}…</p>
-        </div>
-        <div className="hidden md:flex items-center gap-4 text-gray-600 text-xs shrink-0">
-          <div className="flex items-center gap-1"><FiClock className="text-[10px]" />{s.generatedAt}</div>
-        </div>
-        <div className={`flex items-center gap-1.5 transition-opacity duration-200 ${hovered ? "opacity-100" : "opacity-0"}`}>
-          <CopyButton text={s.summary} />
-          <motion.button whileHover={{ scale: 1.12 }} whileTap={{ scale: 0.9 }}
-            onClick={(e) => { e.stopPropagation(); onToggleStar(s._id); }}
-            className="w-7 h-7 rounded-lg bg-white/5 border border-white/[0.07] flex items-center justify-center hover:bg-white/10 transition-all">
-            <FiStar className={`text-xs ${s.starred ? "text-amber-400" : "text-gray-600"}`} style={{ fill: s.starred ? "#f59e0b" : "none" }} />
-          </motion.button>
-        </div>
-      </motion.div>
-    );
-  }
 
   return (
     <motion.div
+      layout // <--- Fixes the blank space bug by tracking height!
       ref={ref}
       initial={{ opacity: 0, y: 24, scale: 0.97 }}
       animate={inView ? { opacity: 1, y: 0, scale: 1 } : {}}
-      transition={{ duration: 0.5, delay: index * 0.09, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => { setHovered(false); setMenuOpen(false); }}
-      className="relative rounded-2xl border bg-[#111827] overflow-hidden cursor-pointer transition-all duration-300"
+      className={`relative rounded-2xl border bg-[#111827] overflow-hidden transition-all duration-300 ${view === "grid" ? "break-inside-avoid mb-4 w-full inline-block" : ""}`}
       style={{ borderColor: hovered ? s.accentBorder : "rgba(31,41,55,1)", boxShadow: hovered ? `0 0 40px ${s.accentDim}, 0 4px 20px rgba(0,0,0,0.3)` : "0 2px 12px rgba(0,0,0,0.2)" }}
     >
       <motion.div animate={{ scaleX: hovered ? 1 : 0, opacity: hovered ? 1 : 0 }} transition={{ duration: 0.3 }}
@@ -144,7 +105,7 @@ function SummaryCard({ summary: s, index, view, onDelete, onToggleStar }) {
         className="absolute -top-8 -right-8 w-32 h-32 rounded-full blur-[55px] pointer-events-none" style={{ background: s.accentDim }} />
 
       <div className="relative z-10 p-5">
-        <div className="flex items-start justify-between gap-3 mb-3">
+        <motion.div layout className="flex items-start justify-between gap-3 mb-3">
           <div className="flex items-start gap-3 flex-1 min-w-0">
             <motion.div animate={{ scale: hovered ? 1.08 : 1, rotate: hovered ? 5 : 0 }} transition={{ duration: 0.25 }}
               className={`w-10 h-10 rounded-xl bg-gradient-to-br ${s.gradient} flex items-center justify-center text-white text-sm shrink-0`}>
@@ -185,10 +146,10 @@ function SummaryCard({ summary: s, index, view, onDelete, onToggleStar }) {
               </AnimatePresence>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* AI Badge row */}
-        <div className="flex items-center gap-2 mb-3 flex-wrap">
+        <motion.div layout className="flex items-center gap-2 mb-3 flex-wrap">
           <motion.div animate={{ opacity: [0.7, 1, 0.7] }} transition={{ duration: 2.5, repeat: Infinity }}
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border bg-white/[0.03]"
             style={{ borderColor: s.accentBorder }}>
@@ -197,43 +158,45 @@ function SummaryCard({ summary: s, index, view, onDelete, onToggleStar }) {
             </motion.div>
             <span className={`text-[10px] font-semibold ${s.accentText}`}>AI Summary</span>
           </motion.div>
-
           <span className="text-gray-700 text-[10px]">·</span>
           <div className="flex items-center gap-1 text-gray-600 text-[10px]">
-            <FiClock className="text-[9px]" />
-            {s.generatedAt}
+            <FiClock className="text-[9px]" /> {s.generatedAt}
           </div>
           <span className="text-gray-700 text-[10px]">·</span>
           <div className="flex items-center gap-1 text-gray-600 text-[10px]">
-            <FiTrendingUp className="text-[9px]" />
-            {s.keyInsights.length} insights
+            <FiTrendingUp className="text-[9px]" /> {s.keyInsights.length} insights
           </div>
-        </div>
+        </motion.div>
 
         {/* Insight text */}
-        <div className="mb-3">
-          <AnimatePresence initial={false}>
-            <motion.div className="text-gray-400 text-xs leading-relaxed" animate={{ height: expanded ? "auto" : undefined }}>
-              <div className="prose prose-invert max-w-none text-sm">
-                <ReactMarkdown>
-                  {expanded ? s.summary : s.summary.slice(0, 130) + (s.summary.length > 130 ? "…" : "")}
-                </ReactMarkdown>
-              </div>
-            </motion.div>
-          </AnimatePresence>
-          {s.summary.length > 130 && (
-            <motion.button whileHover={{ x: 2 }} onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
+        <motion.div layout className="mb-3">
+          <motion.div layout className="text-gray-400 text-xs leading-relaxed">
+            <div className="prose prose-invert max-w-none text-sm">
+              <ReactMarkdown>
+                {expanded ? s.summary : s.summary.slice(0, 130) + (s.summary.length > 130 ? "…" : "")}
+              </ReactMarkdown>
+            </div>
+          </motion.div>
+          {s.summary.length > 130 && !expanded && (
+            <motion.button layout whileHover={{ x: 2 }} onClick={(e) => { e.stopPropagation(); setExpanded(true); }}
               className={`flex items-center gap-1 mt-1.5 text-[11px] font-medium ${s.accentText} transition-colors`}>
-              {expanded ? <>Show less <FiChevronUp className="text-[10px]" /></> : <>Read more <FiChevronDown className="text-[10px]" /></>}
+              Read more <FiChevronDown className="text-[10px]" />
             </motion.button>
           )}
-        </div>
+        </motion.div>
 
         {/* Key insights (expanded) */}
         <AnimatePresence>
           {expanded && (
-            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.3 }} className="mb-3 overflow-hidden">
-              <p className="text-[10px] text-gray-600 font-semibold uppercase tracking-widest mb-2">Key Insights</p>
+            <motion.div
+              layout
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className="mb-3 overflow-hidden"
+            >
+              <p className="text-[10px] text-gray-600 font-semibold uppercase tracking-widest mb-2 mt-2">Key Insights</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                 {s.keyInsights.map((point, i) => (
                   <motion.div key={i} initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.06 }}
@@ -243,12 +206,22 @@ function SummaryCard({ summary: s, index, view, onDelete, onToggleStar }) {
                   </motion.div>
                 ))}
               </div>
+              
+              {/* NEW Show Less Button */}
+              <motion.button 
+                layout
+                whileHover={{ x: -2 }} 
+                onClick={(e) => { e.stopPropagation(); setExpanded(false); }}
+                className={`flex items-center gap-1 mt-4 text-[11px] font-medium ${s.accentText} transition-colors`}
+              >
+                <FiChevronUp className="text-[10px]" /> Show less
+              </motion.button>
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* Tags */}
-        <div className="flex items-center gap-1.5 flex-wrap mb-4">
+        <motion.div layout className="flex items-center gap-1.5 flex-wrap mb-4 mt-2">
           {s.tags.map((tag, i) => (
             <motion.span key={i} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: index * 0.09 + 0.3 + i * 0.05 }}
               whileHover={{ scale: 1.08 }}
@@ -256,10 +229,10 @@ function SummaryCard({ summary: s, index, view, onDelete, onToggleStar }) {
               <FiTag className="text-[8px]" />{tag}
             </motion.span>
           ))}
-        </div>
+        </motion.div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-between pt-3 border-t border-white/[0.05]">
+        {/* Footer (View Button Removed) */}
+        <motion.div layout className="flex items-center justify-start pt-3 border-t border-white/[0.05]">
           <div className="flex items-center gap-1.5">
             <CopyButton text={s.summary} />
             <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
@@ -268,24 +241,7 @@ function SummaryCard({ summary: s, index, view, onDelete, onToggleStar }) {
               <FiShare2 className="text-xs" />
             </motion.button>
           </div>
-          <motion.button whileHover={{ scale: 1.04, x: 2 }} whileTap={{ scale: 0.97 }}
-onClick={(e) => {
-  e.stopPropagation();
-
-  if (s.fileUrl) {
-    window.open(
-      s.fileUrl,
-      "_blank"
-    );
-  }
-}}            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold border transition-all ${s.accentText}`}
-            style={{ background: s.accentDim, borderColor: s.accentBorder }}>
-            <FiEye className="text-[10px]" /> View Full
-            <motion.span animate={{ x: hovered ? [0, 3, 0] : 0 }} transition={{ duration: 1, repeat: hovered ? Infinity : 0 }}>
-              <FiArrowRight className="text-[10px]" />
-            </motion.span>
-          </motion.button>
-        </div>
+        </motion.div>
       </div>
     </motion.div>
   );
@@ -503,7 +459,7 @@ pages: "-",
       </motion.div>
 
       {/* Filter bar */}
-      <motion.div
+      {/* <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.15 }}
@@ -524,7 +480,7 @@ pages: "-",
             {cat}
           </motion.button>
         ))}
-      </motion.div>
+      </motion.div> */}
 
       {/* Cards */}
       <AnimatePresence mode="popLayout">
@@ -536,7 +492,7 @@ pages: "-",
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className={view === "grid" ? "grid grid-cols-1 md:grid-cols-2 gap-4" : "flex flex-col gap-3"}
+            className={view === "grid" ? "columns-1 md:columns-2 gap-4" : "flex flex-col gap-3"}
           >
             {filtered.map((summary, index) => (
               <SummaryCard
