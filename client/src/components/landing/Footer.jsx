@@ -166,28 +166,99 @@ border-white/10
         </div>
 
         {/* ── Bottom Bar ── */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          viewport={{ once: true }}
-          className="mt-10 pt-6 border-t border-white/[0.06] flex flex-col sm:flex-row items-center justify-between gap-3"
-        >
-          <p className="text-gray-600 text-xs">
-            © {new Date().getFullYear()} DocuMind. All rights reserved.
-          </p>
+      <motion.div
+  initial={{ opacity: 0 }}
+  whileInView={{ opacity: 1 }}
+  transition={{ duration: 0.5, delay: 0.3 }}
+  viewport={{ once: true }}
+  className="mt-10 pt-6 border-t border-white/[0.06]"
+>
+  <div className="flex flex-col md:flex-row items-center justify-between gap-4">
 
-          <div className="flex items-center gap-2">
-            <motion.span
-              animate={{ opacity: [1, 0.4, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="w-1.5 h-1.5 rounded-full bg-emerald-400"
-            />
-            <p className="text-gray-600 text-xs">
-              Built with React, Node.js and AI
-            </p>
-          </div>
-        </motion.div>
+    {/* Left Side */}
+    <div className="text-center md:text-left">
+      <p className="text-gray-600 text-xs">
+        © {new Date().getFullYear()} DocuMind. All rights reserved.
+      </p>
+
+    <p
+  className="
+  mt-2
+  text-base
+  sm:text-lg
+  font-bold
+  text-white
+  tracking-wide
+  "
+>
+  Developed by
+
+  <a
+    href="https://www.linkedin.com/in/pragati-singh0208/"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="
+    ml-2
+    bg-gradient-to-r
+    from-cyan-400
+    to-violet-400
+    bg-clip-text
+    text-transparent
+    hover:opacity-80
+    transition-all
+    duration-200
+    "
+  >
+    Pragati Singh
+  </a>
+
+  <span className="mx-2 text-white/70">
+    &
+  </span>
+
+  <a
+    href="https://linkedin.com/in/sandipan-ray14"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="
+    bg-gradient-to-r
+    from-cyan-400
+    to-violet-400
+    bg-clip-text
+    text-transparent
+    hover:opacity-80
+    transition-all
+    duration-200
+    "
+  >
+    Sandipan Ray
+  </a>
+</p>
+    </div>
+
+    {/* Right Side */}
+    <div className="flex items-center gap-2">
+      <motion.span
+        animate={{ opacity: [1, 0.4, 1] }}
+        transition={{ duration: 2, repeat: Infinity }}
+        className="w-1.5 h-1.5 rounded-full bg-emerald-400"
+      />
+
+     <p
+  className="
+  text-xs
+  sm:text-sm
+  text-cyan-400/80
+  font-medium
+  tracking-wide
+  "
+>
+  MERN Stack • Gemini AI • Cloudinary
+</p>
+    </div>
+
+  </div>
+</motion.div>
 
       </div>
     </footer>
