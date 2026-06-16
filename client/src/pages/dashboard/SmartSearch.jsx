@@ -8,7 +8,7 @@ import {
  getSearchHistory,
  clearSearchHistory,deleteSearchHistory,
 } from "../../services/documentService";
-import { useNavigate }
+import { useNavigate, useSearchParams }
 from "react-router-dom";
 import DocumentPreviewModal
 from "../../components/dashboard/DocumentPreviewModal";
@@ -761,9 +761,9 @@ function EmptyState({ query }) {
 
 /* ─── Main Page ─── */
 export default function SmartSearch() {
-  const navigate =
-  useNavigate();
-  const [query, setQuery] = useState("");
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams(); // <-- ADD THIS
+  const [query, setQuery] = useState(searchParams.get("q") || ""); // <-- UPDATE THIS
   
   const [searchedQuery, setSearchedQuery] = useState("");
   const [results, setResults] =
@@ -937,6 +937,16 @@ useEffect(()=>{
  loadCategories();
 
 },[]);
+
+// --- ADD THIS NEW EFFECT BLOCK ---
+useEffect(() => {
+  const urlQuery = searchParams.get("q");
+  if (urlQuery && urlQuery !== searchedQuery) {
+    setQuery(urlQuery);
+    handleSearch(urlQuery);
+  }
+}, [searchParams]);
+
  const handleSearch =
 async (q) => {
 

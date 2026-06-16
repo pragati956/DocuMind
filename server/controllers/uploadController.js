@@ -91,28 +91,30 @@ export const searchDocuments = async (req, res) => {
   try {
     const { q } = req.query;
     
-    if (!q) {
+    // Prevent empty or space-only queries
+    if (!q || !q.trim()) {
       return res.status(400).json({ success: false, message: "Search query 'q' is required" });
     }
-    // Build a regex that matches any term in the query (split on whitespace).
-    // This makes searches for multi-word queries like "Q4 results" match documents
-    // that contain either "Q4" or "results" instead of requiring the exact phrase.
+
     const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const terms = q
-      .split(/\s+/)
-      .map((t) => t.trim())
-      .filter(Boolean);
+    const terms = q.split(/\s+/).map((t) => t.trim()).filter(Boolean);
 
-    const pattern = terms.length > 0 ? terms.map(escapeRegExp).join("|") : escapeRegExp(q);
+    // CREATE AN $AND ARRAY SO EVERY WORD MUST MATCH SOMEWHERE
+    const andConditions = terms.map(term => {
+      const pattern = escapeRegExp(term);
+      return {
+        $or: [
+          { title: { $regex: pattern, $options: "i" } },
+          { summary: { $regex: pattern, $options: "i" } },
+          { tags: { $regex: pattern, $options: "i" } }
+        ]
+      };
+    });
 
-    // $regex will match any of the terms (case-insensitive)
+    // $and guarantees that searching "Q4 Report" only returns files containing BOTH words.
     const documents = await Document.find({
       uploadedBy: req.user.id,
-      $or: [
-        { title: { $regex: pattern, $options: "i" } },
-        { summary: { $regex: pattern, $options: "i" } },
-        { tags: { $regex: pattern, $options: "i" } },
-      ],
+      $and: andConditions
     })
       .populate("uploadedBy", "name email")
       .sort({ createdAt: -1 });
