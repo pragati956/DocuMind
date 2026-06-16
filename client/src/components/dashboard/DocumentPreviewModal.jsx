@@ -62,9 +62,10 @@ const DocumentPreviewModal = ({ document, onClose }) => {
               />
             ) : (
               <iframe
-                src={document.fileUrl}
+                // Route through Google Docs Viewer to force in-browser rendering
+                src={`https://docs.google.com/gview?url=${encodeURIComponent(document.fileUrl)}&embedded=true`}
                 title={document.name}
-                className="w-full h-full"
+                className="w-full h-full border-none bg-white" // <-- Added bg-white
               />
             )}
 
