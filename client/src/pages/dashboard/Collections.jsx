@@ -509,6 +509,7 @@ const [view, setView] = useState("grid");
 const [searchQuery, setSearchQuery] = useState("");
 const [searchFocused, setSearchFocused] =
  useState(false);
+  const [viewingCollection, setViewingCollection] = useState(null);
 
 const isSearching =
  searchQuery.trim() !== "";
@@ -756,7 +757,7 @@ setCollections(prev =>
               <motion.div key="grid" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
                 {filtered.length > 0
-                  ? filtered.map((col, i) => <CollectionCard key={col._id} col={col} index={i} view="grid" onToggleStar={handleToggleStar} onDelete={handleDelete} />)
+                  ? filtered.map((col, i) => <CollectionCard key={col._id} col={col} index={i} view="grid" onToggleStar={handleToggleStar} onDelete={handleDelete} onView={(id) => setViewingCollection(id)} />)
                  : isSearching ? (
     <div className="col-span-full text-center py-20 text-gray-500">
       No matching collections found
@@ -772,7 +773,7 @@ setCollections(prev =>
             ) : (
               <motion.div key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
                 {filtered.length > 0
-                  ? filtered.map((col, i) => <CollectionCard key={col._id} col={col} index={i} view="list" onToggleStar={handleToggleStar} onDelete={handleDelete} />)
+                  ? filtered.map((col, i) => <CollectionCard key={col._id} col={col} index={i} view="list" onToggleStar={handleToggleStar} onDelete={handleDelete} onView={(id) => setViewingCollection(id)} />)
                  : isSearching ? (
     <div className="col-span-full text-center py-20 text-gray-500">
       No matching collections found
