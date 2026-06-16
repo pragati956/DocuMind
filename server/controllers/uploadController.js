@@ -94,90 +94,53 @@ export const searchDocuments = async (req, res) => {
     if (!q) {
       return res.status(400).json({ success: false, message: "Search query 'q' is required" });
     }
+    // Build a regex that matches any term in the query (split on whitespace).
+    // This makes searches for multi-word queries like "Q4 results" match documents
+    // that contain either "Q4" or "results" instead of requiring the exact phrase.
+    const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const terms = q
+      .split(/\s+/)
+      .map((t) => t.trim())
+      .filter(Boolean);
 
-    // $regex provides a basic keyword search. $options: "i" makes it case-insensitive.
-  const documents =
-await Document.find({
+    const pattern = terms.length > 0 ? terms.map(escapeRegExp).join("|") : escapeRegExp(q);
 
- uploadedBy:req.user.id,
+    // $regex will match any of the terms (case-insensitive)
+    const documents = await Document.find({
+      uploadedBy: req.user.id,
+      $or: [
+        { title: { $regex: pattern, $options: "i" } },
+        { summary: { $regex: pattern, $options: "i" } },
+        { tags: { $regex: pattern, $options: "i" } },
+      ],
+    })
+      .populate("uploadedBy", "name email")
+      .sort({ createdAt: -1 });
 
- $or:[
+    // Score documents based on which fields match any of the terms.
+    const scoredDocuments = documents.map((doc) => {
+      let score = 0;
+      const title = (doc.title || "").toLowerCase();
+      const summary = (doc.summary || "").toLowerCase();
+      const tagList = Array.isArray(doc.tags) ? doc.tags.map((t) => (t || "").toLowerCase()) : [];
 
-  {
-   title:{
-    $regex:q,
-    $options:"i"
-   }
-  },
+      for (const term of terms) {
+        const t = term.toLowerCase();
+        if (title.includes(t)) score += 50;
+        if (summary.includes(t)) score += 30;
+        if (tagList.some((tag) => tag.includes(t))) score += 20;
+      }
 
-  {
-   summary:{
-    $regex:q,
-    $options:"i"
-   }
-  },
+      return {
+        ...doc.toObject(),
+        relevance: score,
+      };
+    });
 
-  {
-   tags:{
-    $regex:q,
-    $options:"i"
-   }
-  }
+    scoredDocuments.sort((a, b) => b.relevance - a.relevance);
 
- ]
-
-})
- .populate(
-   "uploadedBy",
-   "name email"
- )
- .sort({
-   createdAt:-1
- });
-const scoredDocuments =
-documents.map(doc=>{
-
- let score = 0;
-
- if(
-  doc.title?.toLowerCase()
-   .includes(q.toLowerCase())
- ){
-  score += 50;
- }
-
- if(
-  doc.summary?.toLowerCase()
-   .includes(q.toLowerCase())
- ){
-  score += 30;
- }
-
- if(
-  doc.tags?.some(tag =>
-   tag.toLowerCase()
-    .includes(q.toLowerCase())
-  )
- ){
-  score += 20;
- }
-
- return {
-  ...doc.toObject(),
-  relevance: score
- };
-
-})
-scoredDocuments.sort(
- (a,b)=>
-  b.relevance-a.relevance
-);
-
-
-res.status(200).json({
- success:true,
- documents: scoredDocuments
-});  } catch (error) {
+    res.status(200).json({ success: true, documents: scoredDocuments });
+  } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
