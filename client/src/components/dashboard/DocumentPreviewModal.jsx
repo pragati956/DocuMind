@@ -106,8 +106,8 @@ const DocumentPreviewModal = ({ document, onClose }) => {
             </div>
           </div>
 
-          {/* Preview Area */}
-          <div className="flex-1 bg-black relative">
+{/* Preview Area */}
+          <div className="flex-1 bg-black relative overflow-hidden">
 
             {isImage ? (
               <img
@@ -116,8 +116,8 @@ const DocumentPreviewModal = ({ document, onClose }) => {
                 className="w-full h-full object-contain"
               />
             ) : isText ? (
-              <div className="w-full h-full bg-[#0B0F19] text-gray-300 p-4 flex flex-col" style={{ scrollbarWidth: "thin" }}>
-                <div className="flex items-center justify-end gap-3 px-2 pb-2">
+              <div className="absolute inset-0 bg-[#0B0F19] text-gray-300 p-4 flex flex-col">
+                <div className="flex items-center justify-end gap-3 px-2 pb-2 shrink-0">
                   <a
                     href={document.fileUrl}
                     target="_blank"
@@ -135,7 +135,7 @@ const DocumentPreviewModal = ({ document, onClose }) => {
                   </div>
                 )}
 
-                <div className="overflow-auto flex-1 z-10" tabIndex={0} style={{ outline: "none" }}>
+                <div className="overflow-y-auto flex-1 z-10 pr-2" tabIndex={0} style={{ outline: "none", scrollbarWidth: "thin" }}>
                   <pre className="whitespace-pre-wrap font-mono text-sm leading-relaxed w-full max-w-none">{textContent}</pre>
                 </div>
               </div>
