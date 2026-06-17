@@ -1,5 +1,6 @@
 import Activity from "../models/Activity.js";
 import Document from "../models/Document.js";
+import Collection from "../models/Collection.js"; // <-- ADD THIS IMPORT
 import cloudinary from "../config/cloudinary.js"; 
 import SearchHistory
 from "../models/SearchHistory.js";
@@ -209,16 +210,30 @@ export const deleteDocument = async (req, res) => {
 
     const resourceType = (document.fileType.includes("word") || document.fileType.includes("text")) ? "raw" : "image";
 
+    // 1. Delete the physical file from Cloudinary
     await cloudinary.uploader.destroy(document.publicId, { resource_type: resourceType });
-   await Activity.create({
- userId:req.user.id,
- documentId:document._id,
- action:"deleted",
- documentName:document.title,
-});
+    
+    // 2. CASCADING DELETE: Remove document ID from all Collections
+    await Collection.updateMany(
+      { documents: document._id },
+      { $pull: { documents: document._id } }
+    );
+
+    // 3. CASCADING DELETE: Wipe all previous activity logs for this document
+    // This prevents the Activity Feed from crashing when trying to load a deleted file
+    await Activity.deleteMany({ documentId: document._id });
+
+    // 4. Log the deletion activity (we intentionally leave documentId out since it's gone)
+    await Activity.create({
+      userId: req.user.id,
+      action: "deleted",
+      documentName: document.title,
+    });
+
+    // 5. Finally, delete the document record from the database
     await Document.findByIdAndDelete(document._id);
 
-    res.status(200).json({ success: true, message: "Document deleted successfully" });
+    res.status(200).json({ success: true, message: "Document and all related data deleted successfully" });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
