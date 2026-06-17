@@ -59,6 +59,7 @@ function NavItem({ item, collapsed }) {
     <div className="relative" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
       <NavLink
         to={item.path}
+        end={item.path === "/dashboard"} // <--- ADD THIS LINE: Fixes the highlight bug!
         className={({ isActive }) =>
           `w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 relative group border
           ${isActive ? "bg-blue-500/12 text-blue-400 border-blue-500/20" : "text-gray-500 hover:text-white hover:bg-white/[0.05] border-transparent"}`
@@ -183,29 +184,6 @@ function UserCard({ collapsed }) {
     </div>
   );
 }
-
-/* ─── New Document Button ─── */
-// function NewDocButton({ collapsed ,  onUpload}) {
-//   const [hovered, setHovered] = useState(false);
-
-//   return (
-//     <div className="relative px-2 mb-4" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
-//       <motion.button
-//        onClick={onUpload}
-//        whileHover={{ scale: 1.03, boxShadow: "0 0 20px rgba(59,130,246,0.3)" }} whileTap={{ scale: 0.97 }} className={`w-full flex items-center gap-2.5 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm font-semibold shadow-[0_0_14px_rgba(59,130,246,0.25)] transition-all duration-200 ${collapsed ? "justify-center px-0" : "px-4"}`}>
-//         <FiPlus className="text-base shrink-0" />
-//         <AnimatePresence>
-//           {!collapsed && (
-//             <motion.span initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -4 }} transition={{ duration: 0.15 }} className="whitespace-nowrap">
-//               New Document
-//             </motion.span>
-//           )}
-//         </AnimatePresence>
-//       </motion.button>
-//       {collapsed && <Tooltip label="New Document" visible={hovered} />}
-//     </div>
-//   );
-// }
 
 /* ─── Section Label ─── */
 function SectionLabel({ label, collapsed }) {
