@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { summarizeDocument } from "../../services/aiService";
-import axios from "axios"; 
-const API_URL =
- import.meta.env.VITE_API_URL;
+import axios from "axios";
+const API_URL = import.meta.env.VITE_API_URL;
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiFileText, FiMoreHorizontal, FiDownload,
@@ -11,6 +10,7 @@ import {
   FiGrid, FiList, FiZap, FiCheck, FiX,
   FiClock, FiFolder, FiStar, FiChevronRight,
 } from "react-icons/fi";
+import DocumentPreviewModal from "./DocumentPreviewModal"; // <-- ADD THIS LINE
 
 /* ─── File Icon ─── */
 function FileIcon({ ext, gradient, size = "md" }) {
@@ -44,6 +44,7 @@ function ContextMenu({
   onClose,
   onDelete,
   onSummarize,
+  onView, // <-- 1. Add onView here
 }) {
   const items = [
     { icon: <FiEye />, label: "View document" },
@@ -56,7 +57,7 @@ function ContextMenu({
   const handleAction = async (item) => {
     try {
       if(item.label === "View document") {
-        window.open(doc.fileUrl, "_blank");
+        onView(doc); // <-- 2. Replace window.open with this
       }
       if(item.label === "Download") {
         const link = document.createElement("a");
@@ -112,7 +113,8 @@ function DocRow({
   index,
   onSummarize,
   onDelete,
-  onToggleStar
+  onToggleStar,
+  onView // <-- Add onView here
 }) {
   const [hovered, setHovered] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -177,7 +179,7 @@ function DocRow({
           whileTap={{ scale: 0.9 }}
           onClick={(e)=>{
             e.stopPropagation();
-            window.open(doc.fileUrl, "_blank");
+            onView(doc); // <-- Replace window.open with this
           }}
           className="w-7 h-7 rounded-lg bg-white/5 border border-white/[0.07] flex items-center justify-center hover:bg-white/10 transition-all"
         >
@@ -199,7 +201,7 @@ function DocRow({
 }
 
 /* ─── Document Card (Grid View) ─── */
-function DocCard({ doc, index, onSummarize, onDelete, onToggleStar }) {
+function DocCard({ doc, index, onSummarize, onDelete, onToggleStar, onView }) {
   const [hovered, setHovered] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -245,7 +247,7 @@ function DocCard({ doc, index, onSummarize, onDelete, onToggleStar }) {
             <FiMoreHorizontal className="text-xs" />
           </motion.button>
           <AnimatePresence>
-            {menuOpen && <ContextMenu doc={doc} onDelete={onDelete} onToggleStar={onToggleStar} onSummarize={onSummarize} onClose={() => setMenuOpen(false)} />}
+            {menuOpen && <ContextMenu doc={doc} onDelete={onDelete} onToggleStar={onToggleStar} onSummarize={onSummarize} onView={onView} onClose={() => setMenuOpen(false)} />}
           </AnimatePresence>
         </div>
       </div>
@@ -269,16 +271,9 @@ function DocCard({ doc, index, onSummarize, onDelete, onToggleStar }) {
         <motion.div
           animate={{ opacity: hovered ? 1 : 0, y: hovered ? 0 : 6 }}
           transition={{ duration: 0.2 }}
-          className="mt-3 pt-3 border-t border-white/[0.05] flex items-center justify-between"
+          className="mt-3 pt-3 border-t border-white/[0.05] flex items-center justify-start"
         >
           <span className={`text-[10px] font-medium ${doc.accentText}`}>{doc.owner}</span>
-          <motion.span
-            animate={{ x: hovered ? [0, 3, 0] : 0 }}
-            transition={{ duration: 1, repeat: hovered ? Infinity : 0 }}
-            className={`flex items-center gap-1 text-[10px] font-semibold ${doc.accentText}`}
-          >
-            View <FiChevronRight className="text-[10px]" />
-          </motion.span>
         </motion.div>
       </div>
     </motion.div>
@@ -306,6 +301,7 @@ export default function RecentDocuments() {
   const [view, setView] = useState("list");
   const [activeFilter, setActiveFilter] = useState("All");
   const [docs, setDocs] = useState([]);
+  const [selectedDoc, setSelectedDoc] = useState(null); // <-- ADD THIS LINE
 
   const filters = [
     "All",
@@ -316,7 +312,7 @@ export default function RecentDocuments() {
   const fetchDocuments = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get(`${API_URL}/api/documents/all`, {
+      const res = await axios.get(`${API_URL}/documents/all`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -373,7 +369,7 @@ export default function RecentDocuments() {
   const handleDelete = async (docId) => {
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`${API_URL}/api/documents/${docId}`, {
+      await axios.delete(`${API_URL}/documents/${docId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 setDocs(prev =>
@@ -390,7 +386,7 @@ setDocs(prev =>
     try {
       const token = localStorage.getItem("token");
       await axios.patch(
-        `${API_URL}/api/documents/${docId}/star`,
+        `${API_URL}/documents/${docId}/star`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -483,7 +479,7 @@ setDocs(prev =>
                 {filtered.length > 0
                   ? latest.map((doc, i) => (
                     <React.Fragment key={doc.id}>
-                      <DocRow doc={doc} index={i} onDelete={handleDelete} onSummarize={handleSummarize} onToggleStar={handleToggleStar} />
+                      <DocRow doc={doc} index={i} onDelete={handleDelete} onSummarize={handleSummarize} onToggleStar={handleToggleStar} onView={setSelectedDoc} />
                       {i < latest.length - 1 && <div className="mx-5 h-px bg-[#1F2937]" />}
                     </React.Fragment>
                   ))
@@ -498,7 +494,7 @@ setDocs(prev =>
               <AnimatePresence>
                 {filtered.length > 0
                   ? <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {latest.map((doc, i) => <DocCard key={doc.id} doc={doc} index={i} onDelete={handleDelete} onSummarize={handleSummarize} onToggleStar={handleToggleStar} />)}
+                    {latest.map((doc, i) => <DocCard key={doc.id} doc={doc} index={i} onDelete={handleDelete} onSummarize={handleSummarize} onToggleStar={handleToggleStar} onView={setSelectedDoc} />)}
                   </div>
                   : <EmptyState filter={activeFilter} />
                 }
@@ -507,6 +503,13 @@ setDocs(prev =>
           )}
         </div>
       </div>
+      {/* --- ADD THE MODAL HERE --- */}
+      {selectedDoc && (
+        <DocumentPreviewModal
+          document={selectedDoc}
+          onClose={() => setSelectedDoc(null)}
+        />
+      )}
     </>
   );
 }

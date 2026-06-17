@@ -32,9 +32,8 @@ import {
 } from "react-icons/hi";
 import { HiOutlineDocumentDuplicate, HiMiniSparkles } from "react-icons/hi2";
 import { BsFilePdf, BsFileWord, BsFileText, BsStars,BsFileImage } from "react-icons/bs";
-import { FiStar } from "react-icons/fi";
+import { FiStar, FiFolderPlus, FiEye } from "react-icons/fi";
 import AddToCollectionModal from "../../components/dashboard/AddToCollectionModal";
-import { FiFolderPlus } from "react-icons/fi";
 
 const FILTERS = [
  "All",
@@ -200,6 +199,17 @@ function DocRow({ doc, index, onSummarize, onDelete, onToggleStar, onView, onEdi
         <button onClick={(e) => { e.stopPropagation(); onToggleStar(doc.id); }} className="rounded-lg p-1.5 text-white/30 hover:bg-white/5 hover:text-amber-400 transition-colors">
           <FiStar className={doc.starred ? "text-amber-400" : ""} style={{ fill: doc.starred ? "#f59e0b" : "none" }} />
         </button>
+        <motion.button
+          whileHover={{ scale: 1.12 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onView(doc); // open preview via prop instead of new tab
+          }}
+          className="w-7 h-7 rounded-lg bg-white/5 border border-white/[0.07] flex items-center justify-center hover:bg-white/10 transition-all"
+        >
+          <FiEye className="text-xs" />
+        </motion.button>
         <button onClick={() => setMenuOpen((v) => !v)} className="rounded-lg p-1.5 text-white/30 hover:bg-white/10 hover:text-white/70 transition-colors">
           <HiOutlineDotsVertical />
         </button>

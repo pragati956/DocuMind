@@ -2,8 +2,7 @@ import { useState, useRef, useCallback, useEffect, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import toast from "react-hot-toast";
-const API_URL =
- import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL;
 import { AuthContext } from "../../context/AuthContext";
 import {
   HiOutlineCloudUpload,

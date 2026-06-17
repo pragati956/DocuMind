@@ -14,10 +14,18 @@ export default function OAuthCallback() {
     const userString = params.get("user");
 
     if (token && userString) {
-      const user = JSON.parse(decodeURIComponent(userString));
-      login(user, token);
-      toast.success("Login successful");
-      navigate("/dashboard");
+      try {
+        const user = JSON.parse(decodeURIComponent(userString));
+        login(user, token);
+        toast.success("Login successful");
+        // Force a full reload to the dashboard so the app picks up the saved token
+        // and initializes all providers immediately.
+        window.location.replace("/dashboard");
+      } catch (err) {
+        console.error("OAuthCallback parse error", err);
+        toast.error("Authentication failed");
+        navigate("/login");
+      }
     } else {
       toast.error("Authentication failed");
       navigate("/login");

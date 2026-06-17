@@ -1,12 +1,67 @@
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { HiOutlineX, HiOutlineDownload } from "react-icons/hi";
 
 const DocumentPreviewModal = ({ document, onClose }) => {
+  const [textContent, setTextContent] = useState("");
+  const [loadingText, setLoadingText] = useState(false);
+
+  useEffect(() => {
+    if (!document) return;
+    const ext = document.name?.split(".").pop().toLowerCase() || "";
+    const isTextFile = ["txt", "md", "csv", "json"].includes(ext);
+
+    let cancelled = false;
+
+    const loadText = async () => {
+      if (!isTextFile) return;
+      setLoadingText(true);
+      try {
+        const res = await fetch(document.fileUrl, { method: "GET", mode: "cors" });
+        let text = "";
+        try {
+          text = await res.text();
+        } catch (err) {
+          const blob = await res.blob();
+          text = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(String(reader.result || ""));
+            reader.onerror = (e) => reject(e);
+            reader.readAsText(blob);
+          });
+        }
+
+        if (!cancelled) setTextContent(text || "");
+      } catch (err) {
+        console.error("Text fetch error:", err);
+        if (!cancelled) setTextContent("Failed to load text content. Try 'View Raw'.");
+      } finally {
+        if (!cancelled) setLoadingText(false);
+      }
+    };
+
+    loadText();
+
+    return () => { cancelled = true; };
+  }, [document]);
+
   if (!document) return null;
 
- const isImage =
-  ["PNG", "JPG", "JPEG", "png", "jpg", "jpeg"]
-    .includes(document.type);
+  const ext = document.name?.split('.').pop().toLowerCase() || "";
+  const isImage = ["png", "jpg", "jpeg", "webp", "gif"].includes(ext);
+  const isOffice = ["doc", "docx", "ppt", "pptx", "xls", "xlsx"].includes(ext);
+  const isPdf = ext === "pdf";
+  const isText = ["txt", "md", "csv", "json"].includes(ext);
+
+  let viewerUrl = "";
+  if (isOffice) {
+    // Google Docs viewer works well when the file URL is publicly reachable
+    viewerUrl = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(document.fileUrl)}`;
+  } else if (isPdf) {
+    viewerUrl = `https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(document.fileUrl)}`;
+  } else {
+    viewerUrl = document.fileUrl;
+  }
 
   return (
     <AnimatePresence>
@@ -51,8 +106,8 @@ const DocumentPreviewModal = ({ document, onClose }) => {
             </div>
           </div>
 
-          {/* Preview Area */}
-          <div className="flex-1 bg-black">
+{/* Preview Area */}
+          <div className="flex-1 bg-black relative overflow-hidden">
 
             {isImage ? (
               <img
@@ -60,12 +115,47 @@ const DocumentPreviewModal = ({ document, onClose }) => {
                 alt={document.name}
                 className="w-full h-full object-contain"
               />
+            ) : isText ? (
+              <div className="absolute inset-0 bg-[#0B0F19] text-gray-300 p-4 flex flex-col">
+                <div className="flex items-center justify-end gap-3 px-2 pb-2 shrink-0">
+                  <a
+                    href={document.fileUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs text-gray-400 hover:text-white underline"
+                  >
+                    View Raw
+                  </a>
+                </div>
+
+                {loadingText && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 z-20 pointer-events-none">
+                    <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+                    <p className="text-sm font-medium">Loading text...</p>
+                  </div>
+                )}
+
+                <div className="overflow-y-auto flex-1 z-10 pr-2" tabIndex={0} style={{ outline: "none", scrollbarWidth: "thin" }}>
+                  <pre className="whitespace-pre-wrap font-mono text-sm leading-relaxed w-full max-w-none">{textContent}</pre>
+                </div>
+              </div>
             ) : (
-              <iframe
-                src={document.fileUrl}
-                title={document.name}
-                className="w-full h-full"
-              />
+              <div className="relative w-full h-full bg-white">
+                {/* Fallback text sitting behind the iframe */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 z-0">
+                  <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+                  <p className="text-sm font-medium">Loading preview...</p>
+                  <p className="text-xs mt-1">If the preview doesn't load, use the Download button above.</p>
+                </div>
+
+                {/* The actual viewer iframe */}
+                <iframe
+                  src={viewerUrl}
+                  title={document.name}
+                  className="w-full h-full border-none relative z-10"
+                  allowFullScreen
+                />
+              </div>
             )}
 
           </div>

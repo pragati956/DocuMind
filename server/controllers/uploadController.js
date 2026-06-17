@@ -1,7 +1,9 @@
 import Activity from "../models/Activity.js";
 import Document from "../models/Document.js";
+import Collection from "../models/Collection.js"; // <-- ADD THIS IMPORT
 import cloudinary from "../config/cloudinary.js"; 
-import SearchHistory from "../models/SearchHistory.js";
+import SearchHistory
+from "../models/SearchHistory.js";
 
 // ─── UPLOAD DOCUMENT ───
 export const uploadDocument = async (req, res) => {
@@ -13,6 +15,8 @@ export const uploadDocument = async (req, res) => {
       console.log("❌ ERROR: req.file is undefined. Multer or Cloudinary rejected the stream.");
       return res.status(400).json({ message: "No file uploaded" });
     }
+    
+
 
     const fileUrl = req.file.path || req.file.secure_url;
     const publicId = req.file.filename || req.file.public_id;
@@ -29,13 +33,12 @@ export const uploadDocument = async (req, res) => {
       fileSize: req.file.size || 0,
       uploadedBy: req.user.id, 
     });
-
    await Activity.create({
-     userId:req.user.id,
-     documentId:newDocument._id,
-     action:"uploaded",
-     documentName:newDocument.title,
-    });
+ userId:req.user.id,
+ documentId:newDocument._id,
+ action:"uploaded",
+ documentName:newDocument.title,
+});
 
     console.log("✅ SUCCESS! Saved to MongoDB:", newDocument._id);
 
@@ -58,18 +61,19 @@ export const getDocuments = async (req, res) => {
 
     const totalDocuments = await Document.countDocuments({ uploadedBy: req.user.id });
     
-   const documents = await Document.find({
-      uploadedBy:req.user.id
-   })
-   .populate(
-     "uploadedBy",
-     "name email"
-   )
-   .sort({
-     createdAt:-1
-   })
-   .skip(skip)
-   .limit(limit);
+   const documents =
+ await Document.find({
+  uploadedBy:req.user.id
+ })
+ .populate(
+   "uploadedBy",
+   "name email"
+ )
+ .sort({
+   createdAt:-1
+ })
+ .skip(skip)
+ .limit(limit);
 
     res.status(200).json({
       success: true,
@@ -88,83 +92,57 @@ export const searchDocuments = async (req, res) => {
   try {
     const { q } = req.query;
     
-    if (!q) {
+    // Prevent empty or space-only queries
+    if (!q || !q.trim()) {
       return res.status(400).json({ success: false, message: "Search query 'q' is required" });
     }
 
-  const documents = await Document.find({
-    uploadedBy:req.user.id,
-    $or:[
-      {
-       title:{
-        $regex:q,
-        $options:"i"
-       }
-      },
-      {
-       summary:{
-        $regex:q,
-        $options:"i"
-       }
-      },
-      {
-       tags:{
-        $regex:q,
-        $options:"i"
-       }
+    const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const terms = q.split(/\s+/).map((t) => t.trim()).filter(Boolean);
+
+    // CREATE AN $AND ARRAY SO EVERY WORD MUST MATCH SOMEWHERE
+    const andConditions = terms.map(term => {
+      const pattern = escapeRegExp(term);
+      return {
+        $or: [
+          { title: { $regex: pattern, $options: "i" } },
+          { summary: { $regex: pattern, $options: "i" } },
+          { tags: { $regex: pattern, $options: "i" } }
+        ]
+      };
+    });
+
+    // $and guarantees that searching "Q4 Report" only returns files containing BOTH words.
+    const documents = await Document.find({
+      uploadedBy: req.user.id,
+      $and: andConditions
+    })
+      .populate("uploadedBy", "name email")
+      .sort({ createdAt: -1 });
+
+    // Score documents based on which fields match any of the terms.
+    const scoredDocuments = documents.map((doc) => {
+      let score = 0;
+      const title = (doc.title || "").toLowerCase();
+      const summary = (doc.summary || "").toLowerCase();
+      const tagList = Array.isArray(doc.tags) ? doc.tags.map((t) => (t || "").toLowerCase()) : [];
+
+      for (const term of terms) {
+        const t = term.toLowerCase();
+        if (title.includes(t)) score += 50;
+        if (summary.includes(t)) score += 30;
+        if (tagList.some((tag) => tag.includes(t))) score += 20;
       }
-    ]
-  })
-  .populate(
-     "uploadedBy",
-     "name email"
-  )
-  .sort({
-     createdAt:-1
-  });
 
-  const scoredDocuments = documents.map(doc=>{
-   let score = 0;
+      return {
+        ...doc.toObject(),
+        relevance: score,
+      };
+    });
 
-   if(
-    doc.title?.toLowerCase()
-     .includes(q.toLowerCase())
-   ){
-    score += 50;
-   }
+    scoredDocuments.sort((a, b) => b.relevance - a.relevance);
 
-   if(
-    doc.summary?.toLowerCase()
-     .includes(q.toLowerCase())
-   ){
-    score += 30;
-   }
-
-   if(
-    doc.tags?.some(tag =>
-     tag.toLowerCase()
-      .includes(q.toLowerCase())
-    )
-   ){
-    score += 20;
-   }
-
-   return {
-    ...doc.toObject(),
-    relevance: score
-   };
-
-  })
-
-  scoredDocuments.sort(
-   (a,b)=>
-    b.relevance-a.relevance
-  );
-
-  res.status(200).json({
-   success:true,
-   documents: scoredDocuments
-  });  
+    res.status(200).json({ success: true, documents: scoredDocuments });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -206,11 +184,11 @@ export const updateDocument = async (req, res) => {
       return res.status(404).json({ success: false, message: "Document not found or unauthorized" });
     }
    await Activity.create({
-     userId:req.user.id,
-     documentId:document._id,
-     action:"edited",
-     documentName:document.title,
-    });
+ userId:req.user.id,
+ documentId:document._id,
+ action:"edited",
+ documentName:document.title,
+});
 
     res.status(200).json({ success: true, message: "Document updated successfully", document });
   } catch (error) {
@@ -232,24 +210,41 @@ export const deleteDocument = async (req, res) => {
 
     const resourceType = (document.fileType.includes("word") || document.fileType.includes("text")) ? "raw" : "image";
 
+    // 1. Delete the physical file from Cloudinary
     await cloudinary.uploader.destroy(document.publicId, { resource_type: resourceType });
+    
+    // 2. CASCADING DELETE: Remove document ID from all Collections
+    await Collection.updateMany(
+      { documents: document._id },
+      { $pull: { documents: document._id } }
+    );
+
+    // 3. CASCADING DELETE: Wipe all previous activity logs for this document
+    // This prevents the Activity Feed from crashing when trying to load a deleted file
+    await Activity.deleteMany({ documentId: document._id });
+
+    // 4. Log the deletion activity (we intentionally leave documentId out since it's gone)
     await Activity.create({
-     userId:req.user.id,
-     documentId:document._id,
-     action:"deleted",
-     documentName:document.title,
+      userId: req.user.id,
+      action: "deleted",
+      documentName: document.title,
     });
+
+    // 5. Finally, delete the document record from the database
     await Document.findByIdAndDelete(document._id);
 
-    res.status(200).json({ success: true, message: "Document deleted successfully" });
+    res.status(200).json({ success: true, message: "Document and all related data deleted successfully" });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+export const toggleStarDocument =
+async (req, res) => {
 
-export const toggleStarDocument = async (req, res) => {
  try {
-  const document = await Document.findOne({
+
+  const document =
+   await Document.findOne({
     _id: req.params.id,
     uploadedBy: req.user.id,
    });
@@ -259,17 +254,19 @@ export const toggleStarDocument = async (req, res) => {
     success: false,
     message: "Document not found",
    });
+
   }
 
-  document.starred = !document.starred;
-  await document.save();
+  document.starred =
+   !document.starred;
 
-  await Activity.create({
-   userId:req.user.id,
-   documentId:document._id,
-   action:"starred",
-   documentName:document.title,
-  });
+  await document.save();
+ await Activity.create({
+ userId:req.user.id,
+ documentId:document._id,
+ action:"starred",
+ documentName:document.title,
+});
 
   res.status(200).json({
    success: true,
@@ -281,33 +278,38 @@ export const toggleStarDocument = async (req, res) => {
    success: false,
    message: error.message,
   });
- }
-};
 
-// Changed: Removed duplicated and cut-off functions to fix syntax errors
-// ─── GET SEARCH STATS ───
-export const getSearchStats = async (req, res) => {
+ }
+
+};
+export const getSearchStats =
+async (req, res) => {
+
  try {
-  const totalDocs = await Document.countDocuments({
+
+  const totalDocs =
+   await Document.countDocuments({
     uploadedBy: req.user.id
    });
 
-  const pdfs = await Document.countDocuments({
+  const pdfs =
+   await Document.countDocuments({
     uploadedBy: req.user.id,
     fileType: {
      $regex: "pdf",
      $options: "i"
     }
    });
+   const summaries =
+ await Document.countDocuments({
+  uploadedBy:req.user.id,
+  summary:{
+   $ne:""
+  }
+ });
 
-   const summaries = await Document.countDocuments({
-    uploadedBy:req.user.id,
-    summary:{
-     $ne:""
-    }
-   });
-
-  const docx = await Document.countDocuments({
+  const docx =
+   await Document.countDocuments({
     uploadedBy: req.user.id,
     fileType: {
      $regex: "word",
@@ -315,7 +317,8 @@ export const getSearchStats = async (req, res) => {
     }
    });
 
-  const txt = await Document.countDocuments({
+  const txt =
+   await Document.countDocuments({
     uploadedBy: req.user.id,
     fileType: {
      $regex: "text",
@@ -331,18 +334,24 @@ export const getSearchStats = async (req, res) => {
    txt,
    summaries
   });
+
  } catch (error) {
+
   res.status(500).json({
    success: false,
    message: error.message,
   });
- }
-};
 
-// ─── GET CATEGORIES ───
-export const getCategories = async (req,res)=>{
+ }
+
+};
+export const getCategories =
+async (req,res)=>{
+
  try{
-  const documents = await Document.find({
+
+  const documents =
+   await Document.find({
     uploadedBy:req.user.id
    });
 
@@ -351,19 +360,27 @@ export const getCategories = async (req,res)=>{
   let txt = 0;
 
   documents.forEach(doc=>{
+
    if(
-    doc.fileType?.includes("pdf")
+    doc.fileType?.includes(
+      "pdf"
+    )
    ){
     pdf++;
    }
+
    else if(
-    doc.fileType?.includes("word")
+    doc.fileType?.includes(
+      "word"
+    )
    ){
     docx++;
    }
+
    else{
     txt++;
    }
+
   });
 
   res.json({
@@ -383,64 +400,82 @@ export const getCategories = async (req,res)=>{
     }
    ]
   });
+
  }
  catch(error){
+
   res.status(500).json({
    success:false,
    message:error.message
   });
- }
-};
 
-// ─── GET DOCUMENTS BY TYPE ───
-export const getDocumentsByType = async (req,res)=>{
+ }
+
+};
+export const getDocumentsByType =
+async (req,res)=>{
+
  try{
-  const { type } = req.params;
+
+  const { type } =
+   req.params;
+
   let regex = "";
 
-  if (type === "PDF") {
-   regex = "pdf";
-  }
-  else if (type === "DOCX") {
-   regex = "word";
-  }
-  else if (type === "TXT") {
-   regex = "text";
-  }
-  else if (type === "IMAGE") {
-   regex = "image";
-  }
+if (type === "PDF") {
+ regex = "pdf";
+}
 
-  const documents = await Document.find({
-    uploadedBy: req.user.id,
-    fileType: {
-     $regex: regex,
-     $options: "i",
-    },
-   });
+else if (type === "DOCX") {
+ regex = "word";
+}
+
+else if (type === "TXT") {
+ regex = "text";
+}
+
+else if (type === "IMAGE") {
+ regex = "image";
+}
+
+const documents =
+ await Document.find({
+  uploadedBy: req.user.id,
+  fileType: {
+   $regex: regex,
+   $options: "i",
+  },
+ });
 
   res.json({
    success:true,
    documents
   });
+
  }
  catch(error){
+
   res.status(500).json({
    success:false,
    message:error.message
   });
- }
-};
 
-// ─── GET SUGGESTIONS ───
-export const getSuggestions = async (req,res)=>{
+ }
+
+};
+export const getSuggestions =
+async (req,res)=>{
+
  try{
-  const documents = await Document.find({
+
+  const documents =
+   await Document.find({
     uploadedBy:req.user.id
    })
    .limit(10);
 
-  const suggestions = documents.map(
+  const suggestions =
+   documents.map(
     doc => doc.title
    );
 
@@ -448,101 +483,158 @@ export const getSuggestions = async (req,res)=>{
    success:true,
    suggestions
   });
+
  }
  catch(error){
+
   res.status(500).json({
    success:false,
    message:error.message
   });
- }
-};
 
-// ─── SAVE SEARCH HISTORY ───
-export const saveSearchHistory = async (req,res)=>{
+ }
+
+};
+export const saveSearchHistory =
+async (req,res)=>{
+
  try{
+
   const {
    query,
    resultsCount
   } = req.body;
 
-  const history = await SearchHistory.create({
+  const history =
+   await SearchHistory.create({
+
     userId:req.user.id,
+
     query,
+
     resultsCount
+
    });
 
   res.status(201).json({
+
    success:true,
    history
+
   });
+
  }
  catch(error){
+
   res.status(500).json({
+
    success:false,
    message:error.message
-  });
- }
-};
 
-// ─── GET SEARCH HISTORY ───
-export const getSearchHistory = async (req,res)=>{
+  });
+
+ }
+
+};
+export const getSearchHistory =
+async (req,res)=>{
+
  try{
-  const history = await SearchHistory.find({
+
+  const history =
+
+   await SearchHistory.find({
+
     userId:req.user.id
+
    })
+
    .sort({
     createdAt:-1
    })
+
    .limit(10);
 
   res.json({
+
    success:true,
    history
+
   });
+
  }
  catch(error){
+
   res.status(500).json({
+
    success:false,
    message:error.message
-  });
- }
-};
 
-// ─── CLEAR SEARCH HISTORY ───
-export const clearSearchHistory = async (req,res)=>{
+  });
+
+ }
+
+};
+export const clearSearchHistory =
+async (req,res)=>{
+
  try{
+
   await SearchHistory.deleteMany({
+
    userId:req.user.id
+
   });
 
   res.json({
+
    success:true
+
   });
+
  }
  catch(error){
+
   res.status(500).json({
+
    success:false,
    message:error.message
+
   });
+
  }
+
 };
+export const deleteSearchHistory =
+async (req,res)=>{
 
-// ─── DELETE SEARCH HISTORY ITEM ───
-export const deleteSearchHistory = async (req,res)=>{
  try{
+
   await SearchHistory.findOneAndDelete({
+
    _id:req.params.id,
+
    userId:req.user.id
+
   });
 
   res.json({
+
    success:true
+
   });
+
  }
  catch(error){
+
   res.status(500).json({
+
    success:false,
+
    message:error.message
+
   });
+
  }
+
 };

@@ -78,13 +78,14 @@ function SummaryCard({ summary, index }) {
   
   return (
     <motion.div
-      layout // <--- FIXED: This allows smooth height shrinking
+      layout // Tracks height changes
       initial={{ opacity: 0, y: 24, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.5, delay: index * 0.09, ease: [0.22, 1, 0.36, 1] }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="relative rounded-2xl border bg-[#111827] overflow-hidden transition-all duration-300"
+      // Added 'break-inside-avoid w-full inline-block mb-4' for masonry layout
+      className="relative rounded-2xl border bg-[#111827] overflow-hidden transition-all duration-300 break-inside-avoid w-full inline-block mb-4"
       style={{
         borderColor: hovered ? summary.accentBorder : "rgba(31,41,55,1)",
         boxShadow: hovered
@@ -134,15 +135,9 @@ function SummaryCard({ summary, index }) {
 
           {/* Right actions */}
           <div className="flex items-center gap-1.5 shrink-0">
-{
-  summary.confidence !== null &&
-  (
-    <ConfidenceRing
-      value={summary.confidence}
-      color={summary.accent}
-    />
-  )
-}
+            {summary.confidence !== null && (
+              <ConfidenceRing value={summary.confidence} color={summary.accent} />
+            )}
             <motion.button
               whileHover={{ scale: 1.15 }}
               whileTap={{ scale: 0.9 }}
@@ -210,14 +205,14 @@ function SummaryCard({ summary, index }) {
             </motion.div>
           </AnimatePresence>
 
-          {isLong && (
+          {isLong && !expanded && (
             <motion.button
               layout
               whileHover={{ x: 2 }}
-              onClick={() => setExpanded(!expanded)}
+              onClick={() => setExpanded(true)}
               className={`flex items-center gap-1 mt-1.5 text-[11px] font-medium ${summary.accentText} transition-colors`}
             >
-              {expanded ? <>Show less <FiChevronUp className="text-[10px]" /></> : <>Read more <FiChevronDown className="text-[10px]" /></>}
+              Read more <FiChevronDown className="text-[10px]" />
             </motion.button>
           )}
         </motion.div>
@@ -226,13 +221,14 @@ function SummaryCard({ summary, index }) {
         <AnimatePresence>
           {expanded && (
             <motion.div
+              layout
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.3 }}
               className="mb-3 overflow-hidden"
             >
-              <p className="text-[10px] text-gray-600 font-semibold uppercase tracking-widest mb-2">Key Insights</p>
+              <p className="text-[10px] text-gray-600 font-semibold uppercase tracking-widest mb-2 mt-2">Key Insights</p>
               <div className="grid grid-cols-2 gap-1.5">
                 {summary.keyInsights.map((point, i) => (
                   <motion.div
@@ -248,12 +244,22 @@ function SummaryCard({ summary, index }) {
                   </motion.div>
                 ))}
               </div>
+
+              {/* Show less button */}
+              <motion.button 
+                layout
+                whileHover={{ x: -2 }} 
+                onClick={() => setExpanded(false)}
+                className={`flex items-center gap-1 mt-4 text-[11px] font-medium ${summary.accentText} transition-colors`}
+              >
+                <FiChevronUp className="text-[10px]" /> Show less
+              </motion.button>
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* Tags */}
-        <motion.div layout className="flex items-center gap-1.5 flex-wrap mb-4">
+        <motion.div layout className="flex items-center gap-1.5 flex-wrap mb-4 mt-2">
           {summary.tags.map((tag, i) => (
             <motion.span
               key={i}
@@ -269,8 +275,8 @@ function SummaryCard({ summary, index }) {
           ))}
         </motion.div>
 
-        {/* Footer actions */}
-        <motion.div layout className="flex items-center justify-between pt-3 border-t border-white/[0.05]">
+        {/* Footer actions (View Full removed) */}
+        <motion.div layout className="flex items-center justify-start pt-3 border-t border-white/[0.05]">
           <div className="flex items-center gap-1.5">
             <CopyButton text={summary.insight} accent={summary.accent} />
             <motion.button
@@ -281,22 +287,6 @@ function SummaryCard({ summary, index }) {
               <FiShare2 className="text-xs" />
             </motion.button>
           </div>
-
-          <motion.button
-            whileHover={{ scale: 1.04, x: 2 }}
-            whileTap={{ scale: 0.97 }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold border transition-all duration-200 ${summary.accentText}`}
-            style={{ background: summary.accentDim, borderColor: summary.accentBorder }}
-          >
-            <FiEye className="text-[10px]" />
-            View Full
-            <motion.span
-              animate={{ x: hovered ? [0, 3, 0] : 0 }}
-              transition={{ duration: 1, repeat: hovered ? Infinity : 0 }}
-            >
-              <FiArrowRight className="text-[10px]" />
-            </motion.span>
-          </motion.button>
         </motion.div>
       </motion.div>
     </motion.div>
@@ -531,7 +521,7 @@ if (minutes < 60)
       {/* Cards */}
       <AnimatePresence mode="popLayout">
         {latestSummaries.length > 0 ? (
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+          <div className="columns-1 xl:columns-2 gap-4">
             {latestSummaries.map((summary, index) => (
               <SummaryCard
                 key={summary._id}
