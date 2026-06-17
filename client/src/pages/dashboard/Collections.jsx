@@ -21,6 +21,7 @@ import {
 // Add the new services and markdown support
 import { getCollectionById, summarizeCollection } from "../../services/collectionService";
 import ReactMarkdown from "react-markdown";
+import DocumentPreviewModal from "../../components/dashboard/DocumentPreviewModal"; // <-- ADD THIS
 
 /* ─── Privacy Icon ─── */
 function PrivacyIcon({ type }) {
@@ -394,7 +395,7 @@ function EmptyCollectionState({ onCreate }) {
 }
 
 /* ─── View Collection Modal ─── */
-function ViewCollectionModal({ collectionId, onClose }) {
+function ViewCollectionModal({ collectionId, onClose, onDocClick }) {
   const [col, setCol] = useState(null);
   const [loading, setLoading] = useState(true);
   const [summarizing, setSummarizing] = useState(false);
@@ -480,7 +481,8 @@ function ViewCollectionModal({ collectionId, onClose }) {
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {col.documents.map(doc => (
-                      <div key={doc._id} className="p-4 rounded-xl border border-white/5 bg-white/[0.02] flex items-center gap-3 hover:bg-white/[0.04] transition-colors cursor-pointer" onClick={() => window.open(doc.fileUrl, "_blank")}>
+                      <div key={doc._id} className="p-4 rounded-xl border border-white/5 bg-white/[0.02] flex items-center gap-3 hover:bg-white/[0.04] transition-colors cursor-pointer" onClick={() => onDocClick({ id: doc._id, name: doc.title, fileUrl: doc.fileUrl, type: doc.fileType || "Document" })} // <-- REPLACE window.open WITH THIS
+                      >
                         <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 shrink-0">
                           <FiFileText />
                         </div>
@@ -510,7 +512,7 @@ const [searchQuery, setSearchQuery] = useState("");
 const [searchFocused, setSearchFocused] =
  useState(false);
   const [viewingCollection, setViewingCollection] = useState(null);
-
+const [selectedDoc, setSelectedDoc] = useState(null); // <-- ADD THIS STATE
 const isSearching =
  searchQuery.trim() !== "";
   const [showModal, setShowModal] = useState(false);
@@ -668,16 +670,17 @@ setCollections(prev =>
   };
 
   const filtered = collections.filter((c) => {
-    const matchSearch = !searchQuery ||(c.name || "")
-.toLowerCase()
-.includes(
- searchQuery
-  .trim()
-  .toLowerCase()
-);
+    const query = searchQuery.trim().toLowerCase();
+    
+    // Now searches through BOTH the collection name and description
+    const matchSearch = !query || 
+      (c.name || "").toLowerCase().includes(query) || 
+      (c.desc || "").toLowerCase().includes(query);
+
     const matchFilter = activeFilter === "All" ? true
       : activeFilter === "Starred" ? c.starred
       : c.privacy === activeFilter.toLowerCase();
+      
     return matchSearch && matchFilter;
   });
 
@@ -735,6 +738,20 @@ setCollections(prev =>
               <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => setSearchFocused(true)} onBlur={() => setSearchFocused(false)}
                 placeholder="Search collections…" className="bg-transparent text-white text-xs placeholder-gray-700 outline-none w-32" />
+              {/* Added Clear Button */}
+              <AnimatePresence>
+                {searchQuery && (
+                  <motion.button 
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    onClick={() => setSearchQuery("")} 
+                    className="text-gray-500 hover:text-white transition-colors"
+                  >
+                    <FiX className="text-xs" />
+                  </motion.button>
+                )}
+              </AnimatePresence>
             </motion.div>
 
             <div className="flex items-center gap-0.5 p-1 rounded-xl border border-[#1F2937] bg-white/[0.02]">
@@ -801,6 +818,17 @@ setCollections(prev =>
           <ViewCollectionModal 
             collectionId={viewingCollection} 
             onClose={() => setViewingCollection(null)} 
+            onDocClick={(doc) => setSelectedDoc(doc)} // <-- ADD THIS PROP
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Document Preview Modal */}
+      <AnimatePresence>
+        {selectedDoc && (
+          <DocumentPreviewModal
+            document={selectedDoc}
+            onClose={() => setSelectedDoc(null)}
           />
         )}
       </AnimatePresence>
