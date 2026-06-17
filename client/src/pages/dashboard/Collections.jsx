@@ -22,6 +22,8 @@ import {
 import { getCollectionById, summarizeCollection } from "../../services/collectionService";
 import ReactMarkdown from "react-markdown";
 import DocumentPreviewModal from "../../components/dashboard/DocumentPreviewModal"; // <-- ADD THIS
+// --- ADD THIS IMPORT ---
+import { deleteDocument } from "../../services/documentService";
 
 /* ─── Privacy Icon ─── */
 function PrivacyIcon({ type }) {
@@ -419,6 +421,27 @@ function ViewCollectionModal({ collectionId, onClose, onDocClick }) {
     }
     setSummarizing(false);
   };
+  // --- ADD THIS DELETE FUNCTION ---
+  const handleDeleteDoc = async (e, docId) => {
+    e.stopPropagation(); // Prevents the preview modal from opening
+    
+    if (!window.confirm("Permanently delete this document from the entire database?")) return;
+    
+    const toastId = toast.loading("Deleting document globally...");
+    try {
+      await deleteDocument(docId);
+      
+      // Instantly remove the document from the modal's UI without closing it
+      setCol(prev => ({
+        ...prev,
+        documents: prev.documents.filter(d => d._id !== docId)
+      }));
+      
+      toast.success("Document deleted globally!", { id: toastId });
+    } catch (err) { 
+      toast.error("Failed to delete document", { id: toastId });
+    }
+  };
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -481,15 +504,32 @@ function ViewCollectionModal({ collectionId, onClose, onDocClick }) {
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {col.documents.map(doc => (
-                      <div key={doc._id} className="p-4 rounded-xl border border-white/5 bg-white/[0.02] flex items-center gap-3 hover:bg-white/[0.04] transition-colors cursor-pointer" onClick={() => onDocClick({ id: doc._id, name: doc.title, fileUrl: doc.fileUrl, type: doc.fileType || "Document" })} // <-- REPLACE window.open WITH THIS
+                      <div 
+                        key={doc._id} 
+                        className="p-4 rounded-xl border border-white/5 bg-white/[0.02] flex items-center justify-between gap-3 hover:bg-white/[0.04] transition-colors cursor-pointer group" 
+                        onClick={() => onDocClick({ id: doc._id, name: doc.title, fileUrl: doc.fileUrl, type: doc.fileType || "Document" })}
                       >
-                        <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 shrink-0">
-                          <FiFileText />
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 shrink-0">
+                            <FiFileText />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-white/90 truncate">{doc.title}</p>
+                            <p className="text-[10px] text-gray-500 uppercase mt-0.5">{doc.fileType || "Document"}</p>
+                          </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-white/90 truncate">{doc.title}</p>
-                          <p className="text-[10px] text-gray-500 uppercase mt-0.5">{doc.fileType || "Document"}</p>
-                        </div>
+
+                        {/* NEW DELETE BUTTON */}
+                        <motion.button
+                          whileHover={{ scale: 1.12 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={(e) => handleDeleteDoc(e, doc._id)}
+                          className="w-8 h-8 rounded-lg bg-red-500/10 text-red-400 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                          title="Delete Globally"
+                        >
+                          <FiTrash2 className="text-xs" />
+                        </motion.button>
+
                       </div>
                     ))}
                   </div>
