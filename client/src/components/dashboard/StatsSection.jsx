@@ -103,8 +103,11 @@ function StatCard({ stat, index }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-40px" });
   const [hovered, setHovered] = useState(false);
-  const count = useCountUp(stat.value, 1400, inView);
-
+const count = useCountUp(
+  stat.value || 0,
+  1400,
+  inView
+);
   return (
     <motion.div
       ref={ref}
@@ -147,8 +150,13 @@ function StatCard({ stat, index }) {
 
         <div className="mb-3">
           <motion.p
-            className="text-white font-bold leading-none"
-            animate={{ fontSize: hovered ? "2rem" : "1.875rem" }}
+           className="text-2xl
+sm:text-3xl
+font-bold
+leading-none
+text-white
+"
+
             transition={{ duration: 0.25 }}
           >
             {count.toLocaleString()}
@@ -172,7 +180,14 @@ function SectionHeader() {
       initial={{ opacity: 0, y: 12 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.5 }}
-      className="flex items-center justify-between mb-5"
+    className="
+flex
+flex-wrap
+items-center
+justify-between
+gap-3
+mb-5
+"
       style={{ fontFamily: "'Poppins', sans-serif" }}
     >
       <div className="flex items-center gap-3">
@@ -221,7 +236,16 @@ export default function StatsSection() {
       const data =
         await getDashboardStats();
 
-      setStatsData(data);
+     setStatsData({
+  totalDocuments:
+    data?.totalDocuments || 0,
+
+  summarizedDocuments:
+    data?.summarizedDocuments || 0,
+
+  starredDocuments:
+    data?.starredDocuments || 0,
+});
 
     } catch (error) {
       console.error(error);

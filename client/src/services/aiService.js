@@ -1,38 +1,17 @@
-import axios from "axios";
+import API from "./api";
 
-const API_URL =
-  `${import.meta.env.VITE_API_URL}/ai`;
+export const getSummaries = async () => {
+  const response = await API.get(
+    "/ai/summaries"
+  );
 
-export const getSummaries =
-  async (token) => {
+  return response.data;
+};
 
-    const response =
-      await axios.get(
-        `${API_URL}/summaries`,
-        {
-          headers: {
-            Authorization:
-              `Bearer ${token}`,
-          },
-        }
-      );
+export const summarizeDocument = async (id) => {
+  const response = await API.post(
+    `/ai/summarize/${id}`
+  );
 
-    return response.data;
-  };
-  export const summarizeDocument =
-  async (id, token) => {
-
-    const response =
-      await axios.post(
-        `${API_URL}/summarize/${id}`,
-        {},
-        {
-          headers: {
-            Authorization:
-              `Bearer ${token}`,
-          },
-        }
-      );
-
-    return response.data;
-  };
+  return response.data;
+};

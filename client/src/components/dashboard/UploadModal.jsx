@@ -1,12 +1,14 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import axios from "axios";
+import API from "../../services/api";
 import toast from "react-hot-toast";
 import {
   FiUpload, FiX, FiFile, FiFileText, FiImage,
   FiCheck, FiAlertCircle, FiTrash2, FiZap,
   FiChevronRight, FiCpu, FiPlus,
 } from "react-icons/fi";
+import { useNavigate }
+from "react-router-dom";
 
 /* ─── Helpers ─── */
 const formatBytes = (bytes) => {
@@ -24,7 +26,7 @@ const getFileIcon = (name) => {
   return { icon: <FiFile />, color: "from-gray-500 to-gray-700", accent: "#6b7280", dim: "rgba(107,114,128,0.12)", border: "rgba(107,114,128,0.25)", text: "text-gray-400" };
 };
 
-const ACCEPTED = ".pdf,.docx,.doc,.txt,.md,.png,.jpg,.jpeg,.webp";
+const ACCEPTED = ".pdf,.docx,.doc,.txt,.png,.jpg,.jpeg,.webp";
 
 /* ─── Particle ─── */
 function Particle({ x, y, delay }) {
@@ -229,7 +231,7 @@ function UploadZone({ onFiles, dragging, setDragging }) {
         <motion.p animate={{ color: dragging ? "#93c5fd" : "#e5e7eb" }} className="font-semibold text-sm mb-1">
           {dragging ? "Drop files to upload" : "Drop files here or click to browse"}
         </motion.p>
-        <p className="text-gray-600 text-xs">PDF, DOCX, TXT, PNG up to 50 MB</p>
+        <p className="text-gray-600 text-xs">PDF, DOCX, TXT, PNG up to 10 MB</p>
       </div>
 
       <input ref={inputRef} type="file" multiple accept={ACCEPTED} className="hidden" onChange={handleChange} />
@@ -243,6 +245,7 @@ export default function UploadModal({ onClose }) {
   const [dragging, setDragging] = useState(false);
   const [uploadStates, setUploadStates] = useState({});
   const [phase, setPhase] = useState("idle");
+  const navigate = useNavigate();
 
   // Global drag prevention
   useEffect(() => {
@@ -270,14 +273,14 @@ export default function UploadModal({ onClose }) {
     if (!files.length) return;
     setPhase("uploading");
 
-    const token = localStorage.getItem("token");
+  
     let completedCount = 0;
     let hasError = false;
 
     // Process files sequentially or map via Promise.all. Doing sequentially for clearer UI state.
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      const fileKey = file.name + file.size;
+      const fileKey = `${file.name}-${file.size}-${file.lastModified}`;
 
       setUploadStates((s) => ({ ...s, [fileKey]: { progress: 0, status: "uploading" } }));
 
@@ -285,10 +288,10 @@ export default function UploadModal({ onClose }) {
       formData.append("document", file);
 
       try {
-        await axios.post("http://localhost:5000/api/documents/upload", formData, {
+        await API.post("/documents/upload", formData, {
           headers: {
             "Content-Type": "multipart/form-data",
-            "Authorization": `Bearer ${token}`
+        
           },
           onUploadProgress: (progressEvent) => {
             const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
@@ -304,7 +307,10 @@ export default function UploadModal({ onClose }) {
         console.error("Upload error:", error);
         hasError = true;
         setUploadStates((s) => ({ ...s, [fileKey]: { progress: 0, status: "error" } }));
-        toast.error(`Failed to upload ${file.name}`);
+       toast.error(
+ error?.response?.data?.message ||
+ `Failed to upload ${file.name}`
+);
       }
     }
 
@@ -317,7 +323,7 @@ export default function UploadModal({ onClose }) {
     }
   };
 
-  const totalProgress = files.length === 0 ? 0 : files.reduce((acc, f) => acc + (uploadStates[f.name + f.size]?.progress ?? 0), 0) / files.length;
+  const totalProgress = files.length === 0 ? 0 : files.reduce((acc, f) => acc + (uploadStates[ `${f.name}-${f.size}-${f.lastModified}`]?.progress ?? 0), 0) / files.length;
 
   return (
     <motion.div
@@ -356,7 +362,10 @@ export default function UploadModal({ onClose }) {
               </div>
             </div>
             <motion.button whileHover={{ scale: 1.1, rotate: 90, backgroundColor: "rgba(239,68,68,0.1)", borderColor: "rgba(239,68,68,0.3)" }}
-              whileTap={{ scale: 0.9 }} onClick={onClose}
+              whileTap={{ scale: 0.9 }} onClick={() => {
+  onClose();
+  navigate("/dashboard");
+}}
               className="w-8 h-8 rounded-xl bg-white/5 border border-white/[0.08] flex items-center justify-center text-gray-500 hover:text-red-400 transition-all duration-200">
               <FiX className="text-sm" />
             </motion.button>
@@ -375,7 +384,7 @@ export default function UploadModal({ onClose }) {
                   <motion.div animate={{ rotate: [0, 360] }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}>
                     <FiZap className="text-purple-400 text-sm" />
                   </motion.div>
-                  <span className="text-purple-300 text-xs font-medium">AI analysis in progress…</span>
+                  <span className="text-purple-300 text-xs font-medium">Document uploaded successfully</span>
                 </div>
                 <motion.button whileHover={{ scale: 1.04, boxShadow: "0 0 20px rgba(59,130,246,0.35)" }} whileTap={{ scale: 0.97 }} onClick={onClose}
                   className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm font-semibold">
@@ -411,7 +420,7 @@ export default function UploadModal({ onClose }) {
                       <div className="space-y-2 max-h-48 overflow-y-auto pr-1" style={{ scrollbarWidth: "thin", scrollbarColor: "#1F2937 transparent" }}>
                         <AnimatePresence>
                           {files.map((file, i) => (
-                            <FileRow key={file.name + file.size} file={file} index={i} onRemove={removeFile} uploadState={uploadStates[file.name + file.size]} />
+                            <FileRow key={`${file.name}-${file.size}-${file.lastModified}`} file={file} index={i} onRemove={removeFile} uploadState={uploadStates[`${file.name}-${file.size}-${file.lastModified}`]} />
                           ))}
                         </AnimatePresence>
                       </div>

@@ -442,6 +442,7 @@ useState(0);
   const docs = documents.map((doc) => ({
     id: doc._id, 
     name: doc.title,
+    fileType: doc.fileType,
 type:
  doc.fileType?.includes("pdf")
  ? "PDF"

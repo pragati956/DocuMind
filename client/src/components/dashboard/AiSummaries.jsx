@@ -1,4 +1,5 @@
 import ReactMarkdown from "react-markdown";
+import { toast } from "react-toastify";
 import {
   useEffect,
   useState,
@@ -334,11 +335,10 @@ if (minutes < 60)
 
   try {
 
-    const token =
-      localStorage.getItem("token");
+    
 
     const data =
-      await getSummaries(token);
+      await getSummaries();
 
     setSummaries(
       data.documents.map((doc) => {
@@ -425,7 +425,10 @@ if (minutes < 60)
 
   } catch (error) {
 
-    console.error(error);
+  console.error(error);
+  toast.error(
+ "Failed to load summaries"
+);
 
   } finally {
 
@@ -463,8 +466,16 @@ if (minutes < 60)
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="flex items-center justify-between mb-4 mt-8" // Added mt-8 for spacing
-      >
+className="
+flex
+flex-col
+sm:flex-row
+sm:items-center
+justify-between
+gap-3
+mb-4
+mt-8
+"      >
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 text-sm">
             <FiZap />

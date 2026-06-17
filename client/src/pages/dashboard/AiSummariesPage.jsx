@@ -285,7 +285,7 @@ export default function AiSummariesPage() {
   const fetchSummaries = async () => {
     try {
       const token = localStorage.getItem("token");
-      const data = await getSummaries(token);
+      const data = await getSummaries();
 
       const formatted = data.documents.map((doc) => {
         const ext = doc.title.split(".").pop().toLowerCase();
