@@ -12,9 +12,9 @@ import {
   FiBell,
   FiMenu,
   FiX,
+  FiSettings,
   FiFileText,
   FiZap,
-  FiSettings,
   FiLogOut,
   FiUser,
   FiChevronDown,
@@ -64,15 +64,12 @@ function SearchBar() {
         }
 
         try {
-
-          const data =
-            await searchDocuments(
-              query
-            );
+           const data =
+    await searchDocuments(query);
 
           setResults(
-            data.documents || []
-          );
+ data?.documents || []
+);
 
         } catch (err) {
 
@@ -110,7 +107,7 @@ function SearchBar() {
   }, []);
 
   return (
-    <div className="relative flex-1 max-w-md">
+    <div className="relative flex-1  w-full max-w-md">
       {/* Input */}
       <motion.div
         animate={{
@@ -399,14 +396,21 @@ function NotificationBell() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.96 }}
             transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute right-0 top-full mt-2 w-80 rounded-2xl border border-[#1F2937] shadow-2xl z-50 overflow-hidden"
+            className="absolute
+right-0
+top-full
+mt-2
+w-[320px]
+max-w-[92vw] rounded-2xl border border-[#1F2937] shadow-2xl z-50 overflow-hidden"
             style={{ background: "rgba(17,24,39,0.97)", backdropFilter: "blur(20px)" }}
           >
             <div className="flex items-center justify-between px-4 py-3.5 border-b border-[#1F2937]">
               <div className="flex items-center gap-2">
                 <h3 className="text-white text-sm font-semibold">Notifications</h3>
                 {unreadCount > 0 && (
-                  <span className="px-1.5 py-0.5 rounded-full bg-blue-500/15 border border-blue-500/20 text-blue-300 text-[10px] font-bold">{unreadCount}</span>
+                  <span className="px-1.5 py-0.5 rounded-full bg-blue-500/15 border border-blue-500/20 text-blue-300 text-[10px] font-bold">{unreadCount > 99
+ ? "99+"
+ : unreadCount}</span>
                 )}
               </div>
               <button onClick={markAllRead} className="text-blue-400 hover:text-blue-300 text-[11px] font-medium transition-colors">
@@ -537,11 +541,13 @@ function ProfileMenu() {
     navigate("/login");
   };
 
-  const menuItems = [
-    { icon: <FiUser />, label: "Profile", sub: "View your profile" },
-    { icon: <FiSettings />, label: "Settings", sub: "Preferences & billing" },
-    { icon: <FiZap />, label: "Upgrade to Team", sub: "Unlock collaboration", highlight: true },
-  ];
+ const menuItems = [
+  {
+    icon: <FiUser />,
+    label: "Profile",
+    sub: "Manage your account",
+  },
+];
 
   const getInitials = (name) => {
     if (!name) return "U";
@@ -568,7 +574,6 @@ function ProfileMenu() {
         </div>
         <div className="hidden md:block text-left">
           <p className="text-white text-xs font-semibold leading-none truncate max-w-[100px]">{user?.name || "Active User"}</p>
-          <p className="text-gray-600 text-[10px] mt-0.5">{user?.plan || "Free Plan"}</p>
         </div>
         <motion.div
           animate={{ rotate: open ? 180 : 0 }}
@@ -586,7 +591,12 @@ function ProfileMenu() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.96 }}
             transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute right-0 top-full mt-2 w-64 rounded-2xl border border-[#1F2937] shadow-2xl z-50 overflow-hidden"
+            className="absolute
+right-0
+top-full
+mt-2
+w-[280px]
+max-w-[90vw] rounded-2xl border border-[#1F2937] shadow-2xl z-50 overflow-hidden"
             style={{ background: "rgba(17,24,39,0.97)", backdropFilter: "blur(20px)" }}
           >
             {/* Header */}
@@ -600,10 +610,7 @@ function ProfileMenu() {
                   <p className="text-gray-500 text-[11px] truncate">{user?.email || "user@example.com"}</p>
                 </div>
               </div>
-              <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/[0.08] border border-emerald-500/20">
-                <motion.span animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 1.8, repeat: Infinity }} className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
-                <span className="text-emerald-300 text-[11px] font-medium">Pro Plan — Active</span>
-              </div>
+             
             </div>
             {/* Items */}
             <div className="p-2">
@@ -611,11 +618,12 @@ function ProfileMenu() {
                 <motion.button
                   key={i}
                   whileHover={{ backgroundColor: item.highlight ? "rgba(59,130,246,0.08)" : "rgba(255,255,255,0.04)" }}
-                  onClick={() => {
-                    if (item.label === "Settings") {
-                      navigate("/dashboard/settings");
-                    }
-                  }}
+                onClick={() => {
+  if (item.label === "Profile") {
+    navigate("/dashboard/settings");
+    setOpen(false);
+  }
+}}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors duration-150 ${item.highlight ? "border border-blue-500/20 bg-blue-500/[0.05]" : ""}`}
                 >
                   <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-sm ${item.highlight ? "bg-blue-500/15 text-blue-400" : "bg-white/5 text-gray-400"}`}>
@@ -684,8 +692,15 @@ export default function Topbar({ onMobileSidebarToggle }) {
           <div className="hidden sm:flex items-center gap-2">
             <span className="text-gray-600 text-sm">DocuMind</span>
             <span className="text-gray-700 text-sm">/</span>
-            <span className="text-white text-sm font-medium">
-              {user?.name
+<span
+ className="
+ text-white
+ text-sm
+ font-medium
+ truncate
+ max-w-[180px]
+ "
+>              {user?.name
                 ? `${user.name}'s Workspace`
                 : "Workspace"}
             </span>

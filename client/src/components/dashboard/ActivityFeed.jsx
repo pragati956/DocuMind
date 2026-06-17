@@ -469,8 +469,15 @@ mappedActivities.filter((a) => {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="flex items-center justify-between mb-4"
-      >
+className="
+flex
+flex-col
+sm:flex-row
+sm:items-center
+justify-between
+gap-3
+mb-4
+"      >
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 text-sm">
             <FiActivity />

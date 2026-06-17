@@ -12,7 +12,7 @@ import { AuthContext } from "../../context/AuthContext";
 import {
   FiHome, FiFileText, FiSearch, FiZap, FiFolder,
   FiActivity, FiSettings, FiCpu, FiChevronLeft,
-   FiHelpCircle, FiLogOut, FiChevronRight,
+   FiHelpCircle, FiLogOut, 
 } from "react-icons/fi";
 
 /* ─── Nav Data ─── */
@@ -94,47 +94,7 @@ function NavItem({ item, collapsed }) {
 }
 
 /* ─── Storage Bar ─── */
-function StorageBar({ collapsed }) {
-  return (
-    <AnimatePresence>
-      {!collapsed && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          exit={{ opacity: 0, height: 0 }}
-          transition={{ duration: 0.3, ease: "easeInOut" }}
-          className="overflow-hidden"
-        >
-          <div className="mx-2 mb-3 p-4 rounded-2xl border border-white/[0.06] bg-white/[0.03]">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-gray-400 text-xs font-semibold">Storage</span>
-              <span className="text-gray-600 text-[10px]">24.6 / 50 GB</span>
-            </div>
-            <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden mb-3">
-              <motion.div initial={{ width: 0 }} animate={{ width: "49%" }} transition={{ duration: 1.2, ease: "easeOut", delay: 0.3 }} className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500" />
-            </div>
-            <div className="space-y-1.5">
-              {[
-                { label: "Documents", pct: 45, color: "bg-blue-500" },
-                { label: "Images", pct: 28, color: "bg-purple-500" },
-                { label: "Other", pct: 27, color: "bg-slate-500" },
-              ].map(({ label, pct, color }, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <div className={`w-1.5 h-1.5 rounded-full ${color} shrink-0`} />
-                  <span className="text-gray-600 text-[10px] flex-1">{label}</span>
-                  <span className="text-gray-600 text-[10px]">{pct}%</span>
-                </div>
-              ))}
-            </div>
-            <motion.button whileHover={{ scale: 1.02, boxShadow: "0 0 16px rgba(59,130,246,0.3)" }} whileTap={{ scale: 0.98 }} className="mt-4 w-full py-2 rounded-xl bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border border-blue-500/20 text-blue-300 text-xs font-semibold hover:from-blue-500/30 hover:to-indigo-500/30 transition-all duration-200">
-              Upgrade Storage
-            </motion.button>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-}
+
 
 /* ─── User Card ─── */
 function UserCard({ collapsed }) {
@@ -166,7 +126,6 @@ function UserCard({ collapsed }) {
           {!collapsed && (
             <motion.div initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -6 }} transition={{ duration: 0.18 }} className="flex-1 min-w-0">
               <p className="text-white text-xs font-semibold truncate">{user?.name || "Active User"}</p>
-              <p className="text-gray-600 text-[10px] truncate">Pro Plan</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -180,7 +139,12 @@ function UserCard({ collapsed }) {
         </AnimatePresence>
       </motion.div>
 
-      {collapsed && <Tooltip label={`${user?.name || "User"} — Pro Plan`} visible={hovered} />}
+      {collapsed && (
+  <Tooltip
+    label={user?.name || "User"}
+    visible={hovered}
+  />
+)}
     </div>
   );
 }
@@ -198,8 +162,10 @@ function SectionLabel({ label, collapsed }) {
   );
 } 
 
+
 /* ─── Main Sidebar ─── */
-export default function Sidebar({ defaultCollapsed = false }) {
+export default function Sidebar({ defaultCollapsed = false, mobileOpen,
+ setMobileOpen, }) {
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
   const [statsData, setStatsData] =
 useState({
@@ -218,7 +184,16 @@ useEffect(() => {
       const data =
       await getDashboardStats();
 
-      setStatsData(data);
+     setStatsData({
+  totalDocuments:
+    data?.totalDocuments || 0,
+
+  summarizedDocuments:
+    data?.summarizedDocuments || 0,
+
+  totalCollections:
+    data?.totalCollections || 0,
+});
 
     } catch (error) {
 
@@ -232,6 +207,15 @@ useEffect(() => {
 
   fetchStats();
 
+ const interval =
+   setInterval(
+     fetchStats,
+     30000
+   );
+
+ return () =>
+   clearInterval(interval);
+
 }, []);
 const navMain = [
   {
@@ -244,8 +228,7 @@ const navMain = [
     icon: <FiFileText />,
     label: "Documents",
     badge:
-      statsData.totalDocuments
-        .toString(),
+      (statsData.totalDocuments || 0).toString(),
     path:
       "/dashboard/documents",
   },
@@ -261,9 +244,9 @@ const navMain = [
     icon: <FiZap />,
     label: "AI Summaries",
     badge:
-      statsData
+      (statsData
         .summarizedDocuments
-        .toString(),
+         || 0).toString(),
     path:
       "/dashboard/summaries",
   },
@@ -271,7 +254,7 @@ const navMain = [
   {
     icon: <FiFolder />,
     label: "Collections",
-    badge: statsData.totalCollections?.toString() || "0", // <-- ADD THIS BADGE
+    badge: (statsData.totalCollections || 0).toString(), // <-- ADD THIS BADGE
     path:
       "/dashboard/collections",
   },
@@ -285,13 +268,54 @@ const navMain = [
 ];
 
   return (
+    
     <>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');`}</style>
+    <AnimatePresence>
+
+{mobileOpen && (
+
+<motion.div
+ initial={{ opacity: 0 }}
+ animate={{ opacity: 1 }}
+ exit={{ opacity: 0 }}
+ onClick={() =>
+   setMobileOpen(false)
+ }
+ className="
+ fixed
+ inset-0
+ bg-black/50
+ z-40
+ md:hidden
+ "
+/>
+
+)}
+
+</AnimatePresence>
       <motion.aside
         animate={{ width: collapsed ? 72 : 248 }}
         transition={{ duration: 0.38, ease: [0.4, 0, 0.2, 1] }}
-        className="relative h-screen flex flex-col overflow-visible border-r border-[#1F2937] bg-[#0B0F19] shrink-0 select-none z-40"
-        style={{ fontFamily: "'Poppins', sans-serif" }}
+className={`
+fixed md:relative
+top-0 left-0
+h-dvh
+z-50
+flex flex-col
+border-r border-[#1F2937]
+bg-[#0B0F19]
+shrink-0
+select-none
+
+transition-transform
+duration-300
+
+${
+ mobileOpen
+ ? "translate-x-0"
+ : "-translate-x-full md:translate-x-0"
+}
+`}        style={{ fontFamily: "'Poppins', sans-serif" }}
       >
         <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-blue-500/30 to-transparent" />
         <div className="absolute top-0 left-0 w-32 h-32 bg-blue-500/5 blur-[60px] rounded-full pointer-events-none" />
@@ -304,7 +328,7 @@ const navMain = [
           <AnimatePresence>
             {!collapsed && (
               <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} transition={{ duration: 0.2 }} className="min-w-0">
-                <span className="text-white font-semibold text-lg tracking-tight whitespace-nowrap">DocuMind</span>
+                <span className="text-white font-semibold text-lg tracking-tight whitespace-nowrap truncate">DocuMind</span>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <motion.span animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 2, repeat: Infinity }} className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                   <span className="text-[10px] text-gray-600 font-medium">AI Ready</span>
@@ -345,7 +369,7 @@ const navMain = [
           whileHover={{ scale: 1.15, borderColor: "rgba(255,255,255,0.25)", backgroundColor: "#1e1e24" }} 
           whileTap={{ scale: 0.90 }} 
           onClick={() => setCollapsed(!collapsed)} 
-          className="absolute -right-[18px] top-[72px] w-9 h-9 rounded-full bg-[#131314] border border-white/[0.15] flex items-center justify-center text-gray-300 hover:text-white transition-all duration-300 z-50 shadow-[0_4px_20px_rgba(0,0,0,0.5),_0_0_15px_rgba(139,92,246,0.15)] cursor-pointer"
+          className=" hidden lg:flex absolute -right-[18px] top-[72px] w-9 h-9 rounded-full bg-[#131314] border border-white/[0.15] flex items-center justify-center text-gray-300 hover:text-white transition-all duration-300 z-50 shadow-[0_4px_20px_rgba(0,0,0,0.5),_0_0_15px_rgba(139,92,246,0.15)] cursor-pointer"
         >
           <motion.div 
             animate={{ rotate: collapsed ? 180 : 0 }} 

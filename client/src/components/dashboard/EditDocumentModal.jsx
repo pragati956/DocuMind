@@ -11,7 +11,7 @@ const EditDocumentModal = ({
   onSuccess,
 }) => {
   const [title, setTitle] = useState(
-    document?.name || ""
+    document?.title || ""
   );
 
   const [tags, setTags] = useState(
@@ -24,18 +24,24 @@ const EditDocumentModal = ({
 
   const [loading, setLoading] = useState(false);
   useEffect(() => {
-  setTitle(document?.name || "");
+  setTitle(document?.title || "");
   setTags(document?.tags?.join(", ") || "");
   setSummary(document?.summary || "");
 }, [document]);
 
   const handleSave = async () => {
     console.log("EDIT DOCUMENT:", document);
+    if (!title.trim()) {
+  toast.error(
+    "Title is required"
+  );
+  return;
+}
     try {
       setLoading(true);
 
       await updateDocument(
-        document.id,
+        document._id || document.id,
         {
           title,
 
@@ -62,8 +68,9 @@ const EditDocumentModal = ({
         "Update failed:",
         error
       );
-      toast.error(
-  "Failed to update document"
+    toast.error(
+ error?.response?.data?.message ||
+ "Failed to update document"
 );
     } finally {
       setLoading(false);
@@ -79,7 +86,11 @@ const EditDocumentModal = ({
       onClick={onClose}
     >
       <motion.div
-        className="w-full max-w-2xl rounded-2xl bg-[#111827] border border-white/10 p-6"
+        className="w-full
+max-w-2xl
+max-h-[90vh]
+overflow-y-auto
+rounded-2xl bg-[#111827] border border-white/10 p-6"
         initial={{ scale: 0.95 }}
         animate={{ scale: 1 }}
         exit={{ scale: 0.95 }}
@@ -149,7 +160,11 @@ const EditDocumentModal = ({
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3">
+        <div className=" flex
+ flex-col
+ sm:flex-row
+ justify-end
+ gap-3">
           <button
             onClick={onClose}
             className="px-4 py-2 rounded-lg border border-white/10 text-white/70 hover:bg-white/5"

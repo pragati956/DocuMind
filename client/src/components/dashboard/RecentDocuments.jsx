@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { summarizeDocument } from "../../services/aiService";
-import axios from "axios";
-const API_URL = import.meta.env.VITE_API_URL;
+import API from "../../services/api";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiFileText, FiMoreHorizontal, FiDownload,
@@ -66,8 +65,11 @@ function ContextMenu({
         link.click();
       }
       if(item.label === "Share") {
-        await navigator.clipboard.writeText(doc.fileUrl);
-        toast.success("Link copied");
+if (navigator.clipboard) {
+ await navigator.clipboard.writeText(
+  doc.fileUrl
+ );
+}        toast.success("Link copied");
       }
       if (item.label === "Summarize now") {
         await onSummarize(doc.id);
@@ -127,7 +129,22 @@ function DocRow({
       transition={{ duration: 0.45, delay: index * 0.06, ease: [0.22, 1, 0.36, 1] }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => { setHovered(false); setMenuOpen(false); }}
-      className="relative flex items-center gap-4 px-5 py-3.5 transition-all duration-200 group cursor-pointer"
+      className=" relative flex flex-col 
+sm:flex-row
+sm:items-center
+
+gap-3
+sm:gap-4
+
+px-4
+sm:px-5
+
+py-3.5
+
+transition-all
+duration-200
+group
+cursor-pointer transition-all duration-200 group cursor-pointer"
       style={{ backgroundColor: hovered ? "rgba(255,255,255,0.02)" : "transparent" }}
     >
       <motion.div
@@ -162,13 +179,17 @@ function DocRow({
         {doc.tag}
       </span>
 
-      <div className="hidden md:flex items-center gap-1 text-gray-600 text-[11px] shrink-0">
+      <div className="hidden lg:flex items-center gap-1 text-gray-600 text-[11px] shrink-0">
         <FiClock className="text-[10px]" /> {doc.time}
       </div>
 
       <StatusBadge status={doc.status} bg={doc.statusBg} />
 
-      <div className={`flex items-center gap-1.5 transition-opacity duration-200 ${hovered ? "opacity-100" : "opacity-0"}`}>
+      <div className={`flex items-center gap-1.5 transition-opacity duration-200 ${
+ hovered
+ ? "opacity-100"
+ : "opacity-100 md:opacity-0"
+}`}>
         <motion.button whileHover={{ scale: 1.12 }} whileTap={{ scale: 0.9 }}
           onClick={(e) => { e.stopPropagation(); onToggleStar(doc.id); }}
           className="w-7 h-7 rounded-lg bg-white/5 border border-white/[0.07] flex items-center justify-center hover:bg-white/10 transition-all">
@@ -192,7 +213,7 @@ function DocRow({
             <FiMoreHorizontal className="text-xs" />
           </motion.button>
           <AnimatePresence>
-            {menuOpen && <ContextMenu doc={doc} onDelete={onDelete} onToggleStar={onToggleStar} onSummarize={onSummarize} onClose={() => setMenuOpen(false)} />}
+            {menuOpen && <ContextMenu doc={doc} onDelete={onDelete} onToggleStar={onToggleStar}  onView={onView} onSummarize={onSummarize} onClose={() => setMenuOpen(false)} />}
           </AnimatePresence>
         </div>
       </div>
@@ -298,7 +319,32 @@ function EmptyState({ filter }) {
 
 // ─── Main Export ───
 export default function RecentDocuments() {
+  
   const [view, setView] = useState("list");
+  useEffect(() => {
+
+  const handleResize = () => {
+
+    if (window.innerWidth < 768) {
+      setView("grid");
+    }
+
+  };
+
+  handleResize();
+
+  window.addEventListener(
+    "resize",
+    handleResize
+  );
+
+  return () =>
+    window.removeEventListener(
+      "resize",
+      handleResize
+    );
+
+}, []);
   const [activeFilter, setActiveFilter] = useState("All");
   const [docs, setDocs] = useState([]);
   const [selectedDoc, setSelectedDoc] = useState(null); // <-- ADD THIS LINE
@@ -311,15 +357,20 @@ export default function RecentDocuments() {
 
   const fetchDocuments = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await axios.get(`${API_URL}/documents/all`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+     const res =
+ await API.get(
+   "/documents/all"
+ );
 
       if (res.data.success) {
         const formattedDocs = res.data.documents.map(d => {
-          const ext = d.title.split('.').pop().toLowerCase();
-          let accent="#3b82f6";
+const ext =
+ d.title?.includes(".")
+ ? d.title
+     .split(".")
+     .pop()
+     .toLowerCase()
+ : "file";          let accent="#3b82f6";
 
           if(ext==="pdf") accent="#ef4444";
           if(ext==="docx") accent="#3b82f6";
@@ -338,8 +389,16 @@ export default function RecentDocuments() {
             name: d.title,
             fileUrl: d.fileUrl,
             createdAt: d.createdAt,
+            fileType: d.fileType,
             ext: ext,
-            size: (d.fileSize / 1024 / 1024).toFixed(2) + " MB",
+          size:
+ d.fileSize
+ ? (
+     d.fileSize /
+     1024 /
+     1024
+   ).toFixed(2) + " MB"
+ : "Unknown",
             time: new Date(d.createdAt).toLocaleDateString(),
             status: d.summary ? "Summarized" : "Queued",
             starred: d.starred,
@@ -357,6 +416,9 @@ export default function RecentDocuments() {
       }
     } catch (err) {
       console.error("Fetch docs error:", err);
+      toast.error(
+ "Failed to load documents"
+);
     }
   };
 
@@ -368,28 +430,33 @@ export default function RecentDocuments() {
 
   const handleDelete = async (docId) => {
     try {
-      const token = localStorage.getItem("token");
-      await axios.delete(`${API_URL}/documents/${docId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+  
+     await API.delete(
+ `/documents/${docId}`
+);
+
 setDocs(prev =>
  prev.filter(
   d => d.id !== docId
  )
 );
+toast.success(
+ "Document deleted"
+);
     } catch (err) {
       console.error("Failed to delete", err);
+      toast.error(
+ "Failed to delete document"
+);
     }
   };
 
   const handleToggleStar = async (docId) => {
     try {
-      const token = localStorage.getItem("token");
-      await axios.patch(
-        `${API_URL}/documents/${docId}/star`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      
+    await API.patch(
+ `/documents/${docId}/star`
+);
       fetchDocuments();
     } catch (error) {
       console.error(error);
@@ -398,8 +465,8 @@ setDocs(prev =>
 
   const handleSummarize = async (docId) => {
     try {
-      const token = localStorage.getItem("token");
-      await summarizeDocument(docId, token);
+      
+      await summarizeDocument(docId);
       toast.success("AI Summary Generated Successfully");
       await fetchDocuments();
     } catch (error) {
@@ -439,13 +506,54 @@ setDocs(prev =>
 
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-0.5 p-1 rounded-xl border border-[#1F2937] bg-white/[0.02]">
-              {[{ icon: <FiList />, val: "list" }, { icon: <FiGrid />, val: "grid" }].map(({ icon, val }) => (
-                <motion.button key={val} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setView(val)}
-                  className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs transition-all duration-200 ${view === val ? "bg-blue-500/15 border border-blue-500/20 text-blue-400" : "text-gray-600 hover:text-gray-300"}`}>
-                  {icon}
-                </motion.button>
-              ))}
-            </div>
+
+    {/* Desktop Only */}
+    <motion.button
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      onClick={() => setView("list")}
+      className={`
+        hidden md:flex
+        w-7 h-7
+        rounded-lg
+        items-center
+        justify-center
+        text-xs
+        transition-all duration-200
+        ${
+          view === "list"
+            ? "bg-blue-500/15 border border-blue-500/20 text-blue-400"
+            : "text-gray-600 hover:text-gray-300"
+        }
+      `}
+    >
+      <FiList />
+    </motion.button>
+
+    {/* Always Visible */}
+    <motion.button
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      onClick={() => setView("grid")}
+      className={`
+        flex
+        w-7 h-7
+        rounded-lg
+        items-center
+        justify-center
+        text-xs
+        transition-all duration-200
+        ${
+          view === "grid"
+            ? "bg-blue-500/15 border border-blue-500/20 text-blue-400"
+            : "text-gray-600 hover:text-gray-300"
+        }
+      `}
+    >
+      <FiGrid />
+    </motion.button>
+
+  </div>
           </div>
         </motion.div>
 

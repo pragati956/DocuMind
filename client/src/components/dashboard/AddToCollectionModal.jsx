@@ -73,7 +73,7 @@ export default function AddToCollectionModal({ documentId, onClose }) {
                   <FiFolder />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-white">{col.name}</p>
+                  <p className="text-sm font-medium text-white truncate">{col.name}</p>
                   <p className="text-[10px] text-gray-500">{col.documents?.length || 0} documents</p>
                 </div>
               </motion.button>

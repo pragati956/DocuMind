@@ -252,7 +252,7 @@ const handleAction = (id) => {
   switch(id){
 
     case "upload":
-      onUpload();
+      onUpload?.();
       break;
 
     case "search":
@@ -283,7 +283,6 @@ const handleAction = (id) => {
 
   return (
     <>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');`}</style>
 
       <div style={{ fontFamily: "'Poppins', sans-serif" }}>
         {/* Header */}
@@ -304,7 +303,8 @@ const handleAction = (id) => {
   onClick={() =>
     navigate("/dashboard/settings")
   }
-  className="flex items-center gap-1 text-gray-600 hover:text-gray-300 text-xs transition-colors"
+  className="hidden xs:flex
+items-center gap-1 text-gray-600 hover:text-gray-300 text-xs transition-colors"
 >
   <FiPlus className="text-[10px]" />
   Customize

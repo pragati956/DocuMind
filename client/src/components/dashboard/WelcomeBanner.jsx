@@ -10,8 +10,8 @@ import {
   getDashboardStats,
 } from "../../services/dashboardService";
 import {
-  FiUpload, FiArrowRight, FiZap, FiFileText,
-  FiStar, FiTrendingUp, FiChevronRight, FiX,
+  FiUpload, FiZap, FiFileText,
+  FiStar,  FiChevronRight, FiX,
 } from "react-icons/fi";
 
 /* ─── Floating Orb ─── */
@@ -64,11 +64,11 @@ export default function WelcomeBanner({ onUpload }) {
   const [dismissed, setDismissed] = useState(false);
   const { user } = useContext(AuthContext);
   const [statsData, setStatsData] =
-    useState({
-      totalDocuments: 0,
-      summarizedDocuments: 0,
-      processingDocuments: 0,
-    });
+  useState({
+    totalDocuments: 0,
+    summarizedDocuments: 0,
+    starredDocuments: 0,
+  });
 
     const fetchStats = async () => {
 
@@ -77,7 +77,14 @@ export default function WelcomeBanner({ onUpload }) {
         const data =
           await getDashboardStats();
 
-        setStatsData(data);
+       setStatsData({
+  totalDocuments:
+    data?.totalDocuments || 0,
+  summarizedDocuments:
+    data?.summarizedDocuments || 0,
+  starredDocuments:
+    data?.starredDocuments || 0,
+});
 
       } catch (error) {
 
@@ -93,6 +100,7 @@ export default function WelcomeBanner({ onUpload }) {
     useEffect(() => {
 
  fetchStats();
+
 
  const interval =
   setInterval(
@@ -136,23 +144,22 @@ export default function WelcomeBanner({ onUpload }) {
       delay: 0.65,
     },
 
-    {
-      icon:
-        <FiTrendingUp className="text-emerald-300" />,
-      value:
-        statsData.processingDocuments,
-      label: "Processing",
-      color:
-        "bg-emerald-500/15 border border-emerald-500/20",
-      delay: 0.75,
-    },
+   {
+  icon:
+    <FiStar className="text-yellow-300" />,
+  value:
+    statsData.starredDocuments,
+  label: "Starred Docs",
+  color:
+    "bg-yellow-500/15 border border-yellow-500/20",
+  delay: 0.75,
+},
   ];
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 
   return (
     <>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');`}</style>
 
       <AnimatePresence>
         {!dismissed && (
@@ -260,7 +267,7 @@ export default function WelcomeBanner({ onUpload }) {
                     initial={{ opacity: 0, y: 18 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: 0.22 }}
-                    className="text-3xl md:text-4xl font-bold tracking-tight text-white leading-tight mb-3"
+                    className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-white leading-tight mb-3"
                   >
                     {greeting},{" "}
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-indigo-300 to-purple-300">
@@ -275,15 +282,18 @@ export default function WelcomeBanner({ onUpload }) {
                     transition={{ duration: 0.6, delay: 0.3 }}
                     className="text-gray-400 text-sm leading-relaxed mb-6 max-w-md"
                   >
-                    You have{" "}
-                    <span className="text-white font-semibold">
-                      {statsData.processingDocuments}
-                    </span>{" "}
-                    documents pending AI analysis and{" "}
-                    <span className="text-white font-semibold">
-                      {statsData.summarizedDocuments}
-                    </span>{" "}
-                    summaries ready to review.
+                    Manage
+<span className="text-white font-semibold">
+ {" "}{statsData.totalDocuments} documents
+</span>,
+access
+<span className="text-white font-semibold">
+ {" "}{statsData.starredDocuments} starred files
+</span>
+ instantly, and review
+<span className="text-white font-semibold">
+ {" "}{statsData.summarizedDocuments} AI summaries
+</span>.
                   </motion.p>
 
                   {/* CTA Buttons */}
