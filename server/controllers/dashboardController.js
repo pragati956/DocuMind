@@ -2,6 +2,7 @@ import Activity from "../models/Activity.js";
 import Document from "../models/Document.js";
 import { UserModel }
 from "../models/User.js";
+import Collection from "../models/Collection.js"; // <-- ADD THIS IMPORT
 export const getActivities =
 async (req, res) => {
   try {
@@ -52,11 +53,17 @@ export const getDashboardStats = async (
 
    const totalUsers = await UserModel.countDocuments();
 
+   // --- ADD THIS QUERY ---
+    const totalCollections = await Collection.countDocuments({ 
+      createdBy: req.user.id 
+    });
+
    res.status(200).json({
   success: true,
   totalDocuments,
   summarizedDocuments,
   starredDocuments,
+  totalCollections, // <-- ADD THIS TO THE RESPONSE
 });
 
   } catch (error) {

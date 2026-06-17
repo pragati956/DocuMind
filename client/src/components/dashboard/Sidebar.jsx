@@ -205,6 +205,7 @@ export default function Sidebar({ defaultCollapsed = false }) {
 useState({
   totalDocuments: 0,
   summarizedDocuments: 0,
+  totalCollections: 0, // <-- ADD THIS
 });
 
 useEffect(() => {
@@ -270,6 +271,7 @@ const navMain = [
   {
     icon: <FiFolder />,
     label: "Collections",
+    badge: statsData.totalCollections?.toString() || "0", // <-- ADD THIS BADGE
     path:
       "/dashboard/collections",
   },
