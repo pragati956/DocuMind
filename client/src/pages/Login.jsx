@@ -91,8 +91,9 @@ export default function Login() {
   const { login } = useContext(AuthContext); // Hooked into the global login context state dispatcher
 
   const handleOAuthLogin = (provider) => {
-    const url = `http://localhost:5000/api/auth/${provider}`;
-    window.location.href = url;
+const url =
+ `${import.meta.env.VITE_API_URL}/auth/${provider}`;
+     window.location.href = url;
   };
 
   const particles = Array.from({ length: 14 }, (_, i) => ({
@@ -122,13 +123,16 @@ export default function Login() {
     } catch (error) {
       setLoading(false);
       console.log(error);
-      toast.error("Invalid credentials");
+      toast.error(
+ error?.response?.data?.message ||
+ "Invalid credentials"
+);
     }
   };
 
   return (
     <div
-      className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#0B0F19] px-4 py-12"
+      className="relative min-h-dvh flex items-center justify-center overflow-hidden bg-[#0B0F19] px-4 py-12"
       style={{ fontFamily: "'Poppins', sans-serif" }}
     >
       {/* ── Background ── */}
@@ -208,7 +212,10 @@ export default function Login() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.28 }}
-            className="grid grid-cols-2 gap-3 mb-6"
+            className="grid
+grid-cols-1
+sm:grid-cols-2
+gap-3 mb-6"
           >
             {[
               { icon: <FiChrome />, label: "google" },
@@ -279,7 +286,12 @@ export default function Login() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.44 }}
-            className="flex items-center justify-between mt-4 mb-6"
+            className="flex
+flex-col
+sm:flex-row
+items-start
+sm:items-center
+gap-3 mt-4 mb-6"
           >
             <label className="flex items-center gap-2.5 cursor-pointer group">
               <div
@@ -394,21 +406,7 @@ export default function Login() {
         </div>
 
         {/* ── Trusted by strip ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-          className="flex items-center justify-center gap-2 mt-6"
-        >
-          <div className="flex -space-x-2">
-            {["#3b82f6", "#8b5cf6", "#10b981", "#f59e0b"].map((c, i) => (
-              <div key={i} className="w-6 h-6 rounded-full border-2 border-[#0B0F19]" style={{ background: c }} />
-            ))}
-          </div>
-          <p className="text-gray-600 text-xs">
-            Trusted by <span className="text-gray-400 font-medium">12,000+</span> teams worldwide
-          </p>
-        </motion.div>
+       
       </motion.div>
     </div>
   );
