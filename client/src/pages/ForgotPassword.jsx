@@ -10,23 +10,36 @@ export default function ForgotPassword() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email) return toast.error("Please enter your email");
+  if (!email.trim()) {
+  return toast.error(
+    "Please enter your email"
+  );
+}
+
+const emailRegex =
+ /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+if (!emailRegex.test(email)) {
+  return toast.error(
+    "Enter a valid email address"
+  );
+}
 
     try {
       setLoading(true);
       const data = await forgotPassword(email);
       toast.success(data.message || "Reset link sent to your email");
     } catch (error) {
-      toast.error(error.response?.data?.message || "Something went wrong");
+      toast.error(error?.response?.data?.message || "Something went wrong");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0B0F19] px-4" style={{ fontFamily: "'Poppins', sans-serif" }}>
-      <div className="w-full max-w-md p-8 rounded-3xl border border-[#1F2937] bg-white/[0.03] backdrop-blur-xl">
-        <h2 className="text-2xl font-bold text-white mb-2">Reset Password</h2>
+    <div className="min-h-dvh flex items-center justify-center bg-[#0B0F19] px-4" style={{ fontFamily: "'Poppins', sans-serif" }}>
+      <div className="w-full max-w-md p-6 sm:p-8 rounded-3xl border border-[#1F2937] bg-white/[0.03] backdrop-blur-xl">
+        <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">Reset Password</h2>
         <p className="text-gray-500 text-sm mb-6">Enter your email and we'll send you a link to reset your password.</p>
         
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -34,6 +47,8 @@ export default function ForgotPassword() {
             <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
             <input
               type="email"
+              required
+               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@company.com"

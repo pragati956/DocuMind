@@ -2,18 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FiGithub, FiLinkedin, FiCpu } from "react-icons/fi";
-const socialLinks = [
- {
-  href:"https://github.com/pragati956/DocuMind",
-  icon: FiGithub,
-  label:"GitHub",
- },
- {
-  href:"https://linkedin.com/in/sandipan-ray14",
-  icon: FiLinkedin,
-  label:"LinkedIn",
- },
-];
+
 const footerLinks = [
  {
   label:"Home",
@@ -139,29 +128,7 @@ border-white/10
           </motion.div>
 
           {/* ── Social Links ── */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            viewport={{ once: true }}
-            className="flex items-center gap-3"
-          >
-         {socialLinks.map(
- ({ href, icon: Icon, label }, i) => (
-              <motion.a
-                key={i}
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={label}
-                whileHover={{ scale: 1.12, y: -2 }}
-                whileTap={{ scale: 0.95 }}
-                className="w-10 h-10 rounded-xl border border-white/10 bg-white/[0.04] flex items-center justify-center text-gray-400 hover:text-white hover:border-cyan-500/40 hover:bg-cyan-500/[0.07] hover:shadow-[0_0_14px_rgba(34,211,238,0.2)] transition-all duration-200"
-              >
-               <Icon />
-              </motion.a>
-            ))}
-          </motion.div>
+         
 
         </div>
 
@@ -177,67 +144,165 @@ border-white/10
 
     {/* Left Side */}
     <div className="text-center md:text-left">
-      <p className="text-gray-600 text-xs">
-        © {new Date().getFullYear()} DocuMind. All rights reserved.
-      </p>
-
-    <p
+    <h3
   className="
-  mt-2
-  text-base
-  sm:text-lg
-  font-bold
   text-white
-  tracking-wide
+  text-xl
+  sm:text-2xl
+  font-bold
+  mb-4
   "
 >
-  Developed by
+  Developed By
+</h3>
 
-  <a
-    href="https://www.linkedin.com/in/pragati-singh0208/"
-    target="_blank"
-    rel="noopener noreferrer"
-    className="
-    ml-2
-    bg-gradient-to-r
-    from-cyan-400
-    to-violet-400
-    bg-clip-text
-    text-transparent
-    hover:opacity-80
-    transition-all
-    duration-200
-    "
-  >
-    Pragati Singh
-  </a>
+   <div
+ className="
+ mt-4
+ flex
+ flex-col
+ md:flex-row
+ justify-center
+ md:justify-start
+ gap-4
+ "
+>
 
-  <span className="mx-2 text-white/70">
-    &
-  </span>
+  {/* Pragati Card */}
 
-  <a
-    href="https://linkedin.com/in/sandipan-ray14"
-    target="_blank"
-    rel="noopener noreferrer"
-    className="
-    bg-gradient-to-r
-    from-cyan-400
-    to-violet-400
-    bg-clip-text
-    text-transparent
-    hover:opacity-80
-    transition-all
-    duration-200
-    "
-  >
-    Sandipan Ray
-  </a>
+  <div
+   className="
+w-full
+sm:w-[280px]
+
+rounded-2xl
+border
+border-white/10
+bg-white/[0.03]
+
+px-4
+py-4
+
+hover:border-cyan-500/30
+hover:bg-cyan-500/[0.04]
+
+transition-all
+duration-300
+">
+    <p className="text-white font-bold text-base">
+      Pragati Singh
+    </p>
+
+    <p className="text-gray-400 text-xs mt-1">
+      MCA'28
+    </p>
+
+    <p className="text-gray-500 text-xs mt-1">
+     <p className="text-gray-500 text-xs mt-1 leading-relaxed">
+  Motilal Nehru National Institute
+  of Technology
 </p>
+    </p>
+
+    <div className="flex items-center gap-3 mt-3">
+
+      <a
+        href="https://www.linkedin.com/in/pragati-singh0208/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-cyan-400 hover:text-cyan-300"
+      >
+        <FiLinkedin size={18} />
+      </a>
+
+      <a
+        href="https://github.com/pragati956"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-cyan-400 hover:text-cyan-300"
+      >
+        <FiGithub size={18} />
+      </a>
+
     </div>
+  </div>
+
+  {/* Sandipan Card */}
+
+  <div
+   className="
+w-full
+sm:w-[280px]
+
+rounded-2xl
+border
+border-white/10
+bg-white/[0.03]
+
+px-4
+py-4
+
+hover:border-cyan-500/30
+hover:bg-cyan-500/[0.04]
+
+transition-all
+duration-300
+"
+  >
+    <p className="text-white font-bold text-base">
+      Sandipan Ray
+    </p>
+
+    <p className="text-gray-400 text-xs mt-1">
+      MCA'28
+    </p>
+
+    <p className="text-gray-500 text-xs mt-1">
+     <p className="text-gray-500 text-xs mt-1 leading-relaxed">
+  Motilal Nehru National Institute
+  of Technology
+</p>
+    </p>
+
+    <div className="flex items-center gap-3 mt-3">
+
+      <a
+        href="https://linkedin.com/in/sandipan-ray14"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-cyan-400 hover:text-cyan-300"
+      >
+        <FiLinkedin size={18} />
+      </a>
+
+      <a
+        href="https://github.com/notoveryet-51"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-cyan-400 hover:text-cyan-300"
+      >
+        <FiGithub size={18} />
+      </a>
+
+    </div>
+  </div>
+
+</div>
+    </div>
+    
 
     {/* Right Side */}
-    <div className="flex items-center gap-2">
+   <div
+ className="
+ flex
+ items-center
+ justify-center
+ md:justify-end
+ gap-2
+ mt-4
+ md:mt-0
+ "
+>
       <motion.span
         animate={{ opacity: [1, 0.4, 1] }}
         transition={{ duration: 2, repeat: Infinity }}
@@ -258,6 +323,23 @@ border-white/10
     </div>
 
   </div>
+  <div
+ className="
+ w-full
+ mt-8
+ pt-4
+ border-t
+ border-white/5
+
+ flex
+ justify-center
+ md:justify-end
+ "
+>
+  <p className="text-gray-600 text-xs">
+    © {new Date().getFullYear()} DocuMind. All rights reserved.
+  </p>
+</div>
 </motion.div>
 
       </div>

@@ -22,7 +22,7 @@ export default function ResetPassword() {
       toast.success("Password reset successfully");
       setTimeout(() => navigate("/login"), 1500);
     } catch (error) {
-      toast.error(error.response?.data?.message || "Invalid or expired token");
+      toast.error(error?.response?.data?.message || "Invalid or expired token");
     } finally {
       setLoading(false);
     }
@@ -30,8 +30,18 @@ export default function ResetPassword() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#0B0F19] px-4" style={{ fontFamily: "'Poppins', sans-serif" }}>
-      <div className="w-full max-w-md p-8 rounded-3xl border border-[#1F2937] bg-white/[0.03] backdrop-blur-xl">
-        <h2 className="text-2xl font-bold text-white mb-2">Create New Password</h2>
+      <div className="
+w-full
+max-w-md
+p-6
+sm:p-8
+rounded-3xl
+border
+border-[#1F2937]
+bg-white/[0.03]
+backdrop-blur-xl
+">
+        <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">Create New Password</h2>
         <p className="text-gray-500 text-sm mb-6">Please enter your new password below.</p>
         
         <form onSubmit={handleSubmit} className="space-y-4">

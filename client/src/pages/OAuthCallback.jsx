@@ -20,7 +20,9 @@ export default function OAuthCallback() {
         toast.success("Login successful");
         // Force a full reload to the dashboard so the app picks up the saved token
         // and initializes all providers immediately.
-        window.location.replace("/dashboard");
+       navigate("/dashboard", {
+ replace: true
+});
       } catch (err) {
         console.error("OAuthCallback parse error", err);
         toast.error("Authentication failed");

@@ -211,7 +211,7 @@ export default function Register() {
 
       console.log(error.response?.data);
 
-      toast.error(error.response?.data?.message || "Registration failed");
+      toast.error(error?.response?.data?.message || "Registration failed");
     }
   };
 
@@ -273,7 +273,7 @@ export default function Register() {
         <div className="absolute -top-px left-1/2 -translate-x-1/2 w-48 h-px bg-gradient-to-r from-transparent via-purple-400/60 to-transparent" />
 
         <div
-          className="rounded-3xl border border-[#1F2937] p-8 relative overflow-hidden"
+          className="rounded-3xl border border-[#1F2937] p-6 sm:p-8 relative overflow-hidden"
           style={{ background: "rgba(17,24,39,0.88)", backdropFilter: "blur(24px)" }}
         >
           {/* Card top blush */}
@@ -290,7 +290,7 @@ export default function Register() {
               >
                 <FiCpu className="text-white text-lg" />
               </motion.div>
-              <span className="text-white text-2xl font-semibold tracking-tight">DocuMind</span>
+              <span className="text-white text-xl sm:text-2xl font-semibold tracking-tight">DocuMind</span>
             </motion.div>
             {/* ── Heading ── */}
             <motion.div variants={itemVariants} className="text-center mb-7">
@@ -299,7 +299,10 @@ export default function Register() {
             </motion.div>
 
             {/* ── OAuth ── */}
-            <motion.div variants={itemVariants} className="grid grid-cols-2 gap-3 mb-6">
+            <motion.div variants={itemVariants} className="grid
+grid-cols-1
+sm:grid-cols-2
+gap-3 mb-6">
               {[{ icon: <FiChrome />, label: "Google" }, { icon: <FiGithub />, label: "GitHub" }].map(({ icon, label }, i) => (
                 <motion.button
                   key={i}
@@ -491,21 +494,7 @@ export default function Register() {
         </div>
 
         {/* ── Trusted strip ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.75 }}
-          className="flex items-center justify-center gap-2 mt-5"
-        >
-          <div className="flex -space-x-2">
-            {["#3b82f6", "#8b5cf6", "#10b981", "#f59e0b"].map((c, i) => (
-              <div key={i} className="w-6 h-6 rounded-full border-2 border-[#0B0F19]" style={{ background: c }} />
-            ))}
-          </div>
-          <p className="text-gray-600 text-xs">
-            Join <span className="text-gray-400 font-medium">12,000+</span> teams already using DocuMind
-          </p>
-        </motion.div>
+        
       </motion.div>
     </div>
   );
