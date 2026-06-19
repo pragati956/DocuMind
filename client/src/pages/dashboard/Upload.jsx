@@ -1,9 +1,8 @@
-import { useState, useRef, useCallback, useEffect, useContext } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import toast from "react-hot-toast";
 const API_URL = import.meta.env.VITE_API_URL;
-import { AuthContext } from "../../context/AuthContext";
 import {
   HiOutlineCloudUpload,
   HiOutlineDocumentText,
@@ -29,6 +28,14 @@ const FORMAT_META = {
   PNG:  { icon: <BsFileImage />,  color: "#ffb74d", bg: "rgba(255,183,77,0.08)",  border: "rgba(255,183,77,0.18)",  label: "PNG",  desc: "Images, screenshots, scans" },
   JPG:  { icon: <BsFileImage />,  color: "#ffb74d", bg: "rgba(255,183,77,0.08)",  border: "rgba(255,183,77,0.18)",  label: "JPG",  desc: "Images, screenshots, scans" },
   JPEG: { icon: <BsFileImage />,  color: "#ffb74d", bg: "rgba(255,183,77,0.08)",  border: "rgba(255,183,77,0.18)",  label: "JPEG", desc: "Images, screenshots, scans" },
+  WEBP: {
+ icon: <BsFileImage />,
+ color: "#ffb74d",
+ bg: "rgba(255,183,77,0.08)",
+ border: "rgba(255,183,77,0.18)",
+ label: "WEBP",
+ desc: "Images, screenshots, scans"
+},
 };
 
 const SIZE_LIMITS = { PDF: "50 MB", DOCX: "25 MB", TXT: "10 MB", PNG: "20 MB", JPG: "20 MB", JPEG: "20 MB" };
@@ -268,7 +275,7 @@ accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.webp"
 export default function UploadPage() {
   const [dragging, setDragging] = useState(false);
   const [uploads, setUploads] = useState([]); 
-  useContext(AuthContext);// Access context for auth token if needed
+  // Access context for auth token if needed
 
   // GLOBAL DRAG PREVENTION: Stops browser from opening files if you miss the dropzone
   useEffect(() => {
@@ -308,8 +315,9 @@ const response = await axios.post(
       "Authorization": `Bearer ${token}`
     },
     onUploadProgress: (e) => {
-      const p = Math.round((e.loaded * 100) / e.total);
-
+const p = e.total
+ ? Math.round((e.loaded * 100) / e.total)
+ : 0;
       setUploads((u) =>
         u.map((f) =>
           f.id === id
@@ -362,7 +370,7 @@ const allowedTypes = [
 ){
 
  toast.error(
-  `${file.name} exceeds 10MB limit`
+  `${file.name} exceeds 50MB limit`
  );
 
  return;
@@ -389,16 +397,8 @@ const allowedTypes = [
 
   return (
     <div className="min-h-screen text-white overflow-x-hidden"
-      style={{ background: "#09090b", fontFamily: "'Sora', sans-serif" }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.07); border-radius: 99px; }
-        body { background: #09090b; }
-      `}</style>
-
+      style={{ background: "#09090b" }}>
+     
       {/* ── background ── */}
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
         <Orb style={{ top: "-15%", right: "-5%",  width: 700, height: 700, background: "radial-gradient(circle, rgba(109,40,217,0.09) 0%, transparent 70%)" }} />

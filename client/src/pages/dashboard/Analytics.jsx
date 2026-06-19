@@ -164,7 +164,7 @@ export default function AnalyticsPage() {
     const fetchRealData = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res   = await axios.get("http://localhost:5000/api/documents/all", {
+        const res   = await axios.get(`${import.meta.env.VITE_API_URL}/documents/all`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.data.success) return;
@@ -293,7 +293,6 @@ export default function AnalyticsPage() {
 
   return (
     <div className="min-h-screen bg-[#0B0F19]" style={{ fontFamily: "'Poppins', sans-serif" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');`}</style>
 
       {/* Ambient blobs */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">

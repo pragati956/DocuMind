@@ -235,6 +235,8 @@ const [profile, setProfile] =
   } catch(error){
 
  console.error(error);
+ toast.error("Failed to update profile");
+
 
 }
 finally{
@@ -804,7 +806,7 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen text-white overflow-x-hidden"
-      style={{ background: "#09090b", fontFamily: "'DM Sans', sans-serif" }}>
+      style={{ background: "#09090b" }}>
 
       
 

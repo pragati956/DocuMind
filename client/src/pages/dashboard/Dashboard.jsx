@@ -10,8 +10,8 @@ const Dashboard = () => {
     const [uploadOpen, setUploadOpen] = useState(false);
 
     return (
-        <div className="flex h-screen bg-[#0B0F19] overflow-hidden">
-            <div className="flex-1 flex flex-col overflow-hidden">
+<div className="flex h-dvh bg-[#0B0F19] overflow-hidden">  
+              <div className="flex-1 flex flex-col overflow-hidden">
                 <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
 
                     <WelcomeBanner

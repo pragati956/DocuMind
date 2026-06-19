@@ -151,7 +151,7 @@ if (!document) {
     const collection = await Collection.findOneAndUpdate(
       { _id: collectionId, createdBy: req.user.id },
       { $addToSet: { documents: documentId } }, 
-      { new: true }
+      { returnDocument: "after" }
     ).populate("documents");
 
     if (!collection) {

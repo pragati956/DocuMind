@@ -11,7 +11,6 @@ import { summarizeDocument } from "../../services/aiService";
 import EditDocumentModal from "../../components/dashboard/EditDocumentModal";
 import UploadModal from "../../components/dashboard/UploadModal"; // <-- Imported Global Modal
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
 import DocumentPreviewModal from "../../components/dashboard/DocumentPreviewModal";
 import {
   HiOutlineSearch,
@@ -115,7 +114,7 @@ z-[9999] w-52 rounded-xl border border-white/10 bg-[#141414]/95 shadow-2xl backd
       {actions.map((a, i) => (
         <button
           key={i}
-          onClick={() => {
+          onClick={async () => {
             if (a.label === "Delete") onDelete(documentData.id);
             
             if (a.label === "View") onView(documentData);
@@ -133,13 +132,14 @@ if(
  a.label==="Share"
 ){
 
- navigator.clipboard.writeText(
+ try {
+ await navigator.clipboard.writeText(
   documentData.fileUrl
  );
-
-toast.success(
- "Link copied!"
-);
+ toast.success("Link copied!");
+} catch {
+ toast.error("Failed to copy link");
+}
 
 }
             if (a.label === "Edit") onEdit(documentData);
@@ -160,7 +160,7 @@ toast.success(
 
 // ── DocRow (List View) ─────────────────────────────────────────────────────────
 function DocRow({ doc, index, onSummarize, onDelete, onToggleStar, onView, onEdit, onAddToCollection }) {
-  const [hovered, setHovered] = useState(false);
+const [hovered, setHovered] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const sb = summaryBadge[doc.summaryStatus];
 
@@ -288,13 +288,35 @@ style={{
 
       <div className="flex-1 px-5 pb-4">
         <h3 className="text-sm font-semibold text-white/90 leading-snug line-clamp-2">{doc.name}</h3>
-        <div className="mt-1 flex flex-wrap gap-1.5">
-          {doc.tags.map((t) => (
-            <span key={t} className="rounded-full border border-white/[0.08] bg-white/[0.04] px-2 py-0.5 text-[10px] text-white/40">
-              {t}
-            </span>
-          ))}
-        </div>
+       <div className="mt-1 flex flex-wrap gap-1.5">
+
+  {(doc.tags || []).slice(0,3).map((t) => (
+    <span
+      key={t}
+      className="rounded-full border border-white/[0.08] bg-white/[0.04] px-2 py-0.5 text-[10px] text-white/40"
+    >
+      {t}
+    </span>
+  ))}
+
+  {(doc.tags || []).length > 3 && (
+    <span
+      className="
+      rounded-full
+      border
+      border-violet-500/20
+      bg-violet-500/10
+      px-2
+      py-0.5
+      text-[10px]
+      text-violet-300
+      "
+    >
++{(doc.tags || []).length - 3}
+    </span>
+  )}
+
+</div>
       </div>
 
       <div className="border-t border-white/[0.06] px-5 py-3 flex items-center justify-between">
@@ -346,6 +368,7 @@ function EmptyState({ onUpload }) {
 // ── Main Page ──────────────────────────────────────────────────────────────────
 export default function DocumentsPage() {
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [filter, setFilter] = useState("All");
   const [view, setView] = useState("grid");
   const [selectedDoc, setSelectedDoc] = useState(null);
@@ -368,7 +391,14 @@ useState(0);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  const [collectionModalDoc, setCollectionModalDoc] = useState(null); // <--- ADD THIS LINE
+  const [collectionModalDoc, setCollectionModalDoc] = useState(null); 
+  useEffect(() => {
+  const timer = setTimeout(() => {
+    setDebouncedSearch(search);
+  }, 500);
+
+  return () => clearTimeout(timer);
+}, [search]);// <--- ADD THIS LINE
 
   const handleDelete = async (id) => {
     try {
@@ -406,7 +436,7 @@ useState(0);
 
   const handleSearch = async (value) => {
     try {
-      setSearch(value);
+      
       setPage(1);
       if (!value.trim()) {
         loadDocuments();
@@ -430,6 +460,9 @@ useState(0);
       setTotalPages(data.totalPages || 1);
     } catch (error) {
       console.error("Error fetching documents:", error);
+      toast.error(
+ "Failed to load documents"
+);
     } finally {
       setLoading(false);
     }
@@ -438,6 +471,16 @@ useState(0);
   useEffect(() => {
     loadDocuments();
   }, [page]);
+  useEffect(() => {
+
+  if (!debouncedSearch.trim()) {
+    loadDocuments();
+    return;
+  }
+
+  handleSearch(debouncedSearch);
+
+}, [debouncedSearch]);
 
   const docs = documents.map((doc) => ({
     id: doc._id, 
@@ -450,7 +493,9 @@ type:
  ? "DOCX"
  : doc.fileType?.includes("image")
  ? "IMAGE"
- : "TXT",    size: `${(doc.fileSize / 1024 / 1024).toFixed(2)} MB`,
+ : "TXT",    size: doc.fileSize
+ ? `${(doc.fileSize / 1024 / 1024).toFixed(2)} MB`
+ : "Unknown",
     date: new Date(doc.createdAt).toLocaleDateString(),
     summary: doc.summary || "",
     summaryStatus: doc.summary ? "done" : "none",
@@ -473,24 +518,18 @@ type:
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen text-white">
+      <div className="flex items-center justify-center min-h-dvh text-white">
         Loading documents...
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen text-white overflow-x-hidden" style={{ background: "#0a0a0a", fontFamily: "'DM Sans', sans-serif" }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
-        * { box-sizing: border-box; }
-        ::-webkit-scrollbar { width: 4px; } 
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 99px; }
-      `}</style>
+    <div className="min-h-dvh text-white overflow-x-hidden" style={{ background: "#0a0a0a" }}>
+    
 
       {/* Background mesh */}
-      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+      <div className="hidden sm:block pointer-events-none fixed inset-0 z-0 overflow-hidden">
         <div style={{ position: "absolute", top: "-20%", left: "60%", width: 600, height: 600, background: "radial-gradient(circle, rgba(109,40,217,0.08) 0%, transparent 70%)", borderRadius: "50%" }} />
         <div style={{ position: "absolute", bottom: "10%", left: "-10%", width: 500, height: 500, background: "radial-gradient(circle, rgba(59,130,246,0.05) 0%, transparent 70%)", borderRadius: "50%" }} />
         <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.025 }}>
@@ -524,7 +563,14 @@ type:
         </motion.div>
 
         {/* ── Stats row ── */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="grid grid-cols-3 gap-3 mb-6">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="
+grid
+grid-cols-1
+sm:grid-cols-2
+lg:grid-cols-3
+gap-3
+mb-6
+">
           {stats.map((s, i) => (
             <div key={i} className="rounded-xl border border-white/[0.07] bg-white/[0.025] px-4 py-3.5 flex items-center gap-3 backdrop-blur-sm">
               <div className={`text-lg ${s.accent ? "text-violet-400" : "text-white/30"}`}>{s.icon}</div>
@@ -542,7 +588,7 @@ type:
             <HiOutlineSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30 text-base" />
             <input
               value={search}
-              onChange={(e) => handleSearch(e.target.value)}
+              onChange={(e) => setSearch(e.target.value)}
               placeholder="Search documents…"
               className="w-full rounded-xl border border-white/[0.08] bg-white/[0.03] py-2.5 pl-10 pr-4 text-sm text-white placeholder-white/25 outline-none focus:border-violet-500/40 focus:bg-white/[0.05] transition-all"
             />
@@ -625,9 +671,26 @@ type:
           </motion.div>
         </AnimatePresence>
 
-        <div className="flex items-center justify-center gap-4 mt-10">
-          <button disabled={page === 1} onClick={() => setPage(page - 1)} className="px-4 py-2 rounded-lg bg-white/10 text-white disabled:opacity-40">Previous</button>
-          <span className="text-white">Page {page} of {totalPages}</span>
+<div
+ className="
+ flex
+ flex-col
+ sm:flex-row
+ items-center
+ justify-center
+ gap-4
+ mt-10
+ "
+>          <button disabled={page === 1} onClick={() => setPage(page - 1)} className="px-4 py-2 rounded-lg bg-white/10 text-white disabled:opacity-40">Previous</button>
+        <span
+ className="
+ text-white
+ text-sm
+ text-center
+ "
+>
+ Page {page} of {totalPages}
+</span>
           <button disabled={page === totalPages} onClick={() => setPage(page + 1)} className="px-4 py-2 rounded-lg bg-white/10 text-white disabled:opacity-40">Next</button>
         </div>
 

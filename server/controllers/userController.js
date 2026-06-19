@@ -11,15 +11,15 @@ export const getProfile = async (req, res) => {
       ).select("-password");
 
     const documentsCount =
- await Document.countDocuments({
-   uploadedBy:req.user.id
- });
+      await Document.countDocuments({
+        uploadedBy: req.user.id
+      });
 
-res.status(200).json({
- success:true,
- user,
- documentsCount,
-});
+    res.status(200).json({
+      success: true,
+      user,
+      documentsCount,
+    });
 
   } catch (error) {
 
@@ -50,8 +50,9 @@ export const updateProfile = async (req, res) => {
           bio,
         },
         {
-          new: true,
+          returnDocument: "after",
         }
+
       ).select("-password");
 
     res.status(200).json({
@@ -70,207 +71,205 @@ export const updateProfile = async (req, res) => {
 
 };
 export const getNotificationPreferences =
-async (req, res) => {
+  async (req, res) => {
 
-  try {
+    try {
 
-    const user =
-      await UserModel.findById(
-        req.user.id
-      );
+      const user =
+        await UserModel.findById(
+          req.user.id
+        );
 
-    res.status(200).json({
-      success: true,
-      notifications:
-        user.notificationPreferences,
-    });
+      res.status(200).json({
+        success: true,
+        notifications:
+          user.notificationPreferences,
+      });
 
-  } catch (error) {
+    } catch (error) {
 
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
 
-  }
+    }
 
-};
+  };
 
 export const updateNotificationPreferences =
-async (req, res) => {
+  async (req, res) => {
 
-  try {
+    try {
 
-    const user =
-      await UserModel.findByIdAndUpdate(
-        req.user.id,
-        {
-          notificationPreferences:
-            req.body,
-        },
-        {
-          new: true,
-        }
-      );
-
-    res.status(200).json({
-      success: true,
-      notifications:
-        user.notificationPreferences,
-    });
-
-  } catch (error) {
-
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-
-  }
-
-};
-export const changePassword =
-async (req, res) => {
-
-  try {
-
-    const {
-      currentPassword,
-      newPassword,
-    } = req.body;
-
-    const user =
-      await UserModel.findById(
-        req.user.id
-      );
-
-    if (!user) {
-
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-
-    }
-
-    const isMatch =
-      await bcrypt.compare(
-        currentPassword,
-        user.password
-      );
-
-    if (!isMatch) {
-
-      return res.status(400).json({
-        success: false,
-        message:
-          "Current password is incorrect",
-      });
-
-    }
-
-    const hashedPassword =
-      await bcrypt.hash(
-        newPassword,
-        10
-      );
-
-    user.password =
-      hashedPassword;
-
-    await user.save();
-
-    res.status(200).json({
-      success: true,
-      message:
-        "Password updated successfully",
-    });
-
-  } catch (error) {
-
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-
-  }
-
-};
-export const getStorageStats =
-async (req, res) => {
-
-  try {
-
-    const documents =
-      await Document.find({
-        uploadedBy:
+      const user =
+        await UserModel.findByIdAndUpdate(
           req.user.id,
+          {
+            notificationPreferences:
+              req.body,
+          },
+          { returnDocument: "after" }
+        );
+
+      res.status(200).json({
+        success: true,
+        notifications:
+          user.notificationPreferences,
       });
- 
 
-    const totalDocuments =
-      documents.length;
+    } catch (error) {
 
-    const pdfCount =
-      documents.filter(
-        doc =>
-          doc.fileType?.includes(
-            "pdf"
-          )
-      ).length;
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
 
-    const docxCount =
-      documents.filter(
-        doc =>
-          doc.fileType?.includes(
-            "word"
-          )
-      ).length;
+    }
 
-    const txtCount =
-      documents.filter(
-        doc =>
-          doc.fileType?.includes(
-            "text"
-          )
-      ).length;
+  };
+export const changePassword =
+  async (req, res) => {
 
-    let totalStorageMB = 0;
+    try {
 
-    documents.forEach(
-      (doc) => {
+      const {
+        currentPassword,
+        newPassword,
+      } = req.body;
 
-        if (doc.fileSize) {
+      const user =
+        await UserModel.findById(
+          req.user.id
+        );
 
-          totalStorageMB +=
-            doc.fileSize /
-            (1024 * 1024);
+      if (!user) {
 
-        }
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
 
       }
-    );
 
-    res.status(200).json({
-      success: true,
-      totalDocuments,
-      pdfCount,
-      docxCount,
-      txtCount,
-      totalStorageMB:
-        Number(
-          totalStorageMB.toFixed(2)
-        ),
-    });
+      const isMatch =
+        await bcrypt.compare(
+          currentPassword,
+          user.password
+        );
 
-  } catch (error) {
+      if (!isMatch) {
 
-    res.status(500).json({
-      success: false,
-      message:
-        error.message,
-    });
+        return res.status(400).json({
+          success: false,
+          message:
+            "Current password is incorrect",
+        });
 
-  }
+      }
 
-};
+      const hashedPassword =
+        await bcrypt.hash(
+          newPassword,
+          10
+        );
+
+      user.password =
+        hashedPassword;
+
+      await user.save();
+
+      res.status(200).json({
+        success: true,
+        message:
+          "Password updated successfully",
+      });
+
+    } catch (error) {
+
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
+
+    }
+
+  };
+export const getStorageStats =
+  async (req, res) => {
+
+    try {
+
+      const documents =
+        await Document.find({
+          uploadedBy:
+            req.user.id,
+        });
+
+
+      const totalDocuments =
+        documents.length;
+
+      const pdfCount =
+        documents.filter(
+          doc =>
+            doc.fileType?.includes(
+              "pdf"
+            )
+        ).length;
+
+      const docxCount =
+        documents.filter(
+          doc =>
+            doc.fileType?.includes(
+              "word"
+            )
+        ).length;
+
+      const txtCount =
+        documents.filter(
+          doc =>
+            doc.fileType?.includes(
+              "text"
+            )
+        ).length;
+
+      let totalStorageMB = 0;
+
+      documents.forEach(
+        (doc) => {
+
+          if (doc.fileSize) {
+
+            totalStorageMB +=
+              doc.fileSize /
+              (1024 * 1024);
+
+          }
+
+        }
+      );
+
+      res.status(200).json({
+        success: true,
+        totalDocuments,
+        pdfCount,
+        docxCount,
+        txtCount,
+        totalStorageMB:
+          Number(
+            totalStorageMB.toFixed(2)
+          ),
+      });
+
+    } catch (error) {
+
+      res.status(500).json({
+        success: false,
+        message:
+          error.message,
+      });
+
+    }
+
+  };

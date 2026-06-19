@@ -222,7 +222,7 @@ function SummaryCard({ summary: s, index, view, onDelete, onToggleStar }) {
 
         {/* Tags */}
         <motion.div layout className="flex items-center gap-1.5 flex-wrap mb-4 mt-2">
-          {s.tags.map((tag, i) => (
+     {  (s.tags || []).map((tag, i) => (
             <motion.span key={i} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: index * 0.09 + 0.3 + i * 0.05 }}
               whileHover={{ scale: 1.08 }}
               className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border cursor-default ${s.tagBg}`}>
@@ -284,7 +284,7 @@ export default function AiSummariesPage() {
 
   const fetchSummaries = async () => {
     try {
-      const token = localStorage.getItem("token");
+      
       const data = await getSummaries();
 
       const formatted = data.documents.map((doc) => {
@@ -346,6 +346,7 @@ pages: "-",
       setSummariesData(formatted);
     } catch (error) {
       console.error("Fetch Summary Error:", error);
+      toast.error("Failed to load summaries");
     } finally {
       setLoading(false);
     }
@@ -393,15 +394,21 @@ pages: "-",
 
   return (
     <div style={{ fontFamily: "'Poppins', sans-serif" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap'); .scrollbar-hide::-webkit-scrollbar{display:none}`}</style>
 
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="flex items-center justify-between mb-4"
-      >
+className="
+flex
+flex-col
+sm:flex-row
+sm:items-center
+justify-between
+gap-3
+mb-4
+"      >
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 text-sm">
             <FiZap />
@@ -420,7 +427,12 @@ pages: "-",
           </motion.span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="
+flex
+flex-wrap
+items-center
+gap-2
+">
           {/* Inline search */}
           <motion.div
             animate={{
