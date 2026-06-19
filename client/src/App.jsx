@@ -14,7 +14,6 @@ import OAuthCallback from "./pages/OAuthCallback";
 import Dashboard from "./pages/dashboard/Dashboard";
 import Upload from "./pages/dashboard/Upload";
 import Documents from "./pages/dashboard/Documents";
-import Chat from "./pages/dashboard/Chat";
 import Settings from "./pages/dashboard/Settings";
 
 import ProtectedRoute from "./routes/ProtectedRoute";
@@ -73,7 +72,7 @@ function App() {
             <Route path="upload" element={<Upload />} />
 
             {/* CHAT */}
-            <Route path="chat" element={<Chat />} />
+
 
             {/* SETTINGS */}
             <Route path="settings" element={<Settings />} />

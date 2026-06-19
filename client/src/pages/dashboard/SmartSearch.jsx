@@ -4,11 +4,11 @@ import SearchSkeleton
 from "../../components/dashboard/SearchSkeleton";
 import {
   searchDocuments,
-  toggleStarDocument, getSearchStats,getCategories,getDocumentsByType,getSuggestions, saveSearchHistory,
+  toggleStarDocument, getSearchStats,getCategories,getDocumentsByType, saveSearchHistory,
  getSearchHistory,
  clearSearchHistory,deleteSearchHistory,
 } from "../../services/documentService";
-import { useNavigate, useSearchParams }
+import {  useSearchParams }
 from "react-router-dom";
 import DocumentPreviewModal
 from "../../components/dashboard/DocumentPreviewModal";
@@ -19,16 +19,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   FiSearch, FiZap, FiFileText, FiClock, FiX,
   FiArrowRight, FiFilter, FiStar, FiTag,
-  FiTrendingUp, FiCommand, FiCpu, FiEye,
+   FiCommand, FiCpu, FiEye,
   FiChevronRight, FiFolder, FiBookmark,
 } from "react-icons/fi";
-
 /* ─── Mock Data ─── */
-
-
-
-
-
 const filters = [
  "All",
  "PDF",
@@ -39,12 +33,7 @@ const filters = [
  "Recent",
  "Summarized"
 ];
-const aiTips = [
-  `Try asking in natural language: "summarize Q4 results"`,
-  `Use quotes for exact phrases: "net revenue retention"`,
-  `Filter by type: "legal contracts signed in 2024"`,
-  `Ask for comparisons: "compare Q3 and Q4 performance"`,
-];
+
 
 /* ─── Typewriter Placeholder ─── */
 function usePlaceholder(items, interval = 3200) {
@@ -80,7 +69,6 @@ function SearchBar({
  focused,
  setFocused,
  loading,
- suggestions
 }){
   const ref = useRef(null);
   const placeholders = [
@@ -110,7 +98,9 @@ function SearchBar({
         backgroundColor: focused ? "rgba(59,130,246,0.03)" : "rgba(17,24,39,0.8)",
       }}
       transition={{ duration: 0.25 }}
-      className=" relative flex items-center gap-4 px-5 py-4 rounded-2xl border backdrop-blur-xl"
+      className=" relative flex flex-col sm:flex-row
+sm:items-center
+gap-3 px-5 py-4 rounded-2xl border backdrop-blur-xl"
     >
       <motion.div animate={{ color: focused ? "#60a5fa" : "#4b5563", scale: focused ? 1.1 : 1 }} transition={{ duration: 0.2 }}>
         <FiSearch className="text-xl shrink-0" />
@@ -128,57 +118,8 @@ function SearchBar({
         className="flex-1 bg-transparent text-white text-base placeholder-gray-600 outline-none"
       />
 
-{query &&
- suggestions.length > 0 && (
 
-  <div
-   className="
-   absolute
-   top-full
-   left-0
-   right-0
-   bg-[#111827]
-   border
-   border-[#1F2937]
-   rounded-xl
-   mt-2
-   z-50
-   "
-  >
 
-   {suggestions
-    .filter(item =>
-      item
-       .toLowerCase()
-       .includes(
-        query.toLowerCase()
-       )
-    )
-    .slice(0,5)
-    .map(item => (
-
-     <button
-      key={item}
-      onClick={() =>
-       onSearch(item)
-      }
-      className="
-      block
-      w-full
-      text-left
-      px-4
-      py-2
-      hover:bg-white/5
-      "
-     >
-      {item}
-     </button>
-
-    ))}
-
-  </div>
-
-)}
 
       <div className="flex items-center gap-2 shrink-0">
         <AnimatePresence>
@@ -248,7 +189,8 @@ function RecentSearches({
  className="text-gray-700 hover:text-gray-400 text-[10px]"
 >
  Clear all
-</button>      </div>
+</button>
+      </div>
       <div className="flex flex-wrap gap-2">
         {searches.map((s, i) => (
           <motion.div
@@ -271,8 +213,8 @@ function RecentSearches({
 >
 {s.createdAt
  ? new Date(
-     s.createdAt
-   ).toLocaleString()
+ s.createdAt
+).toLocaleDateString()
  : ""
 }
 </span>
@@ -331,37 +273,7 @@ function SuggestionCards({
 
 
 /* ─── AI Tips ─── */
-function AiTips() {
-  const [tipIdx, setTipIdx] = useState(0);
-  useEffect(() => {
-    const t = setInterval(() => setTipIdx((i) => (i + 1) % aiTips.length), 3500);
-    return () => clearInterval(t);
-  }, []);
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: 0.4 }}
-      className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-purple-500/15 bg-purple-500/[0.06]"
-    >
-      <motion.div animate={{ rotate: [0, 360] }} transition={{ duration: 4, repeat: Infinity, ease: "linear" }}>
-        <FiCpu className="text-purple-400 text-sm shrink-0" />
-      </motion.div>
-      <AnimatePresence mode="wait">
-        <motion.p
-          key={tipIdx}
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -6 }}
-          transition={{ duration: 0.3 }}
-          className="text-gray-400 text-xs"
-        >
-          <span className="text-purple-300 font-medium">AI Tip: </span>{aiTips[tipIdx]}
-        </motion.p>
-      </AnimatePresence>
-    </motion.div>
-  );
-}
+
 function StatCard({
  title,
  value
@@ -616,7 +528,7 @@ onClick={async (e) => {
         {/* Tags + meta */}
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-1.5 flex-wrap">
-            {result.tags.map((tag, i) => (
+           {(result.tags || []).map((tag, i) => (
               <span key={i} className={`px-2 py-0.5 rounded-full text-[9px] font-semibold border ${result.accentText}`}
                 style={{ background: result.dim, borderColor: result.border }}>
                 {tag}
@@ -631,9 +543,10 @@ onClick={async (e) => {
         </div>
 
         {/* Hover footer */}
-        <motion.div animate={{ opacity: hovered ? 1 : 0, height: hovered ? "auto" : 0 }}
+        <motion.div animate={{opacity: hovered ? 1 : 0 , height: hovered ? "auto" : 0 }}
           transition={{ duration: 0.2 }}
-          className="overflow-hidden">
+          className="overflow-hidden block
+sm:block">
           <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/[0.05]">
             <div className="flex items-center gap-2">
               <motion.button whileHover={{ scale: 1.05 }}
@@ -761,17 +674,13 @@ function EmptyState({ query }) {
 
 /* ─── Main Page ─── */
 export default function SmartSearch() {
-  const navigate = useNavigate();
+  
   const [searchParams] = useSearchParams(); // <-- ADD THIS
   const [query, setQuery] = useState(searchParams.get("q") || ""); // <-- UPDATE THIS
-  
   const [searchedQuery, setSearchedQuery] = useState("");
   const [results, setResults] =
   useState([]);
-  const [
- suggestions,
- setSuggestions
-] = useState([]);
+  
   const [stats,
  setStats]
  =
@@ -795,7 +704,6 @@ useState([]);
 useState("Newest");
   const [hasSearched, setHasSearched] = useState(false);
 useEffect(()=>{
-
  const loadHistory =
  async()=>{
 
@@ -839,31 +747,7 @@ useEffect(() => {
  setTrending(topSearches);
 
 }, [recents]);
-useEffect(() => {
 
- const loadSuggestions =
- async () => {
-
-  try {
-
-   const data =
-    await getSuggestions();
-
-   setSuggestions(
-    data.suggestions
-   );
-
-  } catch (error) {
-
-   console.log(error);
-
-  }
-
- };
-
- loadSuggestions();
-
-}, []);
  const loadStats = async () => {
 
   try {
@@ -967,7 +851,7 @@ useEffect(() => {
     setQuery(urlQuery);
     handleSearch(urlQuery);
   }
-}, [searchParams]);
+}, [searchedQuery,searchParams]);
 
  const handleSearch =
 async (q) => {
@@ -979,23 +863,13 @@ async (q) => {
 
     const data =
       await searchDocuments(q);
-
-    console.log(
-      "SEARCH RESULTS:",
-      data
-    );
-
     setResults(
       data.documents || []
     );
-
     setQuery(q);
-
     setSearchedQuery(q);
-
     setHasSearched(true);
    await saveSearchHistory({
-
  query:q,
 
  resultsCount:
@@ -1005,31 +879,21 @@ async (q) => {
 
 const historyData =
  await getSearchHistory();
-
 setRecents(
  historyData.history
 );
-
-
-    setFocused(false);
-
+   setFocused(false);
   } catch (error) {
-
-    console.error(error);
-
-  }
-  finally {
-
- setLoading(false);
-
+  console.error(error);
+  toast.error("Search failed");
 }
-
+  finally {
+ setLoading(false);
+}
 };
 const handleStarToggle =
 async (id) => {
-
   try {
-
     await toggleStarDocument(
       id
     );
@@ -1214,16 +1078,13 @@ const mostUsedSearch =
  trending.length > 0
  ? trending[0][0]
  : "-";
-
 const lastSearch =
-
  recents.length > 0
  ? recents[0].query
  : "-";
 let sortedResults =
  [...filteredResults];
  if(sortBy==="Newest"){
-
  sortedResults.sort(
   (a,b)=>
    new Date(b.createdAt)
@@ -1254,7 +1115,6 @@ if(sortBy==="A-Z"){
 
   return (
     <div className="min-h-screen bg-[#0B0F19]" style={{ fontFamily: "'Poppins', sans-serif" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');`}</style>
 
       {/* Ambient blobs */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
@@ -1302,13 +1162,10 @@ if(sortBy==="A-Z"){
  focused={focused}
  setFocused={setFocused}
  loading={loading}
- suggestions={suggestions}
 />      </motion.div>
 
         {/* AI Tips */}
-       <div className="mb-8">
-  <AiTips />
-</div>
+      
 
 {
  stats && (
@@ -1316,8 +1173,9 @@ if(sortBy==="A-Z"){
   <div
    className="
    grid
-   grid-cols-2
-   md:grid-cols-5
+   grid-cols-1
+sm:grid-cols-2
+lg:grid-cols-5
    gap-3
    mb-8
    "
@@ -1327,22 +1185,18 @@ if(sortBy==="A-Z"){
     title="Documents"
     value={stats.totalDocs}
    />
-
    <StatCard
     title="PDF"
     value={stats.pdfs}
    />
-
    <StatCard
     title="DOCX"
     value={stats.docx}
    />
-
    <StatCard
     title="TXT"
     value={stats.txt}
    />
-
    <StatCard
     title="Summaries"
     value={stats.summaries}

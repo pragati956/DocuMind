@@ -45,7 +45,7 @@ async (req, res) => {
           isRead: true,
         },
         {
-          new: true,
+           returnDocument: "after"
         }
       );
 

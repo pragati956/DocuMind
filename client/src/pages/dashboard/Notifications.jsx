@@ -167,7 +167,7 @@ export default function NotificationsPage() {
         <div className="min-h-screen bg-[#0B0F19]" style={{ fontFamily: "'Poppins', sans-serif" }}>
 
             {/* Ambient glows */}
-            <div className="fixed inset-0 pointer-events-none overflow-hidden">
+            <div className=" pointer-events-none overflow-hidden">
                 <motion.div animate={{ scale: [1, 1.15, 1], opacity: [0.05, 0.1, 0.05] }} transition={{ duration: 10, repeat: Infinity }}
                     className="absolute top-0 left-1/3 w-[600px] h-[400px] bg-blue-600 blur-[140px] rounded-full" />
                 <motion.div animate={{ scale: [1, 1.1, 1], opacity: [0.04, 0.08, 0.04] }} transition={{ duration: 13, repeat: Infinity, delay: 3 }}
@@ -180,7 +180,15 @@ export default function NotificationsPage() {
 
                 {/* ── Page Header ── */}
                 <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
-                    className="flex items-center justify-between mb-6">
+                   className="
+flex
+flex-col
+sm:flex-row
+sm:items-center
+justify-between
+gap-4
+mb-6
+">
                     <div className="flex items-center gap-3">
                         <div className="relative">
                             <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
@@ -211,7 +219,14 @@ export default function NotificationsPage() {
                     </div>
 
                     {/* Header actions */}
-                    <div className="flex items-center gap-2">
+                    <div className="
+flex
+flex-wrap
+items-center
+gap-2
+justify-start
+sm:justify-end
+">
                         <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
@@ -276,6 +291,7 @@ export default function NotificationsPage() {
                     <div className="space-y-3">
                         {Array.from({ length: 5 }).map((_, i) =><NotificationSkeleton
  key={i}
+  index={i}
 />)}
                     </div>
                 ) : filtered.length === 0 ? (
@@ -296,7 +312,7 @@ export default function NotificationsPage() {
                                     <AnimatePresence mode="popLayout">
                                         {items.map((n, i) => (
                                            <NotificationRow
-  key={n._id}
+  key={n._id || n.id}
   n={n}
   onOpen={handleOpen}
   onMarkRead={markRead}
