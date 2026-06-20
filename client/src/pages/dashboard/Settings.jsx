@@ -935,10 +935,7 @@ export default function SettingsPage() {
         </div>
 
         {/* footer */}
-        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
-          className="mt-12 text-center text-xs text-white/15">
-          DocuMind v2.6.1 · <span className="text-violet-400/40">Privacy Policy</span> · <span className="text-violet-400/40">Terms</span>
-        </motion.p>
+       
       </div>
     </div>
   );

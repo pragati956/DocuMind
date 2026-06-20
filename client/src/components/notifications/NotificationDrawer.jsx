@@ -29,8 +29,9 @@ export default function NotificationDrawer({ open, notification, onClose }) {
       right-0
       top-0
       h-full
-      w-full
-      sm:w-[420px]
+      w-[100vw]
+max-w-full
+sm:w-[420px]
       bg-[#081019]
       border-l
       border-[#1f2937]
@@ -51,16 +52,23 @@ export default function NotificationDrawer({ open, notification, onClose }) {
         gap-3
         "
       >
-        <div>
-          <h3 className="text-white text-lg font-semibold">
-            {notification.action}
-          </h3>
+       <div className="min-w-0 flex-1">
+         <h3
+  className="
+  text-white
+  text-lg
+  font-semibold
+  break-words
+  "
+>
+  {notification.action}
+</h3>
 
           <p
             className="
             text-gray-400
             text-sm
-            break-words
+              break-all
             "
           >
             {notification.documentName}

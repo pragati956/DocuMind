@@ -236,8 +236,26 @@ export default function WelcomeBanner({ onUpload }) {
                 whileHover={{ scale: 1.1, rotate: 90 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setDismissed(true)}
-                className="absolute top-5 right-5 w-7 h-7 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-500 hover:text-white transition-colors"
-              >
+className="
+absolute
+top-3
+right-3
+sm:top-5
+sm:right-5
+w-8
+h-8
+rounded-full
+bg-white/5
+border
+border-white/10
+flex
+items-center
+justify-center
+text-gray-500
+hover:text-white
+transition-colors
+z-20
+"              >
                 <FiX className="text-xs" />
               </motion.button>
 

@@ -8,9 +8,12 @@ const DocumentPreviewModal = ({ document, onClose }) => {
 
   useEffect(() => {
     if (!document) return;
-    const ext = document.name?.split(".").pop().toLowerCase() || "";
-    const isTextFile = ["txt", "md", "csv", "json"].includes(ext);
+    
+const mimeType = document.fileType || "";
 
+const isTextFile =
+  mimeType.startsWith("text/") ||
+  mimeType.includes("json");
     let cancelled = false;
 
     const loadText = async () => {
@@ -47,21 +50,32 @@ const DocumentPreviewModal = ({ document, onClose }) => {
 
   if (!document) return null;
 
-  const ext = document.name?.split('.').pop().toLowerCase() || "";
-  const isImage = ["png", "jpg", "jpeg", "webp", "gif"].includes(ext);
-  const isOffice = ["doc", "docx", "ppt", "pptx", "xls", "xlsx"].includes(ext);
-  const isPdf = ext === "pdf";
-  const isText = ["txt", "md", "csv", "json"].includes(ext);
+const mimeType = document.fileType || "";
+
+const isPdf =
+  mimeType.includes("pdf");
+
+const isImage =
+  mimeType.startsWith("image/");
+
+const isOffice =
+  mimeType.includes("word") ||
+  mimeType.includes("presentation") ||
+  mimeType.includes("excel") ||
+  mimeType.includes("spreadsheet");
+
+const isText =
+  mimeType.startsWith("text/") ||
+  mimeType.includes("json");
+  
 
   let viewerUrl = "";
-  if (isOffice) {
-    // Google Docs viewer works well when the file URL is publicly reachable
-    viewerUrl = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(document.fileUrl)}`;
-  } else if (isPdf) {
-    viewerUrl = `https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(document.fileUrl)}`;
-  } else {
-    viewerUrl = document.fileUrl;
-  }
+ if (isOffice || isPdf) {
+  viewerUrl =
+    `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(document.fileUrl)}`;
+} else {
+  viewerUrl = document.fileUrl;
+}
 
   return (
     <AnimatePresence>

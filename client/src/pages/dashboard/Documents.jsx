@@ -175,8 +175,9 @@ const [hovered, setHovered] = useState(false);
       exit={{ opacity: 0, x: -12 }}
       whileHover={{ backgroundColor: "rgba(255,255,255,0.035)" }}
       onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => { setHovered(false); setMenuOpen(false); }}
-      className="relative flex items-center gap-4 rounded-xl border border-white/[0.06] bg-white/[0.02] px-5 py-4 transition-colors"
+onMouseLeave={() => {
+  setHovered(false);
+}}      className="relative flex items-center gap-4 rounded-xl border border-white/[0.06] bg-white/[0.02] px-5 py-4 transition-colors"
     >
       <span className="text-3xl">{fileIcon(doc.type)}</span>
       <div className="flex-1 min-w-0">
@@ -246,8 +247,9 @@ function DocCard({ doc, view, onDelete, onView, onEdit, onSummarize, onToggleSta
       exit={{ opacity: 0, y: 16 }}
       whileHover={{ y: -3, boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}
       onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => { setHovered(false); setMenuOpen(false); }}
-      className="group relative flex flex-col rounded-2xl border border-white/[0.07] bg-white/[0.03] backdrop-blur-sm overflow-visible cursor-pointer"
+onMouseLeave={() => {
+  setHovered(false);
+}}      className="group relative flex flex-col rounded-2xl border border-white/[0.07] bg-white/[0.03] backdrop-blur-sm overflow-visible cursor-pointer"
 style={{
  zIndex: menuOpen ? 999 : 1,
  background:

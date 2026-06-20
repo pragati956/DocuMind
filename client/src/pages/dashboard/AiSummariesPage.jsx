@@ -95,8 +95,9 @@ function SummaryCard({ summary: s, index, view, onDelete, onToggleStar }) {
       animate={inView ? { opacity: 1, y: 0, scale: 1 } : {}}
       transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
       onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => { setHovered(false); setMenuOpen(false); }}
-      className={`relative rounded-2xl border bg-[#111827] overflow-hidden transition-all duration-300 ${view === "grid" ? "break-inside-avoid mb-4 w-full inline-block" : ""}`}
+onMouseLeave={() => {
+  setHovered(false);
+}}      className={`relative rounded-2xl border bg-[#111827] overflow-hidden transition-all duration-300 ${view === "grid" ? "break-inside-avoid mb-4 w-full inline-block" : ""}`}
       style={{ borderColor: hovered ? s.accentBorder : "rgba(31,41,55,1)", boxShadow: hovered ? `0 0 40px ${s.accentDim}, 0 4px 20px rgba(0,0,0,0.3)` : "0 2px 12px rgba(0,0,0,0.2)" }}
     >
       <motion.div animate={{ scaleX: hovered ? 1 : 0, opacity: hovered ? 1 : 0 }} transition={{ duration: 0.3 }}

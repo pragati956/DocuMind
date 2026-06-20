@@ -128,7 +128,9 @@ function DocRow({
       exit={{ opacity: 0, x: 12, height: 0 }}
       transition={{ duration: 0.45, delay: index * 0.06, ease: [0.22, 1, 0.36, 1] }}
       onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => { setHovered(false); setMenuOpen(false); }}
+onMouseLeave={() => {
+  setHovered(false);
+}}
       className=" relative flex flex-col 
 sm:flex-row
 sm:items-center
@@ -234,8 +236,9 @@ function DocCard({ doc, index, onSummarize, onDelete, onToggleStar, onView }) {
       exit={{ opacity: 0, scale: 0.94 }}
       transition={{ duration: 0.45, delay: index * 0.07, ease: [0.22, 1, 0.36, 1] }}
       onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => { setHovered(false); setMenuOpen(false); }}
-      className="relative rounded-2xl border bg-[#111827] overflow-hidden cursor-pointer transition-all duration-300"
+onMouseLeave={() => {
+  setHovered(false);
+}}      className="relative rounded-2xl border bg-[#111827] overflow-hidden cursor-pointer transition-all duration-300"
       style={{
         borderColor: hovered ? doc.accentBorder : "rgba(31,41,55,1)",
         boxShadow: hovered ? `0 0 32px ${doc.accentDim}, 0 4px 20px rgba(0,0,0,0.3)` : "0 2px 12px rgba(0,0,0,0.2)",
@@ -463,17 +466,40 @@ toast.success(
     }
   };
 
-  const handleSummarize = async (docId) => {
-    try {
-      
-      await summarizeDocument(docId);
-      toast.success("AI Summary Generated Successfully");
-      await fetchDocuments();
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to generate summary");
-    }
-  };
+const handleSummarize = async (docId) => {
+  try {
+
+    toast.loading(
+      "Generating AI Summary...",
+      {
+        id: "summary"
+      }
+    );
+
+    await summarizeDocument(docId);
+
+    toast.success(
+      "AI Summary Generated Successfully",
+      {
+        id: "summary"
+      }
+    );
+
+    await fetchDocuments();
+
+  } catch (error) {
+
+    console.error(error);
+
+    toast.error(
+      "Failed to generate summary",
+      {
+        id: "summary"
+      }
+    );
+
+  }
+};
 
   // Simplified filtering without search
   const filtered = docs.filter((d) => {
