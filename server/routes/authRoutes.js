@@ -20,16 +20,23 @@ router.get("/google", (req, res, next) => {
 // Added Google OAuth Callback Route
 router.get("/google/callback", (req, res, next) => {
   console.log("🔵 Google Callback route triggered");
-  passport.authenticate("google", { session: false, failureRedirect: "http://localhost:5173/login?error=true" })(req, res, (err) => {
+  passport.authenticate("google", {
+  session: false,
+  failureRedirect:
+    `${process.env.CLIENT_URL}/login?error=true`
+})
+(req, res, (err) => {
     if (err) {
       console.error("❌ Google Auth error:", err);
-      return res.redirect("http://localhost:5173/login?error=true");
-    }
+return res.redirect(
+  `${process.env.CLIENT_URL}/login?error=true`
+);    }
     console.log("✅ Google Auth successful, user:", req.user);
     const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
     const userString = encodeURIComponent(JSON.stringify({ name: req.user.name, email: req.user.email }));
-    res.redirect(`http://localhost:5173/oauth-callback?token=${token}&user=${userString}`);
-  });
+res.redirect(
+ `${process.env.CLIENT_URL}/oauth-callback?token=${token}&user=${userString}`
+);  });
 });
 
 // Added GitHub OAuth Initialization Route
@@ -41,16 +48,20 @@ router.get("/github", (req, res, next) => {
 // Added GitHub OAuth Callback Route
 router.get("/github/callback", (req, res, next) => {
   console.log("🔵 GitHub Callback route triggered");
-  passport.authenticate("github", { session: false, failureRedirect: "http://localhost:5173/login?error=true" })(req, res, (err) => {
+  passport.authenticate("github", { session: false,  failureRedirect:
+    `${process.env.CLIENT_URL}/login?error=true`
+})(req, res, (err) => {
     if (err) {
       console.error("❌ GitHub Auth error:", err);
-      return res.redirect("http://localhost:5173/login?error=true");
-    }
+return res.redirect(
+  `${process.env.CLIENT_URL}/login?error=true`
+);    }
     console.log("✅ GitHub Auth successful, user:", req.user);
     const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
     const userString = encodeURIComponent(JSON.stringify({ name: req.user.name, email: req.user.email }));
-    res.redirect(`http://localhost:5173/oauth-callback?token=${token}&user=${userString}`);
-  });
+res.redirect(
+  `${process.env.CLIENT_URL}/oauth-callback?token=${token}&user=${userString}`
+);  });
 });
 
 export default router;

@@ -63,14 +63,17 @@ ${!n.isRead ? "bg-blue-500/[0.03]" : ""}
     cursor-pointer
     "
     onClick={() => onOpen(n)}>
-                <p className="text-white text-sm font-semibold mb-0.5">{n.action === "uploaded" ? "Document Uploaded" : n.action === "summary" ? "AI Summary Ready" : n.action}</p>
-                <p
+              <p className="text-white text-sm font-semibold mb-0.5 break-words">{n.action === "uploaded" ? "Document Uploaded" : n.action === "summary" ? "AI Summary Ready" : n.action}</p>
+               <p
  className="
  text-gray-500
  text-[13px]
- break-words
+ break-all
+ leading-relaxed
  "
->{n.documentName}</p>
+>
+ {n.documentName}
+</p>
             </div>
 </div>
 

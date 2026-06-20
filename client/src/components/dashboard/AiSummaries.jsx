@@ -12,7 +12,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   FiZap, FiStar, FiTag, FiEye, FiCopy, FiShare2,
   FiChevronDown, FiChevronUp, FiClock, FiFileText,
-  FiMoreHorizontal, FiArrowRight, FiCheck, 
+   FiArrowRight, FiCheck, 
   FiSearch, FiBookmark, FiTrendingUp,
 } from "react-icons/fi";
 
@@ -84,8 +84,9 @@ function SummaryCard({ summary, index }) {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.5, delay: index * 0.09, ease: [0.22, 1, 0.36, 1] }}
       onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      // Added 'break-inside-avoid w-full inline-block mb-4' for masonry layout
+onMouseLeave={() => {
+  setHovered(false);
+}}      // Added 'break-inside-avoid w-full inline-block mb-4' for masonry layout
       className="relative rounded-2xl border bg-[#111827] overflow-hidden transition-all duration-300 break-inside-avoid w-full inline-block mb-4"
       style={{
         borderColor: hovered ? summary.accentBorder : "rgba(31,41,55,1)",
@@ -159,9 +160,7 @@ function SummaryCard({ summary, index }) {
               <FiBookmark className={`text-xs transition-colors ${bookmarked ? summary.accentText : "text-gray-600"}`} style={{ fill: bookmarked ? summary.accent : "none" }} />
             </motion.button>
 
-            <button className="w-7 h-7 rounded-lg bg-white/5 border border-white/[0.07] flex items-center justify-center text-gray-600 hover:text-gray-300 transition-all hover:bg-white/10">
-              <FiMoreHorizontal className="text-xs" />
-            </button>
+           
           </div>
         </motion.div>
 

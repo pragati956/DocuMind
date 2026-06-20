@@ -386,7 +386,10 @@ export default function UploadModal({ onClose }) {
                   </motion.div>
                   <span className="text-purple-300 text-xs font-medium">Document uploaded successfully</span>
                 </div>
-                <motion.button whileHover={{ scale: 1.04, boxShadow: "0 0 20px rgba(59,130,246,0.35)" }} whileTap={{ scale: 0.97 }} onClick={onClose}
+                <motion.button whileHover={{ scale: 1.04, boxShadow: "0 0 20px rgba(59,130,246,0.35)" }} whileTap={{ scale: 0.97 }} onClick={() => {
+  onClose();
+  navigate("/dashboard");
+}}
                   className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm font-semibold">
                   Go to Dashboard <FiChevronRight />
                 </motion.button>

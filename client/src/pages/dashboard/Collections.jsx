@@ -434,7 +434,6 @@ function ViewCollectionModal({ collectionId, onClose, onDocClick }) {
   const handleDeleteDoc = async (e, docId) => {
     e.stopPropagation(); // Prevents the preview modal from opening
     
-    if (!window.confirm("Permanently delete this document from the entire database?")) return;
     
     const toastId = toast.loading("Deleting document globally...");
     try {
@@ -558,6 +557,8 @@ export default function Collections() {
 const [loading, setLoading] = useState(true);
 const [view, setView] = useState("grid");
 const [searchQuery, setSearchQuery] = useState("");
+const [confirmDelete, setConfirmDelete] =
+ useState(null);
 const [searchFocused, setSearchFocused] =
  useState(false);
   const [viewingCollection, setViewingCollection] = useState(null);
@@ -663,13 +664,12 @@ toast.success(
 
   const handleDelete = async (id) => {
     try {
-      if (
- !window.confirm(
-  "Delete this collection?"
- )
-) {
- return;
-}
+    toast(
+  "Click delete again to confirm",
+  {
+    icon: "⚠️"
+  }
+);
 
 await deleteCollection(id);
 
