@@ -515,7 +515,7 @@ function ViewCollectionModal({ collectionId, onClose, onDocClick }) {
                       <div 
                         key={doc._id} 
                         className="p-4 rounded-xl border border-white/5 bg-white/[0.02] flex items-center justify-between gap-3 hover:bg-white/[0.04] transition-colors cursor-pointer group" 
-                        onClick={() => onDocClick({ id: doc._id, name: doc.title, fileUrl: doc.fileUrl, type: doc.fileType || "Document" })}
+                        onClick={() => onDocClick({ id: doc._id, name: doc.title, fileUrl: doc.fileUrl, fileType: doc.fileType || "" })}
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 shrink-0">
