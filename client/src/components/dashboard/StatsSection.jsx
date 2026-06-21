@@ -233,19 +233,20 @@ export default function StatsSection() {
 
   const fetchStats = async () => {
     try {
+
       const data =
         await getDashboardStats();
 
-     setStatsData({
-  totalDocuments:
-    data?.totalDocuments || 0,
+      setStatsData({
+        totalDocuments:
+          data?.totalDocuments || 0,
 
-  summarizedDocuments:
-    data?.summarizedDocuments || 0,
+        summarizedDocuments:
+          data?.summarizedDocuments || 0,
 
-  starredDocuments:
-    data?.starredDocuments || 0,
-});
+        starredDocuments:
+          data?.starredDocuments || 0,
+      });
 
     } catch (error) {
       console.error(error);
@@ -254,14 +255,31 @@ export default function StatsSection() {
 
   fetchStats();
 
+  const refreshStats = () => {
+    fetchStats();
+  };
+
+  window.addEventListener(
+    "documentUploaded",
+    refreshStats
+  );
+
   const interval =
     setInterval(
       fetchStats,
       30000
     );
 
-  return () =>
+  return () => {
+
     clearInterval(interval);
+
+    window.removeEventListener(
+      "documentUploaded",
+      refreshStats
+    );
+
+  };
 
 }, []);
 

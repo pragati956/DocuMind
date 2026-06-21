@@ -176,24 +176,23 @@ useState({
 
 useEffect(() => {
 
-  const fetchStats =
-  async () => {
+  const fetchStats = async () => {
 
     try {
 
       const data =
-      await getDashboardStats();
+        await getDashboardStats();
 
-     setStatsData({
-  totalDocuments:
-    data?.totalDocuments || 0,
+      setStatsData({
+        totalDocuments:
+          data?.totalDocuments || 0,
 
-  summarizedDocuments:
-    data?.summarizedDocuments || 0,
+        summarizedDocuments:
+          data?.summarizedDocuments || 0,
 
-  totalCollections:
-    data?.totalCollections || 0,
-});
+        totalCollections:
+          data?.totalCollections || 0,
+      });
 
     } catch (error) {
 
@@ -207,14 +206,31 @@ useEffect(() => {
 
   fetchStats();
 
- const interval =
-   setInterval(
-     fetchStats,
-     30000
-   );
+  const refreshSidebar = () => {
+    fetchStats();
+  };
 
- return () =>
-   clearInterval(interval);
+  window.addEventListener(
+    "documentUploaded",
+    refreshSidebar
+  );
+
+  const interval =
+    setInterval(
+      fetchStats,
+      30000
+    );
+
+  return () => {
+
+    clearInterval(interval);
+
+    window.removeEventListener(
+      "documentUploaded",
+      refreshSidebar
+    );
+
+  };
 
 }, []);
 const navMain = [

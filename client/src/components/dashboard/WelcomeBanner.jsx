@@ -97,19 +97,33 @@ export default function WelcomeBanner({ onUpload }) {
     };
 
 
-    useEffect(() => {
+ useEffect(() => {
 
- fetchStats();
+  fetchStats();
 
+  const refreshStats = () => {
+    fetchStats();
+  };
 
- const interval =
-  setInterval(
-   fetchStats,
-   30000
+  window.addEventListener(
+    "documentUploaded",
+    refreshStats
   );
 
- return () =>
-  clearInterval(interval);
+  const interval =
+    setInterval(
+      fetchStats,
+      30000
+    );
+
+  return () => {
+    clearInterval(interval);
+
+    window.removeEventListener(
+      "documentUploaded",
+      refreshStats
+    );
+  };
 
 }, []);// Dynamically access global user context
 

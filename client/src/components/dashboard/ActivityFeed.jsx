@@ -389,14 +389,18 @@ initials:
         "from-blue-500 to-indigo-600",
     },
 
-   icon:
+  icon:
  activity.action === "uploaded"
  ? <FiUpload />
  : activity.action === "edited"
  ? <FiEdit3 />
- : activity.action === "starred"
+ : activity.action === "summary"
  ? <FiZap />
- : <FiTrash2 />,
+ : activity.action === "collection_created"
+ ? <FiActivity />
+ : activity.action === "deleted"
+ ? <FiTrash2 />
+ : <FiActivity />,
 
     iconColor:
       activity.action === "uploaded"

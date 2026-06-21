@@ -299,9 +299,20 @@ export default function UploadModal({ onClose }) {
           }
         });
 
-        setUploadStates((s) => ({ ...s, [fileKey]: { progress: 100, status: "done" } }));
-        completedCount++;
-        toast.success(`${file.name} uploaded!`);
+       setUploadStates((s) => ({
+  ...s,
+  [fileKey]: {
+    progress: 100,
+    status: "done"
+  }
+}));
+
+window.dispatchEvent(
+  new Event("documentUploaded")
+);
+
+completedCount++;
+toast.success(`${file.name} uploaded!`);
 
       } catch (error) {
         console.error("Upload error:", error);

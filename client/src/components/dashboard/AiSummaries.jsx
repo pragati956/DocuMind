@@ -74,8 +74,45 @@ function SummaryCard({ summary, index }) {
   const [bookmarked, setBookmarked] = useState(false);
 
   const truncLength = 350;
+  const handleShare = async () => {
+
+  const shareText = `
+${summary.title}
+
+${summary.insight}
+`;
+
+  try {
+
+    if (navigator.share) {
+
+      await navigator.share({
+        title: summary.title,
+        text: shareText,
+      });
+
+    } else {
+
+      await navigator.clipboard.writeText(
+        shareText
+      );
+
+      toast.success(
+        "Summary copied to clipboard!"
+      );
+
+    }
+
+  } catch (error) {
+
+    console.error(error);
+
+  }
+
+};
   const insightText = summary.insight || "";
   const isLong = insightText.length > truncLength;
+  
   
   return (
     <motion.div
@@ -279,13 +316,14 @@ onMouseLeave={() => {
         <motion.div layout className="flex items-center justify-start pt-3 border-t border-white/[0.05]">
           <div className="flex items-center gap-1.5">
             <CopyButton text={summary.insight} accent={summary.accent} />
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.92 }}
-              className="w-7 h-7 rounded-lg bg-white/5 border border-white/[0.07] flex items-center justify-center text-gray-500 hover:text-gray-200 transition-all duration-200 hover:bg-white/10"
-            >
-              <FiShare2 className="text-xs" />
-            </motion.button>
+           <motion.button
+  onClick={handleShare}
+  whileHover={{ scale: 1.1 }}
+  whileTap={{ scale: 0.92 }}
+  className="w-7 h-7 rounded-lg bg-white/5 border border-white/[0.07] flex items-center justify-center text-gray-500 hover:text-gray-200 transition-all duration-200 hover:bg-white/10"
+>
+  <FiShare2 className="text-xs" />
+</motion.button>
           </div>
         </motion.div>
       </motion.div>
