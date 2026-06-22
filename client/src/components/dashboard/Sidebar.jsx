@@ -12,8 +12,9 @@ import { AuthContext } from "../../context/AuthContext";
 import {
   FiHome, FiFileText, FiSearch, FiZap, FiFolder,
   FiActivity, FiSettings, FiCpu, FiChevronLeft,
-   FiHelpCircle, FiLogOut, 
+   FiHelpCircle, FiLogOut
 } from "react-icons/fi";
+import { Bug } from "lucide-react";
 
 /* ─── Nav Data ─── */
 // const navMain = [
@@ -26,7 +27,7 @@ import {
 // ];
 
 const navBottom = [
-  { icon: <FiHelpCircle />, label: "Help & Support", path: "/dashboard/help" },
+  { icon: <Bug />, label: "Report Bugs", path: "/dashboard/report-bugs" },
   { icon: <FiSettings />, label: "Settings", path: "/dashboard/settings" },
 ];
 

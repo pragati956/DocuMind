@@ -23,6 +23,7 @@ import SmartSearch from "./pages/dashboard/SmartSearch";
 import AiSummariesPage from "./pages/dashboard/AiSummariesPage";
 import Collections from "./pages/dashboard/Collections";
 import Analytics from "./pages/dashboard/Analytics";
+import ReportBugs from "./pages/dashboard/ReportBugs";
 
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -87,6 +88,8 @@ function App() {
 <Route path="collections" element={<Collections />} />
 
 <Route path="analytics" element={<Analytics />} />
+
+<Route path="report-bugs" element={<ReportBugs />} />
 
           </Route>
 

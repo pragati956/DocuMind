@@ -3,6 +3,7 @@ import Document from "../models/Document.js";
 import { UserModel }
 from "../models/User.js";
 import Collection from "../models/Collection.js"; // <-- ADD THIS IMPORT
+import { sendEmail } from "../utils/sendEmail.js";
 export const getActivities =
 async (req, res) => {
   try {
@@ -227,4 +228,42 @@ async(req,res)=>{
 
  }
 
+};
+export const reportBug = async (req, res) => {
+  try {
+    const { type, severity, subject, description } = req.body;
+    const user = await UserModel.findById(req.user.id);
+
+    if (!subject || !description) {
+      return res.status(400).json({ success: false, message: "Subject and description are required" });
+    }
+
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; color: #333; max-w: 600px; margin: 0 auto; border: 1px solid #eaeaea; border-radius: 8px; overflow: hidden;">
+        <div style="background-color: #f87171; padding: 20px; color: white;">
+          <h2 style="margin: 0; font-size: 20px;">New Bug Report</h2>
+        </div>
+        <div style="padding: 20px;">
+          <p><strong>Reporter:</strong> ${user.name} (<a href="mailto:${user.email}">${user.email}</a>)</p>
+          <p><strong>Issue Type:</strong> ${type}</p>
+          <p><strong>Severity:</strong> <span style="background: #fee2e2; color: #b91c1c; padding: 4px 8px; border-radius: 4px; font-weight: bold;">${severity}</span></p>
+          <hr style="border: 0; border-top: 1px solid #eaeaea; margin: 20px 0;" />
+          <h3 style="margin-top: 0;">${subject}</h3>
+          <p style="background: #f9fafb; padding: 15px; border-radius: 6px; white-space: pre-wrap;">${description}</p>
+        </div>
+      </div>
+    `;
+
+    // Sends the bug report to the system admin (your EMAIL_USER)
+    await sendEmail({
+      to: process.env.EMAIL_USER,
+      subject: `[BUG REPORT - ${severity.toUpperCase()}] ${subject}`,
+      text: emailHtml,
+    });
+
+    res.status(200).json({ success: true, message: "Bug report submitted successfully" });
+  } catch (error) {
+    console.error("Bug Report Error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
 };

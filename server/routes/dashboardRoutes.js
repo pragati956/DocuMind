@@ -3,7 +3,7 @@ import authMiddleware from "../middleware/authMiddleware.js";
 
 import {
   getDashboardStats,
-  getActivities, getPublicStats,getHeroPreview,getFeaturesStats,
+  getActivities, getPublicStats,getHeroPreview,getFeaturesStats, reportBug
 } from "../controllers/dashboardController.js";
 
 const router = express.Router();
@@ -29,6 +29,10 @@ router.get(
   authMiddleware,
   getActivities
 );
-
+router.post(
+  "/report-bug",
+  authMiddleware,
+  reportBug
+);
 
 export default router;
