@@ -261,6 +261,13 @@ export const reportBug = async (req, res) => {
       text: emailHtml,
     });
 
+    // ADD THIS TO LOG THE BUG REPORT IN ACTIVITY FEED
+    await Activity.create({
+      userId: req.user.id,
+      action: "bug_reported",
+      documentName: subject,
+    });
+
     res.status(200).json({ success: true, message: "Bug report submitted successfully" });
   } catch (error) {
     console.error("Bug Report Error:", error);
