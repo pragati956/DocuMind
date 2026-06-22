@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 
 import { getDashboardStats } from "../../services/dashboardService";
 import { motion, useInView } from "framer-motion";
-import { FiFileText, FiZap, FiTrendingUp, FiActivity } from "react-icons/fi";
+import { FiFileText, FiZap, FiTrendingUp, FiStar } from "react-icons/fi";
 
 /* ─── Count-up hook ─── */
 function useCountUp(target, duration = 1600, start = false) {
@@ -84,7 +84,7 @@ const stats = [
   },
   {
   id: "starred",
-  icon: <FiActivity />,
+  icon: <FiStar className="text-amber-400" />,
   label: "Starred",
   sub: "Starred documents",
   accent: "#10b981",
