@@ -32,6 +32,16 @@ export const summarizeDocument =
             "Document not found",
         });
       }
+      if (
+  document.summary &&
+  document.summary.trim() !== ""
+) {
+  return res.status(200).json({
+    success: true,
+    summary: document.summary,
+    document,
+  });
+}
       
       console.log("DOCUMENT:", document.title);
       console.log("FILE URL:", document.fileUrl); // Updated log message

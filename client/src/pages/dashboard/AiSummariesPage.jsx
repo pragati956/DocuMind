@@ -6,7 +6,7 @@ import { deleteDocument, toggleStarDocument } from "../../services/documentServi
 import { toast } from "react-hot-toast";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import {
-  FiZap, FiStar, FiTag, FiEye, FiCopy, FiShare2,
+  FiZap, FiStar, FiTag, FiEye, FiCopy, 
   FiFileText, FiMoreHorizontal, FiArrowRight, FiFilter,
   FiSearch, FiBookmark, FiTrendingUp, FiCpu, FiClock,
   FiCheck, FiChevronDown, FiChevronUp, FiRefreshCw,
@@ -236,11 +236,7 @@ onMouseLeave={() => {
         <motion.div layout className="flex items-center justify-start pt-3 border-t border-white/[0.05]">
           <div className="flex items-center gap-1.5">
             <CopyButton text={s.summary} />
-            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
-              onClick={(e) => { e.stopPropagation(); }}
-              className="w-7 h-7 rounded-lg bg-white/5 border border-white/[0.07] flex items-center justify-center text-gray-500 hover:text-gray-200 hover:bg-white/10 transition-all">
-              <FiShare2 className="text-xs" />
-            </motion.button>
+           
           </div>
         </motion.div>
       </div>
