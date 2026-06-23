@@ -19,12 +19,18 @@ import {
   FiUser,
   FiChevronDown,
   FiCommand,
-  FiStar
+  FiStar,
+  FiActivity, // ADD THIS
+  FiTrash2,   // ADD THIS
+  FiFolder,   // ADD THIS
+  FiPlus,     // ADD THIS
 } from "react-icons/fi";
+import { Bug } from "lucide-react";
 import {
   searchDocuments
 }
   from "../../services/documentService";
+import { getActivities } from "../../services/dashboardService"; // ADD THIS
 
 /* ─── Mock Data ─── */
 // const notifications = [
@@ -265,90 +271,54 @@ function SearchBar() {
 // }
 
 
-/* ─── Notification Bell ─── */
-function NotificationBell() {
-  
+/* ─── Activity Menu (Replaces Notification Bell) ─── */
+function ActivityMenu() {
   const timeAgo = (date) => {
-
-    const seconds =
-      Math.floor(
-        (Date.now() - new Date(date)) / 1000
-      );
-
-    if (seconds < 60)
-      return "Just now";
-
-    if (seconds < 3600)
-      return `${Math.floor(seconds / 60)}m ago`;
-
-    if (seconds < 86400)
-      return `${Math.floor(seconds / 3600)}h ago`;
-
+    const seconds = Math.floor((Date.now() - new Date(date)) / 1000);
+    if (seconds < 60) return "Just now";
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
     return `${Math.floor(seconds / 86400)}d ago`;
-
   };
+
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  // const [notifications_local, setNotifications] = useState(notifications);
-  const {
-    notifications,
-    loading,
-    unreadCount,
-    loadNotifications,
-    markRead,
-    markAll,
-    clearAll,
-    deleteNotification,
-  } = useNotifications();
-  
-
+  const [activities, setActivities] = useState([]);
+  const [loading, setLoading] = useState(false);
   const ref = useRef(null);
 
+  const fetchActivities = async () => {
+    setLoading(true);
+    try {
+      const data = await getActivities();
+      setActivities(data.activities || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
-  const handleNotificationClick =
-    async (notification) => {
 
-      try {
-
-        await markRead(
-          notification._id
-        );
-
-      
-
-       if (notification.documentId) {
-
- navigate(
-  `/dashboard/documents?id=${notification.documentId}`
- );
-
-} else {
-
- navigate(
-  "/dashboard/documents"
- );
-
-}
-
-        setOpen(false);
-
-      } catch (err) {
-
-        console.error(err);
-
-      }
-
-    };
-  const markAllRead = async () => {
-    try {
-      await markAll();
-    } catch (err) {
-      console.error(err);
+  const getActionDetails = (action) => {
+    switch (action) {
+      case "uploaded": return { title: "Document Uploaded", icon: <FiFileText /> };
+      case "summary": return { title: "Document Summarized", icon: <FiZap /> };
+      case "edited": return { title: "Document Updated", icon: <FiSettings /> };
+      case "deleted": return { title: "Document Deleted", icon: <FiX /> };
+      case "starred": return { title: "Document Starred", icon: <FiStar /> };
+      case "created_collection": return { title: "Collection Created", icon: <FiFolder /> };
+      case "deleted_collection": return { title: "Collection Deleted", icon: <FiTrash2 /> };
+      case "added_to_collection": return { title: "Added to Collection", icon: <FiPlus /> };
+      case "collection_summarized": return { title: "Collection Summarized", icon: <FiZap /> };
+      case "collection_starred": return { title: "Collection Starred", icon: <FiStar /> };
+      case "bug_reported": return { title: "Bug Reported", icon: <Bug className="h-4 w-4 text-red-400" /> };
+      default: return { title: "New Activity", icon: <FiActivity /> };
     }
   };
 
@@ -357,38 +327,15 @@ function NotificationBell() {
       <motion.button
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.94 }}
-       onClick={() => {
-  if (!open) {
-    loadNotifications();
-  }
-
-  setOpen(prev => !prev);
-}}
+        onClick={() => {
+          if (!open) fetchActivities();
+          setOpen(prev => !prev);
+        }}
         className="relative w-9 h-9 rounded-xl bg-white/[0.04] border border-[#1F2937] flex items-center justify-center text-gray-400 hover:text-white hover:border-white/10 hover:bg-white/[0.07] transition-all duration-200"
       >
-        <motion.div
-          animate={unreadCount > 0 ? { rotate: [0, -12, 12, -8, 8, 0] } : {}}
-          transition={{ duration: 0.5, delay: 1, repeat: Infinity, repeatDelay: 5 }}
-        >
-          <FiBell className="text-base" />
-        </motion.div>
-
-        <AnimatePresence>
-          {unreadCount > 0 && (
-            <motion.span
-              key="badge"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0 }}
-              className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center text-[9px] text-white font-bold border-2 border-[#0B0F19]"
-            >
-              {unreadCount}
-            </motion.span>
-          )}
-        </AnimatePresence>
+        <FiActivity className="text-base" />
       </motion.button>
 
-      {/* Dropdown */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -396,129 +343,49 @@ function NotificationBell() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.96 }}
             transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute
-right-0
-top-full
-mt-2
-w-[320px]
-max-w-[92vw] rounded-2xl border border-[#1F2937] shadow-2xl z-50 overflow-hidden"
+            className="absolute right-0 top-full mt-2 w-[320px] max-w-[92vw] rounded-2xl border border-[#1F2937] shadow-2xl z-50 overflow-hidden"
             style={{ background: "rgba(17,24,39,0.97)", backdropFilter: "blur(20px)" }}
           >
             <div className="flex items-center justify-between px-4 py-3.5 border-b border-[#1F2937]">
-              <div className="flex items-center gap-2">
-                <h3 className="text-white text-sm font-semibold">Notifications</h3>
-                {unreadCount > 0 && (
-                  <span className="px-1.5 py-0.5 rounded-full bg-blue-500/15 border border-blue-500/20 text-blue-300 text-[10px] font-bold">{unreadCount > 99
- ? "99+"
- : unreadCount}</span>
-                )}
-              </div>
-              <button onClick={markAllRead} className="text-blue-400 hover:text-blue-300 text-[11px] font-medium transition-colors">
-                Mark all read
-              </button>
-              <button
-                onClick={clearAll}
-                className="
- text-red-400
- hover:text-red-300
- text-[11px]
- font-medium
- ml-3
- "
-              >
-                Clear all
-              </button>
+              <h3 className="text-white text-sm font-semibold">Activity Feed</h3>
             </div>
 
             <div className="max-h-72 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
               {loading ? (
-                <div className="p-6 text-center text-gray-500">
-                  Loading notifications...
-                </div>
-
-              ) : notifications.length === 0 ? (
+                <div className="p-6 text-center text-gray-500 text-sm">Loading activity...</div>
+              ) : activities.length === 0 ? (
                 <div className="p-6 text-center">
-                  <FiBell className="mx-auto mb-2 text-gray-600" />
-                  <p className="text-gray-500 text-sm">
-                    No notifications yet
-                  </p>
+                  <FiActivity className="mx-auto mb-2 text-gray-600 text-xl" />
+                  <p className="text-gray-500 text-sm">No activity yet</p>
                 </div>
               ) : (
-                notifications.map((n, i) => (
-                  <motion.div
-                    key={n._id}
-                    onClick={() =>
-                      handleNotificationClick(n)
-                    }
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    whileHover={{ backgroundColor: "rgba(255,255,255,0.02)" }}
-                    className={`flex items-start gap-3 px-4 py-3.5 cursor-pointer transition-colors duration-150 relative ${!n.isRead ? "bg-blue-500/[0.03]" : ""}`}
-                  >
-                    {!n.isRead && <div className="absolute left-2 top-1/2 -translate-y-1/2 w-1 h-1 rounded-full bg-blue-400" />}
-                    <div className={`w-8 h-8 rounded-xl bg-white/5 border border-white/[0.07] flex items-center justify-center text-blue-400 text-sm shrink-0 mt-0.5`}>
-{n.action === "uploaded" ? <FiFileText />
- : n.action === "summary" ? <FiZap />
- : n.action === "edited" ? <FiSettings />
- : n.action === "deleted" ? <FiX />
- : n.action === "starred" ? <FiStar />
- : <FiBell />}                    </div>
-                    <div className="flex-1 min-w-0">
-<p className="text-white text-xs font-semibold mb-0.5">
-{
- n.action === "uploaded"
- ? "Document Uploaded"
- : n.action === "summary"
- ? "AI Summary Ready"
- : n.action === "edited"
- ? "Document Updated"
- : n.action === "deleted"
- ? "Document Deleted"
- : n.action === "starred"
- ? "Document Starred"
- : n.action
-}
-</p>                      <p className="text-gray-500 text-[11px] truncate">{n.documentName}</p>
-                    </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-
-                        deleteNotification(
-                          n._id
-                        );
-                      }}
-                      className="
- text-red-400
- hover:text-red-300
- mr-2
- "
+                activities.map((a, i) => {
+                  const { title, icon } = getActionDetails(a.action);
+                  return (
+                    <motion.div
+                      key={a._id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      className="flex items-start gap-3 px-4 py-3.5 border-b border-white/[0.02] last:border-0 hover:bg-white/[0.02] transition-colors"
                     >
-                      <FiX />
-                    </button>
-                    <span className="text-gray-700 text-[10px] shrink-0 mt-0.5">{timeAgo(n.createdAt)}</span>
-                  </motion.div>
-                ))
-
+                      <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/[0.07] flex items-center justify-center text-blue-400 text-sm shrink-0 mt-0.5">
+                        {icon}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white text-xs font-semibold mb-0.5">{title}</p>
+                        <p className="text-gray-500 text-[11px] truncate">{a.documentName}</p>
+                      </div>
+                      <span className="text-gray-700 text-[10px] shrink-0 mt-0.5">{timeAgo(a.createdAt)}</span>
+                    </motion.div>
+                  );
+                })
               )}
-            </div>
-
-            <div className="px-4 py-3 border-t border-[#1F2937]">
-              <button
-                onClick={() => {
-                  navigate("/dashboard/notifications");
-                  setOpen(false);
-                }}
-                className="w-full text-center text-blue-400 hover:text-blue-300 text-xs font-medium transition-colors"
-              >
-                View all notifications
-              </button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </div >
+    </div>
   );
 }
 
@@ -723,7 +590,7 @@ export default function Topbar({ onMobileSidebarToggle }) {
 
         {/* ── Right ── */}
         <div className="flex items-center gap-2">
-          <NotificationBell />
+          <ActivityMenu />
           <div className="w-px h-6 bg-[#1F2937] mx-1" />
           <ProfileMenu />
         </div>

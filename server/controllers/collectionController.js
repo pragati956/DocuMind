@@ -98,6 +98,13 @@ export const toggleStarCollection = async (req, res) => {
     collection.starred = !collection.starred;
     await collection.save();
 
+    // ADD THIS
+    await Activity.create({
+      userId: req.user.id,
+      action: "collection_starred",
+      documentName: collection.name,
+    });
+
     res.status(200).json({ success: true, collection });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -158,6 +165,13 @@ if (!document) {
       return res.status(404).json({ success: false, message: "Collection not found" });
     }
 
+    // ADD THIS
+    await Activity.create({
+      userId: req.user.id,
+      action: "added_to_collection",
+      documentName: `${document.title} to ${collection.name}`,
+    });
+
     res.status(200).json({ success: true, collection });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -212,6 +226,13 @@ export const summarizeCollection = async (req, res) => {
 
     collection.aiSummary = collectionSummary;
     await collection.save();
+
+    // ADD THIS
+    await Activity.create({
+      userId: req.user.id,
+      action: "collection_summarized",
+      documentName: collection.name,
+    });
 
     res.status(200).json({ success: true, summary: collectionSummary, collection });
   } catch (error) {
