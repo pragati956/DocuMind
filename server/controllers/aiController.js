@@ -32,9 +32,18 @@ export const summarizeDocument =
             "Document not found",
         });
       }
-      if (
+const isFallbackSummary =
+  document.summary?.includes(
+    "Summary generation is temporarily unavailable"
+  ) ||
+  document.summary?.includes(
+    "AI service is currently busy"
+  );
+
+if (
   document.summary &&
-  document.summary.trim() !== ""
+  document.summary.trim() !== "" &&
+  !isFallbackSummary
 ) {
   return res.status(200).json({
     success: true,

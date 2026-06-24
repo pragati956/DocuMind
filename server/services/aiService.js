@@ -79,12 +79,9 @@ ${documentText}
 
   }
 
-  return `
-Summary generation is temporarily unavailable.
-
-The AI service is currently busy.
-Please try again after a few minutes.
-`;
+throw new Error(
+  "AI service is currently busy"
+);
 
 }
 }

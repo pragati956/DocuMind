@@ -476,8 +476,24 @@ if (minutes < 60)
 };
   
   useEffect(() => {
+  fetchSummaries();
+
+  const handleSummaryGenerated = () => {
     fetchSummaries();
-  }, []);
+  };
+
+  window.addEventListener(
+    "summaryGenerated",
+    handleSummaryGenerated
+  );
+
+  return () => {
+    window.removeEventListener(
+      "summaryGenerated",
+      handleSummaryGenerated
+    );
+  };
+}, []);
 
   const filtered = summaries.filter((s) => {
     const matchSearch =

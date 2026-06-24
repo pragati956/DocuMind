@@ -430,6 +430,14 @@ useState(0);
       await summarizeDocument(id, token);
       toast.success("AI Summary Generated", { id: "summary" });
       await loadDocuments();
+      window.dispatchEvent(
+  new Event("summaryGenerated")
+
+);
+  toast.success(
+      "AI Summary Generated",
+      { id: "summary" }
+    );
     } catch (error) {
       console.error(error);
       toast.error("Failed to generate summary", { id: "summary" });
@@ -470,9 +478,24 @@ useState(0);
     }
   };
 
-  useEffect(() => {
+useEffect(() => {
+  loadDocuments();
+
+  const handleDocumentUpload = () => {
     loadDocuments();
-  }, [page]);
+  };
+
+  window.addEventListener(
+    "documentUploaded",
+    handleDocumentUpload
+  );
+  return () => {
+    window.removeEventListener(
+      "documentUploaded",
+      handleDocumentUpload
+    );
+  };
+}, [page]);
   useEffect(() => {
 
   if (!debouncedSearch.trim()) {
