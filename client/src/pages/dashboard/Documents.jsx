@@ -107,6 +107,7 @@ function ActionsMenu({
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.92, y: -6 }}
       transition={{ duration: 0.15 }}
+      onMouseLeave={onClose}
       className="
 absolute top-8 right-0
 z-[9999] w-52 rounded-xl border border-white/10 bg-[#141414]/95 shadow-2xl backdrop-blur-xl overflow-hidden"

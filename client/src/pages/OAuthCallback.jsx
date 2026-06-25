@@ -1,11 +1,10 @@
 import { useEffect, useContext } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import toast from "react-hot-toast";
 
 export default function OAuthCallback() {
   const { login } = useContext(AuthContext);
-  const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
@@ -18,21 +17,18 @@ export default function OAuthCallback() {
         const user = JSON.parse(decodeURIComponent(userString));
         login(user, token);
         toast.success("Login successful");
-        // Force a full reload to the dashboard so the app picks up the saved token
-        // and initializes all providers immediately.
-       navigate("/dashboard", {
- replace: true
-});
+        // Force a full reload so the app picks up the saved token and loads the dashboard immediately.
+        window.location.replace("/dashboard");
       } catch (err) {
         console.error("OAuthCallback parse error", err);
         toast.error("Authentication failed");
-        navigate("/login");
+        window.location.replace("/login");
       }
     } else {
       toast.error("Authentication failed");
-      navigate("/login");
+      window.location.replace("/login");
     }
-  }, [location, login, navigate]);
+  }, [location, login]);
 
   return (
     <div className="min-h-screen bg-[#0B0F19] flex items-center justify-center">

@@ -9,10 +9,14 @@ export const AuthProvider = ({ children }) => {
     return savedUser ? JSON.parse(savedUser) : null;
   });
 
+  const updateUser = (userData) => {
+    localStorage.setItem('user', JSON.stringify(userData));
+    setUser(userData);
+  };
+
   const login = (userData, token) => {
     localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(userData)); // Save user data permanently
-    setUser(userData);
+    updateUser(userData);
   };
 
   const logout = () => {
@@ -22,7 +26,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

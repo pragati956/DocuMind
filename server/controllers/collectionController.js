@@ -178,6 +178,30 @@ if (!document) {
   }
 };
 
+// REMOVE DOCUMENT FROM COLLECTION
+export const removeDocumentFromCollection = async (req, res) => {
+  try {
+    const { id, documentId } = req.params;
+
+    const collection = await Collection.findOneAndUpdate(
+      { _id: id, createdBy: req.user.id },
+      {
+        $pull: { documents: documentId },
+        $set: { aiSummary: "" },
+      },
+      { returnDocument: "after" }
+    ).populate("documents");
+
+    if (!collection) {
+      return res.status(404).json({ success: false, message: "Collection not found" });
+    }
+
+    res.status(200).json({ success: true, collection });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // GET SINGLE COLLECTION (WITH POPULATED DOCUMENTS)
 export const getCollectionById = async (req, res) => {
   try {

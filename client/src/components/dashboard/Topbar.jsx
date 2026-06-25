@@ -18,7 +18,6 @@ import {
   FiLogOut,
   FiUser,
   FiChevronDown,
-  FiCommand,
   FiStar,
   FiActivity, // ADD THIS
   FiTrash2,   // ADD THIS
@@ -124,13 +123,6 @@ function SearchBar() {
         transition={{ duration: 0.25 }}
         className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl border"
       >
-        <motion.div
-          animate={{ color: focused ? "#60a5fa" : "#4b5563" }}
-          transition={{ duration: 0.2 }}
-        >
-          <FiSearch className="text-sm shrink-0" />
-        </motion.div>
-
         <input
           onKeyDown={(e) => {
 
@@ -156,32 +148,18 @@ function SearchBar() {
         />
 
         <AnimatePresence>
-          {!focused ? (
-            <motion.div
-              key="kbd"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex items-center gap-1 shrink-0"
-            >
-              <kbd className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-white/5 border border-white/[0.07] text-gray-600 text-[10px] font-mono">
-                <FiCommand className="text-[9px]" />K
-              </kbd>
-            </motion.div>
-          ) : (
-            query && (
-              <motion.button
-                key="clear"
-                initial={{ opacity: 0, scale: 0.7 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.7 }}
-                onClick={() => setQuery("")}
-                className="text-gray-600 hover:text-white transition-colors shrink-0"
-              >
+          {query && focused && (
+                <motion.button
+                  key="clear"
+                  initial={{ opacity: 0, scale: 0.7 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.7 }}
+                  onClick={() => setQuery("")}
+                  className="text-gray-600 hover:text-white transition-colors shrink-0"
+                >
                 <FiX className="text-xs" />
               </motion.button>
-            )
-          )}
+              )}
         </AnimatePresence>
       </motion.div>
 

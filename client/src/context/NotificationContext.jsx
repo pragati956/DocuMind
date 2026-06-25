@@ -37,6 +37,7 @@ export const NotificationContext =
  useState(false);
  const loadingRef =
  useRef(false);
+const bugDismissTimersRef = useRef(new Map());
 
 const loadNotifications =
 useCallback(
@@ -144,6 +145,44 @@ async () => {
  }
 
 };
+
+useEffect(() => {
+ const activeIds = new Set(
+  notifications
+   .filter((n) => n.action === "bug_reported")
+   .map((n) => n._id || n.id)
+ );
+
+ for (const [id, timer] of bugDismissTimersRef.current.entries()) {
+  if (!activeIds.has(id)) {
+   clearTimeout(timer);
+   bugDismissTimersRef.current.delete(id);
+  }
+ }
+
+ notifications.forEach((notification) => {
+  if (notification.action !== "bug_reported") return;
+
+  const id = notification._id || notification.id;
+  if (!id || bugDismissTimersRef.current.has(id)) return;
+
+  const timer = setTimeout(async () => {
+   bugDismissTimersRef.current.delete(id);
+   await deleteNotification(id);
+  }, 1500);
+
+  bugDismissTimersRef.current.set(id, timer);
+ });
+}, [notifications]);
+
+useEffect(() => {
+ return () => {
+  for (const timer of bugDismissTimersRef.current.values()) {
+   clearTimeout(timer);
+  }
+  bugDismissTimersRef.current.clear();
+ };
+}, []);
 
 useEffect(() => {
 

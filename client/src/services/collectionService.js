@@ -28,6 +28,12 @@ export const addDocumentToCollection = async (collectionId, documentId) => {
   return response.data;
 };
 
+// REMOVE DOCUMENT FROM COLLECTION
+export const removeDocumentFromCollection = async (collectionId, documentId) => {
+  const response = await API.delete(`/collections/${collectionId}/documents/${documentId}`);
+  return response.data;
+};
+
 // GET SINGLE COLLECTION
 export const getCollectionById = async (id) => {
   const response = await API.get(`/collections/${id}`);

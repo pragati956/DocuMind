@@ -10,10 +10,10 @@ import {
 } from "../../services/aiService";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  FiZap, FiStar, FiTag, FiEye, FiCopy, FiShare2,
+  FiZap, FiStar, FiEye, FiCopy,
   FiChevronDown, FiChevronUp, FiClock, FiFileText,
-   FiArrowRight, FiCheck, 
-  FiSearch, FiBookmark, FiTrendingUp,
+   FiArrowRight, FiCheck,
+  FiSearch, FiTrendingUp,
 } from "react-icons/fi";
 
 /* ─── Confidence Ring ─── */
@@ -71,45 +71,8 @@ function SummaryCard({ summary, index }) {
   const [hovered, setHovered] = useState(false);
   const [starred, setStarred] = useState(summary.starred);
   const [expanded, setExpanded] = useState(false);
-  const [bookmarked, setBookmarked] = useState(false);
 
   const truncLength = 350;
-  const handleShare = async () => {
-
-  const shareText = `
-${summary.title}
-
-${summary.insight}
-`;
-
-  try {
-
-    if (navigator.share) {
-
-      await navigator.share({
-        title: summary.title,
-        text: shareText,
-      });
-
-    } else {
-
-      await navigator.clipboard.writeText(
-        shareText
-      );
-
-      toast.success(
-        "Summary copied to clipboard!"
-      );
-
-    }
-
-  } catch (error) {
-
-    console.error(error);
-
-  }
-
-};
   const insightText = summary.insight || "";
   const isLong = insightText.length > truncLength;
   
@@ -187,17 +150,6 @@ onMouseLeave={() => {
                 <FiStar className={`text-xs transition-colors ${starred ? "text-amber-400 fill-amber-400" : "text-gray-600"}`} style={{ fill: starred ? "#f59e0b" : "none" }} />
               </motion.div>
             </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.15 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setBookmarked(!bookmarked)}
-              className="w-7 h-7 rounded-lg bg-white/5 border border-white/[0.07] flex items-center justify-center transition-all duration-200 hover:bg-white/10"
-            >
-              <FiBookmark className={`text-xs transition-colors ${bookmarked ? summary.accentText : "text-gray-600"}`} style={{ fill: bookmarked ? summary.accent : "none" }} />
-            </motion.button>
-
-           
           </div>
         </motion.div>
 
@@ -306,7 +258,6 @@ onMouseLeave={() => {
               whileHover={{ scale: 1.08 }}
               className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border cursor-default ${summary.tagBg}`}
             >
-              <FiTag className="text-[8px]" />
               {tag}
             </motion.span>
           ))}
@@ -316,14 +267,6 @@ onMouseLeave={() => {
         <motion.div layout className="flex items-center justify-start pt-3 border-t border-white/[0.05]">
           <div className="flex items-center gap-1.5">
             <CopyButton text={summary.insight} accent={summary.accent} />
-           <motion.button
-  onClick={handleShare}
-  whileHover={{ scale: 1.1 }}
-  whileTap={{ scale: 0.92 }}
-  className="w-7 h-7 rounded-lg bg-white/5 border border-white/[0.07] flex items-center justify-center text-gray-500 hover:text-gray-200 transition-all duration-200 hover:bg-white/10"
->
-  <FiShare2 className="text-xs" />
-</motion.button>
           </div>
         </motion.div>
       </motion.div>

@@ -185,7 +185,7 @@ function Btn({ children, variant = "ghost", onClick, danger, icon, small }) {
 
 function ProfileSection() {
   const [role, setRole] = useState("Student");
-  const { user } = useContext(AuthContext);
+  const { user, updateUser } = useContext(AuthContext);
 const [profile, setProfile] =
   useState(null);
   const [savingProfile, setSavingProfile] =
@@ -217,7 +217,7 @@ const [profile, setProfile] =
     const token =
       localStorage.getItem("token");
 
-    await updateProfile(
+    const data = await updateProfile(
       {
         name,
         role,
@@ -225,6 +225,14 @@ const [profile, setProfile] =
       },
       token
     );
+
+    if (data?.user) {
+      updateUser(data.user);
+      setProfile(data.user);
+      setName(data.user.name || "");
+      setRole(data.user.role || "Student");
+      setBio(data.user.bio || "");
+    }
 
     setSaved(true);
 

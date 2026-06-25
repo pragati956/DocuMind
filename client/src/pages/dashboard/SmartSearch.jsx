@@ -26,7 +26,6 @@ import {
   FiFilter,
   FiStar,
   FiTag,
-  FiCommand,
   FiCpu,
   FiEye,
   FiChevronRight,
@@ -114,13 +113,6 @@ function SearchBar({ query, setQuery, onSearch, focused, setFocused, loading }) 
       transition={{ duration: 0.25 }}
       className="relative flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4 rounded-2xl border backdrop-blur-xl"
     >
-      <motion.div
-        animate={{ color: focused ? "#60a5fa" : "#4b5563", scale: focused ? 1.1 : 1 }}
-        transition={{ duration: 0.2 }}
-      >
-        <FiSearch className="text-xl shrink-0" />
-      </motion.div>
-
       <input
         ref={ref}
         type="text"
@@ -149,12 +141,6 @@ function SearchBar({ query, setQuery, onSearch, focused, setFocused, loading }) 
             </motion.button>
           )}
         </AnimatePresence>
-
-        {!focused && (
-          <kbd className="hidden sm:flex items-center gap-0.5 px-2 py-1 rounded-lg bg-white/5 border border-white/[0.07] text-gray-600 text-[10px] font-mono">
-            <FiCommand className="text-[9px]" />K
-          </kbd>
-        )}
 
         <motion.button
           whileHover={query ? { scale: 1.05, boxShadow: "0 0 20px rgba(59,130,246,0.4)" } : {}}

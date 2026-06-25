@@ -9,7 +9,8 @@ import {
   createCollection,
   getCollections,
   toggleStarCollection,
-  deleteCollection
+  deleteCollection,
+  removeDocumentFromCollection,
 } from "../../services/collectionService";
 import {
   FiFolder, FiPlus, FiMoreHorizontal, FiFileText,
@@ -22,9 +23,6 @@ import {
 import { getCollectionById, summarizeCollection } from "../../services/collectionService";
 import ReactMarkdown from "react-markdown";
 import DocumentPreviewModal from "../../components/dashboard/DocumentPreviewModal"; // <-- ADD THIS
-// --- ADD THIS IMPORT ---
-import { deleteDocument } from "../../services/documentService";
-
 /* ─── Privacy Icon ─── */
 function PrivacyIcon({ type }) {
   if (type === "private") return <FiLock className="text-[10px]" />;
@@ -430,24 +428,22 @@ function ViewCollectionModal({ collectionId, onClose, onDocClick }) {
     }
     setSummarizing(false);
   };
-  // --- ADD THIS DELETE FUNCTION ---
-  const handleDeleteDoc = async (e, docId) => {
+  const handleRemoveDoc = async (e, docId) => {
     e.stopPropagation(); // Prevents the preview modal from opening
-    
-    
-    const toastId = toast.loading("Deleting document globally...");
+
+    const toastId = toast.loading("Removing from collection...");
     try {
-      await deleteDocument(docId);
-      
+      const data = await removeDocumentFromCollection(collectionId, docId);
+
       // Instantly remove the document from the modal's UI without closing it
       setCol(prev => ({
         ...prev,
-        documents: prev.documents.filter(d => d._id !== docId)
+        documents: data.collection?.documents || prev.documents.filter(d => d._id !== docId)
       }));
       
-      toast.success("Document deleted globally!", { id: toastId });
+      toast.success("Removed from collection", { id: toastId });
     } catch (err) { 
-      toast.error("Failed to delete document", { id: toastId });
+      toast.error("Failed to remove document from collection", { id: toastId });
     }
   };
 
@@ -531,9 +527,9 @@ function ViewCollectionModal({ collectionId, onClose, onDocClick }) {
                         <motion.button
                           whileHover={{ scale: 1.12 }}
                           whileTap={{ scale: 0.9 }}
-                          onClick={(e) => handleDeleteDoc(e, doc._id)}
+                          onClick={(e) => handleRemoveDoc(e, doc._id)}
                           className="w-8 h-8 rounded-lg bg-red-500/10 text-red-400 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                          title="Delete Globally"
+                          title="Remove from Collection"
                         >
                           <FiTrash2 className="text-xs" />
                         </motion.button>
