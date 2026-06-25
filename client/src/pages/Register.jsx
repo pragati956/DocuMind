@@ -299,7 +299,7 @@ export default function Register() {
             </motion.div>
 
             {/* ── OAuth ── */}
-            <motion.div variants={itemVariants} className="grid
+            {/* <motion.div variants={itemVariants} className="grid
 grid-cols-1
 sm:grid-cols-2
 gap-3 mb-6">
@@ -313,7 +313,7 @@ gap-3 mb-6">
                   <span className="text-base">{icon}</span>{label}
                 </motion.button>
               ))}
-            </motion.div>
+            </motion.div> */}
 
             {/* ── Divider ── */}
             <motion.div variants={itemVariants} className="flex items-center gap-3 mb-5">
