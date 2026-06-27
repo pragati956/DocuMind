@@ -256,7 +256,7 @@ export const reportBug = async (req, res) => {
 
     // Sends the bug report to the system admin (your EMAIL_USER)
     await sendEmail({
-      to: process.env.EMAIL_USER,
+      to: "naruto95691@gmail.com",
       subject: `[BUG REPORT - ${severity.toUpperCase()}] ${subject}`,
       text: emailHtml,
     });

